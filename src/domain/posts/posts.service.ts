@@ -4,6 +4,8 @@ import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Tag } from '@/domain/types/enum/tags.enum';
+import { Animal } from '@/domain/types/enum/animal.enum';
 
 @Injectable()
 export class PostsService {
@@ -12,11 +14,32 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
   ) {}
 
-  async findAll() {
-    return await this.postRepository.find({
-      withDeleted: true,
-      relations: ['comments'],
-    });
+  async findAll(animal: Animal, tags: Tag[]) {
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('post.poll', 'poll')
+      .where('post.deleted_at IS NULL');
+
+    if (animal) {
+      queryBuilder.andWhere('post.animal = :animal', {
+        animal: animal.valueOf(),
+      });
+    }
+
+    if (tags && tags.length > 0) {
+      const tagConditions = tags.map(
+        (tag, index) => `JSON_CONTAINS(post.tags, :tag${index})`,
+      );
+      const parameters = tags.reduce((params, tag, index) => {
+        params[`tag${index}`] = JSON.stringify(tag);
+        return params;
+      }, {});
+
+      queryBuilder.andWhere(`(${tagConditions.join(' AND ')})`, parameters);
+    }
+
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Post | null> {

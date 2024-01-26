@@ -32,7 +32,7 @@ export class CreatePostDto {
   readonly isAnonymous: boolean = true;
 
   @ApiProperty({
-    example: '["연애", "조언해줘"]',
+    example: '["dating", "advise"]',
     description: '게시글 태그 목록',
     isArray: true,
     enum: Tag,

@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Tag } from '@/domain/types/enum/tags.enum';
+import { Animal } from '@/domain/types/enum/animal.enum';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -23,10 +26,24 @@ export class PostsController {
     return await this.postsService.create(createPostDto);
   }
 
-  @Get()
+  @ApiQuery({
+    name: 'animal',
+    required: false,
+    description: '검색할 게시글 동물',
+  })
+  @ApiQuery({
+    name: 'tags',
+    required: false,
+    description: '검색할 게시글 태그 목록',
+  })
   @ApiOperation({ summary: '전체 게시글 조회' })
-  async findAll() {
-    return await this.postsService.findAll();
+  @Get()
+  async findAll(
+    @Query('animal') animal: Animal,
+    @Query('tags') tags: Tag | Tag[],
+  ) {
+    const tagsArray = Array.isArray(tags) ? tags : [tags];
+    return await this.postsService.findAll(animal, tagsArray);
   }
 
   @Get(':id')
