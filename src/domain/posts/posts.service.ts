@@ -14,7 +14,7 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
   ) {}
 
-  async findAll(animal: Animal, tags: Tag[]) {
+  async findAll(animal: Animal, tags: Tag | Tag[]) {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
@@ -28,10 +28,12 @@ export class PostsService {
     }
 
     if (tags && tags.length > 0) {
-      const tagConditions = tags.map(
+      const tagsArray = Array.isArray(tags) ? tags : [tags];
+
+      const tagConditions = tagsArray.map(
         (tag, index) => `JSON_CONTAINS(post.tags, :tag${index})`,
       );
-      const parameters = tags.reduce((params, tag, index) => {
+      const parameters = tagsArray.reduce((params, tag, index) => {
         params[`tag${index}`] = JSON.stringify(tag);
         return params;
       }, {});

@@ -42,8 +42,7 @@ export class PostsController {
     @Query('animal') animal: Animal,
     @Query('tags') tags: Tag | Tag[],
   ) {
-    const tagsArray = Array.isArray(tags) ? tags : [tags];
-    return await this.postsService.findAll(animal, tagsArray);
+    return await this.postsService.findAll(animal, tags);
   }
 
   @Get(':id')

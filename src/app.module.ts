@@ -11,6 +11,7 @@ import { CategoriesModule } from './domain/categories/categories.module';
 import { PollItemsModule } from './domain/pollItems/pollItems.module';
 import { UsersModule } from './domain/users/users.module';
 import { ItemsModule } from './domain/items/items.module';
+import { FilesModule } from '@/domain/files/files.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ItemsModule } from './domain/items/items.module';
     PollItemsModule,
     UsersModule,
     ItemsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

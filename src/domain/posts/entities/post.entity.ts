@@ -36,7 +36,7 @@ export class Post {
   tags: Tag[];
 
   @Column({ type: 'json', nullable: true })
-  images: string[];
+  imageUrls: string[];
 
   @Column({ name: 'animal', type: 'enum', enum: Animal, nullable: true })
   animal: Animal;
