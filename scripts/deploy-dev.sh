@@ -1,6 +1,6 @@
 # !/bin/bash
 
-REPOSITORY=/home/ubuntu/wagglewaggle_server
+REPOSITORY=~/wagglewaggle_server
 DOCKER_COMPOSE_FILE=${REPOSITORY}/docker-compose.dev.yml
 
 echo "> 프로젝트 폴더로 이동"
