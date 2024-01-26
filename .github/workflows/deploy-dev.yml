@@ -21,4 +21,5 @@ jobs:
           key: ${{ secrets.DEV_KEY }}
           port: ${{ secrets.DEV_PORT }}
           script: |
+            chmod +x wagglewaggle_server/scripts/deploy-dev.sh
             ./wagglewaggle_server/scripts/deploy-dev.sh
