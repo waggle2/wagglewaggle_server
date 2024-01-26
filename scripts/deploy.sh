@@ -14,7 +14,7 @@ docker-compose -f $DOCKER_COMPOSE_FILE build || exit 1
 
 echo "> 현재 실행중인 컨테이너 확인"
 
-CURRNET_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server_app_5001")
+CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server_app_5001")
 CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server_app_5002")
 
 
