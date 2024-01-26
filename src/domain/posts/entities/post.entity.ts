@@ -13,6 +13,7 @@ import { Comment } from '../../comments/entities/comment.entity';
 import { Category } from '@/domain/categories/entities/category.entity';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
+import { Animal } from '@/domain/types/enum/animal.enum';
 
 @Entity()
 export class Post {
@@ -32,6 +33,15 @@ export class Post {
     nullable: true,
   })
   tags: Tag[];
+
+  @Column({ type: 'json' })
+  images: string[];
+
+  @Column({ name: 'author_animal', type: 'enum', enum: Animal })
+  animal: Animal;
+
+  @Column({ type: 'json' })
+  likes: number[]; // 좋아요 누른 유저 아이디
 
   @OneToMany('Comment', 'post', {
     lazy: true,
