@@ -29,18 +29,19 @@ export class Post {
   @Column({ name: 'is_anonymous' })
   isAnonymous: boolean;
 
-  @Column('simple-array', {
+  @Column({
+    type: 'json',
     nullable: true,
   })
   tags: Tag[];
 
-  @Column({ type: 'json' })
+  @Column({ type: 'json', nullable: true })
   images: string[];
 
-  @Column({ name: 'author_animal', type: 'enum', enum: Animal })
+  @Column({ name: 'animal', type: 'enum', enum: Animal, nullable: true })
   animal: Animal;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'json', nullable: true })
   likes: number[]; // 좋아요 누른 유저 아이디
 
   @OneToMany('Comment', 'post', {
