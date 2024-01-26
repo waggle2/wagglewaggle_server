@@ -4,21 +4,21 @@ on:
   push:
     branches: [ dev ]
 
-  jobs:
-    deploy:
-      name: Deploy(dev)
-      runs-on: ubuntu-latest
+jobs:
+  deploy:
+    name: Deploy(dev)
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: checkout
-          uses: actions/checkout@v2
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
 
-        - name: SSH Remote Commands
-          uses: appleboy/ssh-action@0.1.7
-          with:
-            host: ${{ secrets.DEV_HOST }}
-            username: ${{ secrets.DEV_USER }}
-            key: ${{ secrets.DEV_KEY }}
-            port: ${{ secrets.DEV_PORT }}
-            script: |
-              ./wagglewaggle_server/scripts/deploy-dev.sh
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@0.1.7
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_KEY }}
+          port: ${{ secrets.DEV_PORT }}
+          script: |
+            ./wagglewaggle_server/scripts/deploy-dev.sh
