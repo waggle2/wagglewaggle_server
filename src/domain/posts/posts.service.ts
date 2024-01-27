@@ -84,10 +84,16 @@ export class PostsService {
   }
 
   async findOne(id: number): Promise<Post | null> {
-    const post = await this.postRepository.findOne({
-      where: { id, deletedAt: undefined },
-      relations: ['comments'],
-    });
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('post.poll', 'poll')
+      .leftJoinAndSelect('poll.pollItems', 'pollItems')
+      .where('post.deleted_at IS NULL')
+      .andWhere('post.id = :id', { id });
+
+    const post = await queryBuilder.getOne();
+
     if (!post) throw new NotFoundException('게시글이 존재하지 않습니다.');
     return post;
   }
