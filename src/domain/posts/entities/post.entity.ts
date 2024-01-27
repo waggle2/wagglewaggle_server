@@ -9,7 +9,6 @@ import {
   ManyToOne,
   OneToOne,
   Index,
-  JoinColumn,
 } from 'typeorm';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Category } from '@/domain/categories/entities/category.entity';
