@@ -6,6 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
+import { PaginationOptions } from '@/domain/types/interface/pagination-option.interface';
 
 @Injectable()
 export class PostsService {
@@ -14,7 +15,13 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
   ) {}
 
-  async findAll(animal: Animal, tags: Tag | Tag[]) {
+  async findAll(
+    animal: Animal,
+    tags: Tag | Tag[],
+    paginationOptions?: PaginationOptions,
+  ) {
+    const { page, pageSize } = paginationOptions;
+
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
@@ -42,7 +49,38 @@ export class PostsService {
       queryBuilder.andWhere(`(${tagConditions.join(' AND ')})`, parameters);
     }
 
-    return await queryBuilder.getMany();
+    const [posts, total] = await queryBuilder
+      .orderBy('post.updated_at', 'DESC')
+      .skip(page * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { posts, total };
+  }
+
+  async findHotPosts(paginationOptions: PaginationOptions) {
+    const { page, pageSize } = paginationOptions;
+
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('post.poll', 'poll')
+      .leftJoinAndSelect('poll.pollItems', 'pollItems')
+      .where('post.deleted_at IS NULL');
+
+    queryBuilder.andWhere(
+      'post.updated_at > :date',
+      new Date(Date.now() - 48 * 60 * 60 * 1000), // 최근 48시간 이내의 게시물
+    );
+
+    const [hotPosts, total] = await queryBuilder
+      .orderBy('post.comment_num', 'DESC')
+      .addOrderBy('post.like_num', 'DESC')
+      .skip(page * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return { hotPosts, total };
   }
 
   async findOne(id: number): Promise<Post | null> {

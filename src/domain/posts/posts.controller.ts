@@ -35,14 +35,51 @@ export class PostsController {
     name: 'tags',
     required: false,
     description: '검색할 게시글 태그 목록',
+    type: Array<Tag>,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    description: '페이지당 게시글 개수',
+    type: Number,
   })
   @ApiOperation({ summary: '전체 게시글 조회' })
   @Get()
   async findAll(
-    @Query('animal') animal: Animal,
+    @Query('page') page: number = 0,
+    @Query('pageSize') pageSize: number = 20,
     @Query('tags') tags: Tag | Tag[],
+    @Query('animal')
+    animal: Animal,
   ) {
-    return await this.postsService.findAll(animal, tags);
+    return await this.postsService.findAll(animal, tags, { page, pageSize });
+  }
+
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    description: '페이지당 게시글 개수',
+    type: Number,
+  })
+  @ApiOperation({ summary: '인기 게시글 조회' })
+  @Get('/hot-posts')
+  async findHotPosts(
+    @Query('page') page: number = 0,
+    @Query('pageSize') pageSize: number = 20,
+  ) {
+    return await this.postsService.findHotPosts({ page, pageSize });
   }
 
   @Get(':id')
