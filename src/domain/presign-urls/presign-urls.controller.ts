@@ -3,14 +3,19 @@ import { ConfigService } from '@nestjs/config';
 import { PresignUrlsDto } from '@/domain/presign-urls/dto/presign-urls.dto';
 import { createS3Client } from '@/config/s3.config';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('presign-urls')
 @Controller('presign-urls')
 export class PresignUrlsController {
   constructor(private readonly configService: ConfigService) {}
 
+  @ApiOperation({
+    summary: 'presign-url 발급',
+  })
   @Post('')
   async presignPost(@Body() presignUrlsDto: PresignUrlsDto) {
-    const { filename, type } = presignUrlsDto;
+    const { filename } = presignUrlsDto;
     const s3Client = createS3Client(this.configService);
 
     return await createPresignedPost(s3Client, {
