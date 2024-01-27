@@ -12,6 +12,7 @@ import { PollItemsModule } from './domain/pollItems/pollItems.module';
 import { UsersModule } from './domain/users/users.module';
 import { ItemsModule } from './domain/items/items.module';
 import { FilesModule } from '@/domain/files/files.module';
+import { PresignUrlsModule } from '@/domain/presign-urls/presign-urls.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { FilesModule } from '@/domain/files/files.module';
     UsersModule,
     ItemsModule,
     FilesModule,
+    PresignUrlsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
