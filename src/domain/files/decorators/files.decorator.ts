@@ -1,6 +1,6 @@
 import { applyDecorators, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 export function FilesDecorator(fieldName: string = 'files') {
   return applyDecorators(

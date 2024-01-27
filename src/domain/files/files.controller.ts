@@ -1,18 +1,5 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Post,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
-import {
-  ApiConsumes,
-  ApiOperation,
-  ApiProperty,
-  ApiTags,
-} from '@nestjs/swagger';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Delete, Post, UploadedFiles } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UploadFilesDto } from '@/domain/files/dto/upload-files.dto';
 import { FilesService } from '@/domain/files/files.service';
 import { createS3Client } from '@/config/s3.config';
