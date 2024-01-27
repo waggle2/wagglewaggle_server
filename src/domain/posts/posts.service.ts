@@ -6,7 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
-import { PaginationOptions } from '@/domain/types/interface/pagination-option.interface';
+import { PaginationOptions } from '@/domain/common/pagination-option.class';
 
 @Injectable()
 export class PostsService {
@@ -61,17 +61,17 @@ export class PostsService {
   async findHotPosts(paginationOptions: PaginationOptions) {
     const { page, pageSize } = paginationOptions;
 
+    const currentDate = new Date();
+    const date48HoursAgo = new Date(currentDate);
+    date48HoursAgo.setHours(currentDate.getHours() - 48);
+
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
-      .where('post.deleted_at IS NULL');
-
-    queryBuilder.andWhere(
-      'post.updated_at > :date',
-      new Date(Date.now() - 48 * 60 * 60 * 1000), // 최근 48시간 이내의 게시물
-    );
+      .where('post.deleted_at IS NULL')
+      .andWhere('post.updated_at > :date', { date: date48HoursAgo });
 
     const [hotPosts, total] = await queryBuilder
       .orderBy('post.comment_num', 'DESC')
