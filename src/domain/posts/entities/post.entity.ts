@@ -13,6 +13,7 @@ import { Comment } from '../../comments/entities/comment.entity';
 import { Category } from '@/domain/categories/entities/category.entity';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
+import { Animal } from '@/domain/types/enum/animal.enum';
 
 @Entity()
 export class Post {
@@ -28,10 +29,20 @@ export class Post {
   @Column({ name: 'is_anonymous' })
   isAnonymous: boolean;
 
-  @Column('simple-array', {
+  @Column({
+    type: 'json',
     nullable: true,
   })
   tags: Tag[];
+
+  @Column({ type: 'json', nullable: true })
+  imageUrls: string[];
+
+  @Column({ name: 'animal', type: 'enum', enum: Animal, nullable: true })
+  animal: Animal;
+
+  @Column({ type: 'json', nullable: true })
+  likes: number[]; // 좋아요 누른 유저 아이디
 
   @OneToMany('Comment', 'post', {
     lazy: true,
