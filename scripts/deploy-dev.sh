@@ -14,8 +14,8 @@ docker-compose -f $DOCKER_COMPOSE_FILE build || exit 1
 
 echo "> 현재 실행중인 컨테이너 확인"
 
-CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server_app_5001")
-CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server_app_5002")
+CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5001")
+CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5002")
 
 
 echo "> 5001번 포트에 대한 배포"
