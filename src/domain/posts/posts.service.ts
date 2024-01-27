@@ -19,6 +19,7 @@ export class PostsService {
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('post.poll', 'poll')
+      .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL');
 
     if (animal) {
