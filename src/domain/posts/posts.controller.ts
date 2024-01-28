@@ -11,9 +11,14 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
+import {
+  PageQuery,
+  PageSizeQuery,
+} from '@/domain/types/decorators/pagination.decorator';
+import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -26,23 +31,28 @@ export class PostsController {
     return await this.postsService.create(createPostDto);
   }
 
-  @ApiQuery({
-    name: 'animal',
-    required: false,
-    description: '검색할 게시글 동물',
-  })
-  @ApiQuery({
-    name: 'tags',
-    required: false,
-    description: '검색할 게시글 태그 목록',
-  })
   @ApiOperation({ summary: '전체 게시글 조회' })
+  @FindAllDecorator()
   @Get()
   async findAll(
-    @Query('animal') animal: Animal,
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
     @Query('tags') tags: Tag | Tag[],
+    @Query('animal')
+    animal: Animal,
   ) {
-    return await this.postsService.findAll(animal, tags);
+    return await this.postsService.findAll(animal, tags, page, pageSize);
+  }
+
+  @ApiOperation({ summary: '인기 게시글 조회' })
+  @PageQuery()
+  @PageSizeQuery()
+  @Get('/hot-posts')
+  async findHotPosts(
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
+  ) {
+    return await this.postsService.findHotPosts(page, pageSize);
   }
 
   @Get(':id')
