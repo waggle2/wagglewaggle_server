@@ -46,8 +46,12 @@ export class Post {
   @Column({ type: 'json', nullable: true })
   imageUrls: string[];
 
+  // Todo: 나중에 nullable false
   @Column({ name: 'animal', type: 'enum', enum: Animal, nullable: true })
   animal: Animal;
+
+  @Column({ name: 'preferred_response_animal', type: 'enum', enum: Animal })
+  preferredResponseAnimal: Animal;
 
   @Column({ type: 'json', nullable: true })
   likes: number[]; // 좋아요 누른 유저 아이디

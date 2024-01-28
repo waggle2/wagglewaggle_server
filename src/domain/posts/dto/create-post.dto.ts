@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsBoolean, IsEnum, IsString, Length } from 'class-validator';
 import { Tag } from '@/domain/types/enum/tags.enum';
+import { Animal } from '@/domain/types/enum/animal.enum';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -31,6 +32,15 @@ export class CreatePostDto {
   @IsBoolean()
   @Expose({ name: 'is_anonymous' })
   readonly isAnonymous: boolean = true;
+
+  @ApiProperty({
+    example: 'bear',
+    description: '희망 댭변 동물',
+    enum: Animal,
+  })
+  @IsEnum(Animal)
+  @Expose({ name: 'preferred_response_animal' })
+  readonly preferredResponseAnimal: Animal;
 
   @ApiProperty({
     example: '["dating", "advise"]',
