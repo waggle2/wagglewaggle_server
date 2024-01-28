@@ -6,7 +6,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
-import { PaginationOptions } from '@/domain/common/pagination-option.class';
 
 @Injectable()
 export class PostsService {
@@ -18,15 +17,11 @@ export class PostsService {
   async findAll(
     animal: Animal,
     tags: Tag | Tag[],
-    paginationOptions?: PaginationOptions,
+    page: number,
+    pageSize: number,
   ) {
-    const { page, pageSize } = paginationOptions;
-
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.comments', 'comments')
-      .leftJoinAndSelect('post.poll', 'poll')
-      .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL');
 
     if (animal) {
@@ -49,38 +44,53 @@ export class PostsService {
       queryBuilder.andWhere(`(${tagConditions.join(' AND ')})`, parameters);
     }
 
-    const [posts, total] = await queryBuilder
-      .orderBy('post.updated_at', 'DESC')
-      .skip(page * pageSize)
-      .take(pageSize)
-      .getManyAndCount();
+    queryBuilder.addOrderBy('post.updated_at', 'DESC');
 
-    return { posts, total };
+    let posts: Post[], total: number;
+
+    if (page && pageSize) {
+      [posts, total] = await queryBuilder
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
+      [posts, total] = await queryBuilder.getManyAndCount();
+    }
+
+    return {
+      data: posts,
+      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+    };
   }
 
-  async findHotPosts(paginationOptions: PaginationOptions) {
-    const { page, pageSize } = paginationOptions;
-
+  async findHotPosts(page: number, pageSize: number) {
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
 
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.comments', 'comments')
-      .leftJoinAndSelect('post.poll', 'poll')
-      .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL')
-      .andWhere('post.updated_at > :date', { date: date48HoursAgo });
+      .andWhere('post.updated_at > :date', { date: date48HoursAgo })
+      .addOrderBy('post.comment_num', 'DESC')
+      .addOrderBy('post.like_num', 'DESC');
 
-    const [hotPosts, total] = await queryBuilder
-      .orderBy('post.comment_num', 'DESC')
-      .addOrderBy('post.like_num', 'DESC')
-      .skip(page * pageSize)
-      .take(pageSize)
-      .getManyAndCount();
+    let hotPosts: Post[], total: number;
 
-    return { hotPosts, total };
+    if (page && pageSize) {
+      [hotPosts, total] = await queryBuilder
+        .skip(page * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      [hotPosts, total] = await queryBuilder.getManyAndCount();
+    }
+
+    return {
+      data: hotPosts,
+      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+    };
   }
 
   async findOne(id: number): Promise<Post | null> {

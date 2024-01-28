@@ -18,11 +18,7 @@ import {
   PageQuery,
   PageSizeQuery,
 } from '@/domain/types/decorators/pagination.decorator';
-import {
-  AnimalQuery,
-  GetAllPostsOperation,
-  TagsQuery,
-} from '@/domain/posts/decorators/posts.decorator';
+import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -35,29 +31,28 @@ export class PostsController {
     return await this.postsService.create(createPostDto);
   }
 
-  @AnimalQuery()
-  @TagsQuery()
-  @PageQuery()
-  @PageSizeQuery()
-  @GetAllPostsOperation()
+  @ApiOperation({ summary: '전체 게시글 조회' })
+  @FindAllDecorator()
   @Get()
   async findAll(
-    @Query('page') page: number = 0,
-    @Query('pageSize') pageSize: number = 20,
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
     @Query('tags') tags: Tag | Tag[],
     @Query('animal')
     animal: Animal,
   ) {
-    return await this.postsService.findAll(animal, tags, { page, pageSize });
+    return await this.postsService.findAll(animal, tags, page, pageSize);
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
+  @PageQuery()
+  @PageSizeQuery()
   @Get('/hot-posts')
   async findHotPosts(
-    @Query('page') page: number = 0,
-    @Query('pageSize') pageSize: number = 20,
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
   ) {
-    return await this.postsService.findHotPosts({ page, pageSize });
+    return await this.postsService.findHotPosts(page, pageSize);
   }
 
   @Get(':id')
