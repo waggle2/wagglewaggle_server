@@ -1,22 +1,24 @@
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  PageQuery,
+  PageSizeQuery,
+} from '@/domain/types/decorators/pagination.decorator';
 
-export function AnimalQuery() {
-  return ApiQuery({
-    name: 'animal',
-    required: false,
-    description: '검색할 게시글 동물',
-  });
-}
-
-export function TagsQuery() {
-  return ApiQuery({
-    name: 'tags',
-    required: false,
-    description: '검색할 게시글 태그 목록',
-    isArray: true,
-  });
-}
-
-export function GetAllPostsOperation() {
-  return ApiOperation({ summary: '전체 게시글 조회' });
+export function FindAllDecorator() {
+  return applyDecorators(
+    ApiQuery({
+      name: 'animal',
+      required: false,
+      description: '검색할 게시글 동물',
+    }),
+    ApiQuery({
+      name: 'tags',
+      required: false,
+      description: '검색할 게시글 태그 목록',
+      isArray: true,
+    }),
+    PageQuery(),
+    PageSizeQuery,
+  );
 }
