@@ -11,11 +11,11 @@ export enum AuthorityName {
 }
 
 export enum State {
-  JOINED = 'joined',
-  WITHDRAWN = 'withdrawn',
+  JOINED = '가입',
+  WITHDRAWN = '탈퇴',
 }
 
 export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
+  MALE = '남성',
+  FEMALE = '여성',
 }

@@ -9,10 +9,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserAuthority } from './user-authority.entity';
-// import { Post } from 'src/posts/entities/post.entity';
-import { AuthenticationProvider, State } from '@/domain/types/enum/users.enum';
+import { AuthenticationProvider, State } from '@/domain/types/enum/user.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
 import { Credential } from './credential.entity';
+import { Post } from '@/domain/posts/entities/post.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -34,10 +34,10 @@ export class User {
   })
   authorities: UserAuthority[];
 
-  @Column({ type: 'enum', enum: State })
+  @Column({ type: 'enum', enum: State, default: State.JOINED })
   state: State;
 
-  @Column()
+  @Column({ type: 'json' })
   points: number;
 
   @Column({ name: 'primary_animal', type: 'enum', enum: Animal })
@@ -46,8 +46,8 @@ export class User {
   @Column({ name: 'second_animal', type: 'enum', enum: Animal })
   secondAnimal: Animal;
 
-  // @OneToMany(() => Post, (post) => post.user)
-  // posts: Post[];
+  @OneToMany('Post', 'user')
+  posts: Post[];
 
   // @OneToMany(() => Comment, (comment) => comment.user)
   // comments: Comment[];

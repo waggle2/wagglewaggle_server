@@ -5,8 +5,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { AuthorityName } from '@/domain/types/enum/user.enum';
 import { User } from './user.entity';
-import { AuthorityName } from '@/domain/types/enum/users.enum';
 
 @Entity({ name: 'user_authorities' })
 export class UserAuthority {
@@ -17,6 +17,11 @@ export class UserAuthority {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'authority_name', type: 'enum', enum: AuthorityName })
+  @Column({
+    name: 'authority_name',
+    type: 'enum',
+    enum: AuthorityName,
+    default: AuthorityName.USER,
+  })
   authorityName: AuthorityName;
 }
