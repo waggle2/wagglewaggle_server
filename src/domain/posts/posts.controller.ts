@@ -14,11 +14,11 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
+import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
 import {
   PageQuery,
   PageSizeQuery,
 } from '@/domain/types/decorators/pagination.decorator';
-import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -53,6 +53,17 @@ export class PostsController {
     @Query('pageSize') pageSize: number,
   ) {
     return await this.postsService.findHotPosts(page, pageSize);
+  }
+
+  @ApiOperation({ summary: '삭제된 게시글 조회' })
+  @PageQuery()
+  @PageSizeQuery()
+  @Get('/deleted-posts')
+  async findDeletedPosts(
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
+  ) {
+    return await this.postsService.findDeletedPosts(page, pageSize);
   }
 
   @Get(':id')
