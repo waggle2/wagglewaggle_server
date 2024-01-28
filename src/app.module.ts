@@ -16,10 +16,9 @@ import { FilesModule } from '@/domain/files/files.module';
 import { PresignUrlsModule } from '@/domain/presign-urls/presign-urls.module';
 import { AuthenticationModule } from './domain/authentication/authentication.module';
 import * as Joi from 'joi';
-import { RedisModule } from '@liaoliaots/nestjs-redis';
-import { RedisConfigService } from './config/redis.config';
 import { RedisCacheModule } from './domain/redis-cache/redis-cache.module';
 import { mailerConfigFactory } from './config/mailer.config';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
   imports: [
@@ -39,9 +38,10 @@ import { mailerConfigFactory } from './config/mailer.config';
       useFactory: TypeormConfig,
     }),
     RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      useClass: RedisConfigService,
-      inject: [ConfigService],
+      useFactory: () => ({
+        type: 'single',
+        url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
+      }),
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
