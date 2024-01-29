@@ -19,6 +19,7 @@ import * as Joi from 'joi';
 import { RedisCacheModule } from './domain/redis-cache/redis-cache.module';
 import { mailerConfigFactory } from './config/mailer.config';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { HealthCheckController } from './health-check/health-check.controller';
 
 @Module({
   imports: [
@@ -60,7 +61,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     AuthenticationModule,
     RedisCacheModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthCheckController],
   providers: [AppService],
 })
 export class AppModule {}
