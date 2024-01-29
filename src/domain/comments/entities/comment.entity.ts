@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
 
@@ -18,13 +19,31 @@ export class Comment {
   @Column()
   content: string;
 
-  @ManyToOne('Post', 'comments', { onDelete: 'CASCADE' })
+  @Column({ name: 'is_anonymous' })
+  isAnonymous: boolean;
+
+  @ManyToOne('Post', 'comments', {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   @JoinColumn({ name: 'post_id' })
   post: Post;
 
+  @ManyToOne('Comment', 'replies', {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'comment_id' })
+  parent: Comment;
+
+  @OneToMany('Comment', 'parent', {
+    cascade: true,
+    eager: true,
+  })
+  replies: Comment[];
+
   // Todo
   // user: User;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -93,10 +93,35 @@ export class PostsService {
     };
   }
 
+  async findDeletedPosts(page: number, pageSize: number) {
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .where('post.deleted_at IS NOT NULL')
+      .orderBy('post.updated_at', 'DESC');
+
+    let posts: Post[], total: number;
+
+    if (page && pageSize) {
+      [posts, total] = await queryBuilder
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
+      [posts, total] = await queryBuilder.getManyAndCount();
+    }
+
+    return {
+      data: posts,
+      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+    };
+  }
+
   async findOne(id: number): Promise<Post | null> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('comments.replies', 'replies')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL')

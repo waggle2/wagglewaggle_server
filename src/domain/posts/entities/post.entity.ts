@@ -57,6 +57,7 @@ export class Post {
   likes: number[]; // 좋아요 누른 유저 아이디
 
   @OneToMany('Comment', 'post', {
+    cascade: true,
     lazy: true,
   })
   comments: Comment[];

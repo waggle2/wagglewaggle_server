@@ -26,6 +26,15 @@ export class CommentsController {
     return this.commentsService.create(+postId, createCommentDto);
   }
 
+  @Post('/reply/:commentId')
+  @ApiOperation({ summary: '대댓글 생성' })
+  addReply(
+    @Param('commentId') commentId: string,
+    @Body() createCommentDto: CreateCommentDto,
+  ) {
+    return this.commentsService.addReply(+commentId, createCommentDto);
+  }
+
   @Get()
   @ApiOperation({ summary: '전체 댓글 조회' })
   findAll() {

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class CreateCommentDto {
   @ApiProperty({
@@ -9,4 +9,13 @@ export class CreateCommentDto {
   })
   @IsString()
   readonly content: string;
+
+  @ApiProperty({
+    example: 'false',
+    description: '익명 여부 설정',
+    required: false,
+    default: false,
+  })
+  @IsBoolean()
+  readonly isAnonymous: boolean = true;
 }
