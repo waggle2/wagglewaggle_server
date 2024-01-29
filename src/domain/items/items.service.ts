@@ -41,6 +41,6 @@ export class ItemsService {
     if (!itemToRemove) {
       throw new NotFoundException(`Item with id ${id} not found`);
     }
-    await this.itemRepository.softDelete(itemToRemove);
+    await this.itemRepository.softDelete(id);
   }
 }
