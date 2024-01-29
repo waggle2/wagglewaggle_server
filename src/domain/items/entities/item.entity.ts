@@ -20,13 +20,13 @@ export class Item {
   @Column({ name: 'item_type', type: 'enum', enum: ItemType })
   itemType: ItemType;
 
-  @Column({ type: 'json' })
+  @Column()
   name: string;
 
-  @Column({ type: 'json' })
+  @Column()
   price: number;
 
-  @Column({ name: 'purchased_count', type: 'json' })
+  @Column({ name: 'purchased_count', type: 'int', default: 0 })
   purchasedCount: number;
 
   @CreateDateColumn({ name: 'created_at' })
