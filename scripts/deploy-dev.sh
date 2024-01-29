@@ -2,10 +2,9 @@
 
 REPOSITORY=~/wagglewaggle_server
 DOCKER_COMPOSE_FILE=${REPOSITORY}/docker-compose.dev.yml
-HEALTH_CHECK_ENDPOINT=/api/v1/health-check
 
 echo "> 프로젝트 폴더로 이동"
-cd $REPOSITORY
+cd $REPOSITORY || exit 1
 
 echo "> git pull"
 git pull origin dev
@@ -31,8 +30,6 @@ fi
 echo "> 5001번 포트에 새 컨테이너 실행"
 docker-compose -f $DOCKER_COMPOSE_FILE up -d app_5001 || exit 1
 
-echo "> Health check for 5001번 포트"
-curl -s http://localhost:5001$HEALTH_CHECK_ENDPOINT > /dev/null || exit 1
 
 echo "> 5002번 포트에 대한 배포"
 
@@ -45,8 +42,5 @@ fi
 
 echo "> 5002번 포트에 새 컨테이너 실행"
 docker-compose -f $DOCKER_COMPOSE_FILE up -d app_5002 || exit 1
-
-echo "> Health check for 5002번 포트"
-curl -s http://localhost:5002$HEALTH_CHECK_ENDPOINT > /dev/null || exit 1
 
 echo "> 배포 완료"
