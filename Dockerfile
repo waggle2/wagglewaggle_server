@@ -5,8 +5,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-# 의존성 설치, lock으로 설치
-RUN npm ci
+RUN npm install
 
 # 소스 코드 복사
 COPY . .
