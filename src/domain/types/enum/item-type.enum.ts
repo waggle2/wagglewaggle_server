@@ -1,4 +1,4 @@
-export enum Type {
+export enum ItemType {
   EMOJI = 'emoji',
   BACKGROUND = 'background',
   FRAME = 'frame',

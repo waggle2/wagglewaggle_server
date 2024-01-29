@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Animal } from '@/domain/types/enum/animal.enum';
-import { Type } from '@/domain/types/enum/item-type.enum';
+import { ItemType } from '@/domain/types/enum/item-type.enum';
 
 @Entity({ name: 'items' })
 export class Item {
@@ -17,16 +17,16 @@ export class Item {
   @Column({ type: 'enum', enum: Animal })
   animal: Animal;
 
-  @Column({ type: 'enum', enum: Type })
-  type: Type;
+  @Column({ name: 'item_type', type: 'enum', enum: ItemType })
+  itemType: ItemType;
 
-  @Column()
+  @Column({ type: 'json' })
   name: string;
 
-  @Column()
+  @Column({ type: 'json' })
   price: number;
 
-  @Column({ name: 'purchased_count' })
+  @Column({ name: 'purchased_count', type: 'json' })
   purchasedCount: number;
 
   @CreateDateColumn({ name: 'created_at' })
