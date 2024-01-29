@@ -23,6 +23,3 @@ jobs:
           script: |
             chmod +x wagglewaggle_server/scripts/deploy-dev.sh
             ./wagglewaggle_server/scripts/deploy-dev.sh
-            
-            chmod +x wagglewaggle_server/scripts/health-check.sh
-            ./wagglewaggle_server/scripts/health-check.sh
