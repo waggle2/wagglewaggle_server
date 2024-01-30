@@ -16,7 +16,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 
 @Entity({ name: 'users' })
 export class User {
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column({
@@ -26,8 +26,14 @@ export class User {
   })
   authenticationProvider: AuthenticationProvider;
 
+  @Column({ name: 'social_id', unique: true, nullable: true })
+  socialId: string | null;
+
   @OneToOne('Credential', 'user', { cascade: true })
   credential: Credential;
+
+  @Column({ name: 'is_verified', default: false })
+  isVerified: boolean;
 
   @OneToMany('UserAuthority', 'user', {
     cascade: true,

@@ -30,6 +30,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<void> {
     const {
       authenticationProvider,
+      socialId,
       email,
       password,
       nickname,
@@ -40,6 +41,7 @@ export class UsersService {
 
     const user = this.userRepository.create({
       authenticationProvider,
+      socialId: socialId || null,
       primaryAnimal,
     });
 
@@ -129,6 +131,7 @@ export class UsersService {
     const existingUser = await this.credentialRepository.findOne({
       where: { nickname },
     });
+
     return !existingUser;
   }
 
@@ -155,6 +158,16 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
+
+    return user;
+  }
+
+  async findBySocialId(socialId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { socialId },
+      relations: ['credential', 'authorities'],
+    });
+
     return user;
   }
 
