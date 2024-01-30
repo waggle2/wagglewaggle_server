@@ -34,7 +34,7 @@ export class Comment {
     nullable: true,
   })
   @JoinColumn({ name: 'comment_id' })
-  parent: Comment;
+  parent: Comment | null;
 
   @OneToMany('Comment', 'parent', {
     cascade: true,

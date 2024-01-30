@@ -8,6 +8,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Comment, Post]), PostsModule],
+  exports: [CommentsService],
   controllers: [CommentsController],
   providers: [CommentsService],
 })
