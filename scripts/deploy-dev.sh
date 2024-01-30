@@ -7,7 +7,7 @@ echo "> 프로젝트 폴더로 이동"
 cd $REPOSITORY || exit 1
 
 echo "> git pull"
-git pull origin dev
+git pull origin dev || exit 1
 
 echo "> 소스코드 빌드"
 docker-compose -f $DOCKER_COMPOSE_FILE build || exit 1
