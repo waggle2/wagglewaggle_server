@@ -40,27 +40,29 @@ export class AuthenticationController {
     return response.send(user);
   }
 
-  // @HttpCode(200)
-  // @Post('/login/kakao')
-  // @ApiOperation({ summary: '카카오 로그인' })
-  // async kakaoLogin(@Body() authorizationCode: string) {}
+  @HttpCode(200)
+  @Post('/login/kakao')
+  @ApiOperation({ summary: '카카오 로그인' })
+  async kakaoLogin(@Body() authorizationCode: string) {
+    return await this.authenticationService.kakaoLogin(authorizationCode);
+  }
 
-  // @HttpCode(200)
-  // @Post('/login/naver')
-  // @ApiOperation({ summary: '네이버 로그인' })
-  // async naverLogin(@Body() authorizationCode: string, state: string) {
-  //   return await this.authenticationService.naverLogin(
-  //     authorizationCode,
-  //     state,
-  //   );
-  // }
+  @HttpCode(200)
+  @Post('/login/naver')
+  @ApiOperation({ summary: '네이버 로그인' })
+  async naverLogin(@Body() authorizationCode: string, state: string) {
+    return await this.authenticationService.naverLogin(
+      authorizationCode,
+      state,
+    );
+  }
 
-  // @HttpCode(200)
-  // @Post('/login/google')
-  // @ApiOperation({ summary: '구글 로그인' })
-  // async googleLogin(@Body() authorizationCode: string) {
-  //   return await this.authenticationService.googleLogin(authorizationCode);
-  // }
+  @HttpCode(200)
+  @Post('/login/google')
+  @ApiOperation({ summary: '구글 로그인' })
+  async googleLogin(@Body() authorizationCode: string) {
+    return await this.authenticationService.googleLogin(authorizationCode);
+  }
 
   @UseGuards(JwtAuthenticationGuard)
   @Post('/logout')

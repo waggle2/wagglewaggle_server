@@ -8,6 +8,7 @@ import {
   HttpCode,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -56,6 +57,20 @@ export class UsersController {
     @Body() nickname: string,
   ) {
     return await this.usersService.updateNickname(request.user, nickname);
+  }
+
+  @Patch('/verification')
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '본인인증' })
+  async updateVerificationStatus(
+    @Req() request: RequestWithUser,
+    @Query() queryParams: any,
+  ) {
+    const { imp_uid } = queryParams;
+    return await this.usersService.updateVerificationStatus(
+      request.user,
+      imp_uid,
+    );
   }
 
   @Delete()

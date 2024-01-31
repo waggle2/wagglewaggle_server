@@ -20,13 +20,13 @@ export class Credential {
   @Column({ nullable: true, unique: true })
   email: string | null;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ nullable: true })
   password: string | null;
 
   @Column({ unique: true })
   nickname: string;
 
-  @Column({ type: 'json', name: 'birth_year' })
+  @Column({ name: 'birth_year' })
   birthYear: number;
 
   @Column({ type: 'enum', enum: Gender })

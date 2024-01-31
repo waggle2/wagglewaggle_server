@@ -6,9 +6,13 @@ import { User } from './entities/user.entity';
 import { Credential } from './entities/credential.entity';
 import { UserAuthority } from './entities/user-authority.entity';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Credential, UserAuthority])],
+  imports: [
+    TypeOrmModule.forFeature([User, Credential, UserAuthority]),
+    HttpModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService, RedisCacheService],
   exports: [UsersService],

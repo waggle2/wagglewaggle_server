@@ -1,16 +1,32 @@
 import { Animal } from '@/domain/types/enum/animal.enum';
 import { AuthenticationProvider, Gender } from '@/domain/types/enum/user.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({
     example: 'email',
-    description: '가입 방식',
+    description: '가입 방식(kakao, naver, google, email)',
     required: true,
   })
   @IsString()
   readonly authenticationProvider: AuthenticationProvider;
+
+  @ApiProperty({
+    example: '3145587907',
+    description: '소셜 고유 id',
+    required: false,
+  })
+  @IsString()
+  @ValidateIf((o) => o.authenticationProvider !== 'email')
+  @IsNotEmpty()
+  readonly socialId?: string;
 
   @ApiProperty({
     example: 'asd@gmail.com',
@@ -18,6 +34,8 @@ export class CreateUserDto {
     required: false,
   })
   @IsString()
+  @ValidateIf((o) => o.authenticationProvider === 'email')
+  @IsNotEmpty()
   readonly email?: string;
 
   @ApiProperty({
@@ -26,6 +44,8 @@ export class CreateUserDto {
     required: false,
   })
   @IsString()
+  @ValidateIf((o) => o.authenticationProvider === 'email')
+  @IsNotEmpty()
   readonly password?: string;
 
   @ApiProperty({

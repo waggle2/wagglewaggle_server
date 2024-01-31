@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -11,6 +12,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 import TokenPayload from './interfaces/token-payload.interface';
+import { HttpService } from '@nestjs/axios';
+import { catchError, lastValueFrom, map } from 'rxjs';
 // import { Repository } from 'typeorm';
 // import { InjectRepository } from '@nestjs/typeorm';
 
@@ -20,6 +23,7 @@ export class AuthenticationService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
     // @InjectRepository(Credential)
     // private readonly credentialRepository: Repository<Credential>,
   ) {}
@@ -60,33 +64,267 @@ export class AuthenticationService {
     return user;
   }
 
-  //   // 카카오 로그인
-  //   public async kakaoLogin() {}
+  // 카카오 로그인
+  async kakaoLogin(authorizationCode: string) {
+    const accessToken = await this.getKakaoToken(
+      authorizationCode,
+      process.env.KAKAO_REST_API_KEY,
+    );
+    const kakaoUserData = await this.getKakaoUserData(accessToken);
+    const user = await this.usersService.findBySocialId(kakaoUserData.socialId);
 
-  //   // 네이버 로그인
-  //   public async naverLogin() {}
+    if (user) {
+      const accessCookie = this.getCookieWithAccessToken(user);
+      const refreshCookie = this.getCookieWithRefreshToken(user);
 
-  //   // 구글 로그인
-  //   public async googleLogin() {}
+      return { user, accessCookie, refreshCookie, kakaoUserData };
+    } else {
+      return {
+        user: null,
+        accessCookie: null,
+        refreshCookie: null,
+        kakaoUserData: kakaoUserData,
+      };
+    }
+  }
+
+  // 카카오 로그인 (get token)
+  async getKakaoToken(code: string, client_id: string): Promise<string> {
+    const data = new URLSearchParams();
+    data.append('grant_type', 'authorization_code');
+    data.append('client_id', client_id);
+    data.append('code', code);
+
+    const request = this.httpService
+      .post('https://kauth.kakao.com/oauth/token', data, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      })
+      .pipe(map((res) => res.data?.access_token))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    return await lastValueFrom(request);
+  }
+
+  // 카카오 로그인 (get user info)
+  async getKakaoUserData(
+    accessToken: string,
+  ): Promise<{ socialId: string; nickname: string }> {
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const request = this.httpService
+      .get('https://kapi.kakao.com/v2/user/me', {
+        headers,
+      })
+      .pipe(map((res) => res.data))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    const result = await lastValueFrom(request);
+
+    return {
+      socialId: result.id,
+      nickname: result.kakao_account.profile.nickname,
+    };
+  }
+
+  // 네이버 로그인
+  async naverLogin(authorizationCode: string, state: string) {
+    const accessToken = await this.getNaverToken(
+      authorizationCode,
+      state,
+      process.env.NAVER_CLIENT_ID,
+      process.env.NAVER_CLIENT_SECRET,
+    );
+    const naverUserData = await this.getNaverUserData(accessToken);
+    const user = await this.usersService.findBySocialId(naverUserData.socialId);
+
+    if (user) {
+      const accessCookie = this.getCookieWithAccessToken(user);
+      const refreshCookie = this.getCookieWithRefreshToken(user);
+
+      return { user, accessCookie, refreshCookie, naverUserData };
+    } else {
+      return {
+        user: null,
+        accessCookie: null,
+        refreshCookie: null,
+        naverUserData: naverUserData,
+      };
+    }
+  }
+
+  // 네이버 로그인 (get token)
+  async getNaverToken(
+    code: string,
+    state: string,
+    client_id: string,
+    client_secret: string,
+  ): Promise<string> {
+    const data = new URLSearchParams();
+    data.append('grant_type', 'authorization_code');
+    data.append('client_id', client_id);
+    data.append('client_secret', client_secret);
+    data.append('code', code);
+    data.append('state', state);
+
+    const request = this.httpService
+      .post('https://nid.naver.com/oauth2.0/token', data, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      })
+      .pipe(map((res) => res.data?.access_token))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    return await lastValueFrom(request);
+  }
+
+  // 네이버 로그인 (get user info)
+  async getNaverUserData(
+    accessToken: string,
+  ): Promise<{ socialId: string; nickname: string }> {
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const request = this.httpService
+      .get('https://openapi.naver.com/v1/nid/me', {
+        headers,
+      })
+      .pipe(map((res) => res.data))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    const result = await lastValueFrom(request);
+
+    return {
+      socialId: result.response.id,
+      nickname: result.response.nickname,
+    };
+  }
+
+  // 구글 로그인
+  async googleLogin(authorizationCode: string) {
+    const accessToken = await this.getGoogleToken(
+      authorizationCode,
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+    );
+    const googleUserData = await this.getGoogleUserData(accessToken);
+    const user = await this.usersService.findBySocialId(
+      googleUserData.socialId,
+    );
+
+    if (user) {
+      const accessCookie = this.getCookieWithAccessToken(user);
+      const refreshCookie = this.getCookieWithRefreshToken(user);
+
+      return { user, accessCookie, refreshCookie, googleUserData };
+    } else {
+      return {
+        user: null,
+        accessCookie: null,
+        refreshCookie: null,
+        googleUserData: googleUserData,
+      };
+    }
+  }
+
+  // 구글 로그인 (get token)
+  async getGoogleToken(
+    code: string,
+    client_id: string,
+    client_secret: string,
+  ): Promise<string> {
+    // auth code를 URL 디코딩
+    const decodedCode = decodeURIComponent(code);
+
+    const data = new URLSearchParams();
+    data.append('grant_type', 'authorization_code');
+    data.append('client_id', client_id);
+    data.append('client_secret', client_secret);
+    data.append('code', decodedCode);
+    data.append('redirect_uri', process.env.GOOGLE_REDIRECT_URL);
+
+    const request = this.httpService
+      .post('https://oauth2.googleapis.com/token', data, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      })
+      .pipe(map((res) => res.data?.access_token))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    return await lastValueFrom(request);
+  }
+
+  // 구글 로그인 (get user info)
+  async getGoogleUserData(
+    accessToken: string,
+  ): Promise<{ socialId: string; nickname: string }> {
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const request = this.httpService
+      .get('https://www.googleapis.com/userinfo/v2/me', {
+        headers,
+      })
+      .pipe(map((res) => res.data))
+      .pipe(
+        catchError(() => {
+          throw new ForbiddenException('API not available');
+        }),
+      );
+
+    const result = await lastValueFrom(request);
+
+    return {
+      socialId: result.id,
+      nickname: result.given_name,
+    };
+  }
 
   // 로그아웃 (빈 값의 쿠키 반환)
   async getCookieForLogout() {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
   }
 
-  //   async updatePassword(user: User, password: string, newPassword: string) {
-  //     const isMatch = await this.comparePassword(
-  //       password,
-  //       user.credential.password,
-  //     );
-  //     if (!isMatch) {
-  //       throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
-  //     }
-
-  //     user.credential.password = await this.hashPassword(newPassword);
-
-  //     await this.credentialRepository.save(user.credential);
+  // async updatePassword(user: User, password: string, newPassword: string) {
+  //   const isMatch = await this.comparePassword(
+  //     password,
+  //     user.credential.password,
+  //   );
+  //   if (!isMatch) {
+  //     throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
   //   }
+
+  //   user.credential.password = await this.hashPassword(newPassword);
+
+  //   await this.credentialRepository.save(user.credential);
+  // }
 
   // 비밀번호 해싱
   async hashPassword(password: string): Promise<string> {

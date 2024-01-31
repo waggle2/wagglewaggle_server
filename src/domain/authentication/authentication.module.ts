@@ -7,12 +7,14 @@ import { LocalStrategy } from './passport/local.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './passport/jwt.strategy';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
     PassportModule,
+    HttpModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
