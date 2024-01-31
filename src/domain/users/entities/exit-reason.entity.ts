@@ -1,8 +1,11 @@
 import { ExitReasonEnum } from '@/domain/types/enum/user.enum';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'exit_reasons' })
 export class ExitReason {
+  @PrimaryGeneratedColumn('increment')
+  id: number;
+
   @Column()
   userId: number;
 

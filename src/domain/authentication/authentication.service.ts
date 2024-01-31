@@ -14,8 +14,9 @@ import bcrypt from 'bcrypt';
 import TokenPayload from './interfaces/token-payload.interface';
 import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom, map } from 'rxjs';
-// import { Repository } from 'typeorm';
-// import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Credential } from '../users/entities/credential.entity';
 
 @Injectable()
 export class AuthenticationService {
@@ -24,8 +25,8 @@ export class AuthenticationService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    // @InjectRepository(Credential)
-    // private readonly credentialRepository: Repository<Credential>,
+    @InjectRepository(Credential)
+    private readonly credentialRepository: Repository<Credential>,
   ) {}
 
   // 회원가입
@@ -282,19 +283,23 @@ export class AuthenticationService {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
   }
 
-  // async updatePassword(user: User, password: string, newPassword: string) {
-  //   const isMatch = await this.comparePassword(
-  //     password,
-  //     user.credential.password,
-  //   );
-  //   if (!isMatch) {
-  //     throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
-  //   }
+  // 비밀번호 수정
+  async updatePassword(user: User, password: string, newPassword: string) {
+    const isMatch = await this.comparePassword(
+      password,
+      user.credential.password,
+    );
+    if (!isMatch) {
+      throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+    }
 
-  //   user.credential.password = await this.hashPassword(newPassword);
+    const hashedPassword = await this.hashPassword(newPassword);
 
-  //   await this.credentialRepository.save(user.credential);
-  // }
+    await this.credentialRepository.update(
+      { user },
+      { password: hashedPassword },
+    );
+  }
 
   // 비밀번호 해싱
   async hashPassword(password: string): Promise<string> {
