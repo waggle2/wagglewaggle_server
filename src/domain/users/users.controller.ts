@@ -14,6 +14,7 @@ import { UsersService } from './users.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import JwtAuthenticationGuard from '../authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
+import { ExitReasonDto } from './dto/exit-reason.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -76,8 +77,11 @@ export class UsersController {
   @Delete()
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '회원 탈퇴' })
-  async remove(@Req() request: RequestWithUser) {
+  async remove(
+    @Req() request: RequestWithUser,
+    @Body() exitReasonDto: ExitReasonDto,
+  ) {
     const { user } = request;
-    return await this.usersService.remove(user.id);
+    return await this.usersService.remove(user.id, exitReasonDto);
   }
 }
