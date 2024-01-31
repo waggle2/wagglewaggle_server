@@ -13,6 +13,8 @@ import { State } from '../types/enum/user.enum';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +27,7 @@ export class UsersService {
     private readonly credentialRepository: Repository<Credential>,
     private readonly mailerService: MailerService,
     private readonly redisCacheService: RedisCacheService,
+    private readonly httpService: HttpService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<void> {
@@ -174,6 +177,44 @@ export class UsersService {
   async updateNickname(user: User, nickname: string): Promise<void> {
     user.credential.nickname = nickname;
     await this.credentialRepository.save(user.credential);
+  }
+
+  async updateVerificationStatus(
+    user: User,
+    imp_uid: string,
+  ): Promise<boolean> {
+    // 인증 토큰 발급 받기
+    const getTokenRequest = await lastValueFrom(
+      this.httpService.post(
+        'https://api.iamport.kr/users/getToken',
+        {
+          imp_key: 'imp_apikey',
+          imp_secret:
+            'ekKoeW8RyKuT0zgaZsUtXXTLQ4AhPFW3ZGseDA6bkA5lamv9OqDMnxyeB9wqOsuO9W3Mx9YSJ4dTqJ3f',
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+    const { access_token } = getTokenRequest.data;
+
+    // imp_uid로 인증 정보 조회
+    const getCertificationsRequest = await lastValueFrom(
+      this.httpService.get(`https://api.iamport.kr/certifications/${imp_uid}`, {
+        headers: { Authorization: access_token },
+      }),
+    );
+
+    const certificationsInfo = getCertificationsRequest.data;
+    const { birth } = certificationsInfo;
+
+    user.isVerified = true;
+    user.credential.birthYear = birth;
+    await this.userRepository.save(user);
+    await this.credentialRepository.save(user.credential);
+
+    return true;
   }
 
   async remove(id: number): Promise<void> {
