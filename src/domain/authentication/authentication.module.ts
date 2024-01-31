@@ -8,6 +8,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './passport/jwt.strategy';
 import { HttpModule } from '@nestjs/axios';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Credential } from '../users/entities/credential.entity';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { HttpModule } from '@nestjs/axios';
     UsersModule,
     PassportModule,
     HttpModule,
+    TypeOrmModule.forFeature([Credential]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   HttpCode,
+  Patch,
   Post,
   Req,
   Res,
@@ -103,18 +104,18 @@ export class AuthenticationController {
     return response.sendStatus(200);
   }
 
-  // @Patch()
-  // @UseGuards(JwtAuthenticationGuard)
-  // @ApiOperation({ summary: '비밀번호 수정' })
-  // async update(
-  //   @Req() request: RequestWithUser,
-  //   @Body() password: string,
-  //   newPassword: string,
-  // ) {
-  //   return await this.authenticationService.updatePassword(
-  //     request.user,
-  //     password,
-  //     newPassword,
-  //   );
-  // }
+  @Patch()
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '비밀번호 수정' })
+  async update(
+    @Req() request: RequestWithUser,
+    @Body() password: string,
+    newPassword: string,
+  ) {
+    return await this.authenticationService.updatePassword(
+      request.user,
+      password,
+      newPassword,
+    );
+  }
 }

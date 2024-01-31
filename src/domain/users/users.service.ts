@@ -9,12 +9,14 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserAuthority } from './entities/user-authority.entity';
 import { Credential } from './entities/credential.entity';
-import { State } from '../types/enum/user.enum';
+import { ExitReasonEnum, State } from '../types/enum/user.enum';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { ExitReasonDto } from './dto/exit-reason.dto';
+import { ExitReason } from './entities/exit-reason.entity';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +27,8 @@ export class UsersService {
     private readonly userAuthorityRepository: Repository<UserAuthority>,
     @InjectRepository(Credential)
     private readonly credentialRepository: Repository<Credential>,
+    @InjectRepository(ExitReason)
+    private readonly exitReasonRepository: Repository<ExitReason>,
     private readonly mailerService: MailerService,
     private readonly redisCacheService: RedisCacheService,
     private readonly httpService: HttpService,
@@ -216,10 +220,18 @@ export class UsersService {
     return true;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, exitReasonDto: ExitReasonDto): Promise<void> {
     const user = await this.findById(id);
     user.state = State.WITHDRAWN;
     await this.userRepository.save(user);
     await this.userRepository.softDelete(id);
+
+    const exitReason = new ExitReason();
+    exitReason.userId = id;
+    exitReason.reason = exitReasonDto.reason;
+    if (exitReasonDto.reason === ExitReasonEnum.OTHER) {
+      exitReason.otherReasons = exitReasonDto.otherReasons;
+    }
+    await this.exitReasonRepository.save(exitReason);
   }
 }
