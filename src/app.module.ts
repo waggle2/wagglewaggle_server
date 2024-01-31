@@ -21,6 +21,7 @@ import { mailerConfigFactory } from './config/mailer.config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from './health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
+import { StickerModule } from '@/domain/sticker/sticker.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ReportsModule } from '@/domain/reports/reports.module';
     AuthenticationModule,
     RedisCacheModule,
     ReportsModule,
+    StickerModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],

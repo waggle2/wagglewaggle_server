@@ -59,8 +59,8 @@ export class PostsService {
     }
 
     return {
-      data: posts,
-      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+      posts,
+      total,
     };
   }
 
@@ -88,8 +88,8 @@ export class PostsService {
     }
 
     return {
-      data: hotPosts,
-      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+      hotPosts,
+      total,
     };
   }
 
@@ -122,6 +122,7 @@ export class PostsService {
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('comments.replies', 'replies')
+      .leftJoinAndSelect('comments.stickers', 'stickers')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL')

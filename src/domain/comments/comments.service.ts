@@ -5,15 +5,12 @@ import { Comment } from './entities/comment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostsService } from '../posts/posts.service';
-import { Post } from '@/domain/posts/entities/post.entity';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
-    @InjectRepository(Post)
-    private readonly postsRepository: Repository<Post>,
     private readonly postService: PostsService,
   ) {}
 
@@ -30,6 +27,7 @@ export class CommentsService {
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
+      .leftJoinAndSelect('comment.stickers', 'stickers')
       .where('comment.deleted_at IS NULL')
       .andWhere('comment.id = :id', { id });
 
@@ -46,12 +44,9 @@ export class CommentsService {
     const post = await this.postService.findOne(postId);
     const newComment = this.commentRepository.create({
       ...createCommentDto,
+      // user
       post: { id: post?.id },
     });
-
-    post.commentNum++;
-    await this.postsRepository.save(post);
-
     return await this.commentRepository.save(newComment);
   }
 
@@ -63,12 +58,9 @@ export class CommentsService {
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
+      // user
       parent: { id: parent.id },
     });
-
-    const post = parent.post;
-    post.commentNum++;
-    await this.postsRepository.save(post);
 
     return await this.commentRepository.save(newComment);
   }
