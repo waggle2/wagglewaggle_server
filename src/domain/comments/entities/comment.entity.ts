@@ -10,6 +10,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { Sticker } from '@/domain/sticker/entities/sticker.entity';
 
 @Entity()
 export class Comment {
@@ -41,6 +42,11 @@ export class Comment {
     eager: true,
   })
   replies: Comment[];
+
+  @OneToMany('Sticker', 'comment', {
+    cascade: true,
+  })
+  stickers: Sticker[];
 
   // Todo
   // user: User;
