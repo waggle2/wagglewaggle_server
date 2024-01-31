@@ -64,28 +64,51 @@ export class AuthenticationService {
     return user;
   }
 
-  // 카카오 로그인
-  async kakaoLogin(authorizationCode: string) {
-    const accessToken = await this.getKakaoToken(
-      authorizationCode,
-      process.env.KAKAO_REST_API_KEY,
-    );
-    const kakaoUserData = await this.getKakaoUserData(accessToken);
-    const user = await this.usersService.findBySocialId(kakaoUserData.socialId);
+  // 소셜 로그인
+  async socialLogin(
+    provider: string,
+    authorizationCode: string,
+    state: string,
+  ) {
+    let accessToken;
+    let userData;
 
-    if (user) {
-      const accessCookie = this.getCookieWithAccessToken(user);
-      const refreshCookie = this.getCookieWithRefreshToken(user);
-
-      return { user, accessCookie, refreshCookie, kakaoUserData };
-    } else {
-      return {
-        user: null,
-        accessCookie: null,
-        refreshCookie: null,
-        kakaoUserData: kakaoUserData,
-      };
+    switch (provider) {
+      case 'kakao':
+        accessToken = await this.getKakaoToken(
+          authorizationCode,
+          process.env.KAKAO_REST_API_KEY,
+        );
+        userData = await this.getKakaoUserData(accessToken);
+        break;
+      case 'naver':
+        accessToken = await this.getNaverToken(
+          authorizationCode,
+          state,
+          process.env.NAVER_CLIENT_ID,
+          process.env.NAVER_CLIENT_SECRET,
+        );
+        userData = await this.getNaverUserData(accessToken);
+        break;
+      case 'google':
+        accessToken = await this.getGoogleToken(
+          authorizationCode,
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+        );
+        userData = await this.getGoogleUserData(accessToken);
+        break;
     }
+
+    const user = await this.usersService.findBySocialId(userData.socialId);
+    if (!user) {
+      throw new NotFoundException('회원가입이 필요합니다.', userData);
+    }
+
+    const accessCookie = await this.getCookieWithAccessToken(user);
+    const refreshCookie = await this.getCookieWithRefreshToken(user);
+
+    return { user, accessCookie, refreshCookie, userData };
   }
 
   // 카카오 로그인 (get token)
@@ -136,32 +159,6 @@ export class AuthenticationService {
       socialId: result.id,
       nickname: result.kakao_account.profile.nickname,
     };
-  }
-
-  // 네이버 로그인
-  async naverLogin(authorizationCode: string, state: string) {
-    const accessToken = await this.getNaverToken(
-      authorizationCode,
-      state,
-      process.env.NAVER_CLIENT_ID,
-      process.env.NAVER_CLIENT_SECRET,
-    );
-    const naverUserData = await this.getNaverUserData(accessToken);
-    const user = await this.usersService.findBySocialId(naverUserData.socialId);
-
-    if (user) {
-      const accessCookie = this.getCookieWithAccessToken(user);
-      const refreshCookie = this.getCookieWithRefreshToken(user);
-
-      return { user, accessCookie, refreshCookie, naverUserData };
-    } else {
-      return {
-        user: null,
-        accessCookie: null,
-        refreshCookie: null,
-        naverUserData: naverUserData,
-      };
-    }
   }
 
   // 네이버 로그인 (get token)
@@ -219,33 +216,6 @@ export class AuthenticationService {
       socialId: result.response.id,
       nickname: result.response.nickname,
     };
-  }
-
-  // 구글 로그인
-  async googleLogin(authorizationCode: string) {
-    const accessToken = await this.getGoogleToken(
-      authorizationCode,
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-    );
-    const googleUserData = await this.getGoogleUserData(accessToken);
-    const user = await this.usersService.findBySocialId(
-      googleUserData.socialId,
-    );
-
-    if (user) {
-      const accessCookie = this.getCookieWithAccessToken(user);
-      const refreshCookie = this.getCookieWithRefreshToken(user);
-
-      return { user, accessCookie, refreshCookie, googleUserData };
-    } else {
-      return {
-        user: null,
-        accessCookie: null,
-        refreshCookie: null,
-        googleUserData: googleUserData,
-      };
-    }
   }
 
   // 구글 로그인 (get token)
