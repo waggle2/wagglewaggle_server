@@ -188,9 +188,8 @@ export class UsersService {
       this.httpService.post(
         'https://api.iamport.kr/users/getToken',
         {
-          imp_key: 'imp_apikey',
-          imp_secret:
-            'ekKoeW8RyKuT0zgaZsUtXXTLQ4AhPFW3ZGseDA6bkA5lamv9OqDMnxyeB9wqOsuO9W3Mx9YSJ4dTqJ3f',
+          imp_key: process.env.PORTONE_REST_API_KEY,
+          imp_secret: process.env.PORTONE_REST_API_SECRET,
         },
         {
           headers: { 'Content-Type': 'application/json' },
