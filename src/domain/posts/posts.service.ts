@@ -6,7 +6,10 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
-import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
+import {
+  PostBadRequestException,
+  PostNotFoundException,
+} from '@/exceptions/domain/posts.exception';
 
 @Injectable()
 export class PostsService {
@@ -139,7 +142,7 @@ export class PostsService {
 
   async removeMany(ids: number[]) {
     if (!ids || ids.length === 0)
-      throw new PostNotFoundException('삭제할 게시글이 없습니다');
+      throw new PostBadRequestException('삭제할 게시글이 없습니다');
 
     const result = await this.postRepository.softDelete(ids);
 
