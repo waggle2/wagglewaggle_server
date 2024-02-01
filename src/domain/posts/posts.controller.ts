@@ -11,7 +11,14 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
 import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
@@ -19,19 +26,33 @@ import {
   PageQuery,
   PageSizeQuery,
 } from '@/domain/types/decorators/pagination.decorator';
+import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
+import { Post as PostEntity } from './entities/post.entity';
 
 @Controller('posts')
 @ApiTags('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Post()
   @ApiOperation({ summary: '게시글 생성' })
-  async create(@Body() createPostDto: CreatePostDto) {
+  @ApiCreatedResponse({
+    type: PostEntity,
+    description: '게시글이 성공적으로 생성되었습니다',
+  })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Post()
+  async create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
     return await this.postsService.create(createPostDto);
   }
 
   @ApiOperation({ summary: '전체 게시글 조회' })
+  @ApiOkResponse({
+    type: Array<PostEntity>,
+    description: '게시물 목록을 불러오는 데 성공했습니다',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+  })
   @FindAllDecorator()
   @Get()
   async findAll(
@@ -45,6 +66,9 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
+  @ApiOkResponse({
+    type: Array<PostEntity>,
+  })
   @PageQuery()
   @PageSizeQuery()
   @Get('/hot-posts')
@@ -56,6 +80,9 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
+  @ApiOkResponse({
+    type: Array<PostEntity>,
+  })
   @PageQuery()
   @PageSizeQuery()
   @Get('/deleted-posts')
@@ -66,21 +93,39 @@ export class PostsController {
     return await this.postsService.findDeletedPosts(page, pageSize);
   }
 
-  @Get(':id')
   @ApiOperation({ summary: '단일 게시글 조회' })
+  @ApiOkResponse({
+    type: Post,
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+  })
+  @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.postsService.findOne(+id);
   }
 
-  @Patch(':id')
   @ApiOperation({ summary: '게시글 수정' })
+  @ApiOkResponse({
+    type: Post,
+  })
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+  })
+  @Patch(':id')
   async update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
     return await this.postsService.update(+id, updatePostDto);
   }
 
-  @Delete(':id')
   @ApiOperation({ summary: '게시글 삭제' })
+  @ApiOkResponse()
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+  })
+  @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.postsService.remove(+id);
+    await this.postsService.remove(+id);
+    return { message: '게시글이 성공적으로 삭제되었습니다' };
   }
 }

@@ -34,7 +34,7 @@ export class CreatePostDto {
   readonly isAnonymous: boolean = true;
 
   @ApiProperty({
-    example: 'bear',
+    example: '곰',
     description: '희망 댭변 동물',
     enum: Animal,
   })
@@ -43,7 +43,7 @@ export class CreatePostDto {
   readonly preferredResponseAnimal: Animal;
 
   @ApiProperty({
-    example: '["dating", "advise"]',
+    example: '["연애", "조언해줘"]',
     description: '게시글 태그 목록',
     isArray: true,
     enum: Tag,
