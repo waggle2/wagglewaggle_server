@@ -1,20 +1,32 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { StickerService } from './sticker.service';
 import { CreateStickerDto } from './dto/create-sticker.dto';
 import { UpdateStickerDto } from './dto/update-sticker.dto';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Sticker } from '@/domain/sticker/entities/sticker.entity';
+import { CommentNotFoundException } from '@/exceptions/domain/comments.exception';
+import { StickerNotFoundException } from '@/exceptions/domain/stickers.exception';
 
+@ApiTags('stickers')
 @Controller('stickers')
 export class StickerController {
   constructor(private readonly stickerService: StickerService) {}
 
+  @ApiOperation({ summary: '스티커 생성' })
+  @ApiCreatedResponse({
+    type: Sticker,
+  })
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+  })
   @Post(':commentId')
   async create(
     @Param('commentId') commentId: number,
@@ -23,16 +35,17 @@ export class StickerController {
     return await this.stickerService.create(commentId, createStickerDto);
   }
 
-  @Get()
-  async findAll() {
-    return await this.stickerService.findAll();
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.stickerService.findOne(+id);
-  }
-
+  @ApiOperation({
+    summary: '스티커 수정',
+    description: '다른 동물의 스티커를 선택하고 싶을 때 사용합니다',
+  })
+  @ApiOkResponse({
+    type: Sticker,
+  })
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse({
+    type: StickerNotFoundException,
+  })
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -41,6 +54,13 @@ export class StickerController {
     return await this.stickerService.update(+id, updateStickerDto);
   }
 
+  @ApiOperation({ summary: '스티커 삭제' })
+  @ApiOkResponse({
+    type: Sticker,
+  })
+  @ApiNotFoundResponse({
+    type: StickerNotFoundException,
+  })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.stickerService.remove(+id);

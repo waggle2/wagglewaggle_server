@@ -14,3 +14,7 @@ export enum PollExceptionEnum {
   POLL_NOT_FOUND = '2001',
   POLL_CONFLICT = '2002',
 }
+
+export enum StickerExceptionEnum {
+  STICKER_NOT_FOUND = '3001',
+}
