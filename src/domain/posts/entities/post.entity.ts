@@ -38,6 +38,9 @@ export class Post {
   @Column({ name: 'like_num', default: 0 })
   likeNum: number;
 
+  @Column({ default: 0 })
+  views: number;
+
   @Column({
     type: 'json',
     nullable: true,

@@ -47,7 +47,7 @@ export class CommentsService {
     postId: number,
     createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
-    const post = await this.postService.findOne(postId);
+    const post = await this.postService.findOneWithoutIncrementingViews(postId);
     const newComment = this.commentRepository.create({
       ...createCommentDto,
       // user

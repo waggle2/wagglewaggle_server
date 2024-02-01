@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
@@ -14,6 +14,29 @@ export class PostsService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
   ) {}
+
+  private async findPosts(
+    queryBuilder: SelectQueryBuilder<Post>,
+    page: number,
+    pageSize: number,
+  ): Promise<{ posts: Post[]; total: number }> {
+    let posts: Post[], total: number;
+
+    if (page && pageSize) {
+      [posts, total] = await queryBuilder
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
+      [posts, total] = await queryBuilder.getManyAndCount();
+    }
+
+    return {
+      posts,
+      total,
+    };
+  }
 
   async findAll(
     animal: Animal,
@@ -47,22 +70,7 @@ export class PostsService {
 
     queryBuilder.addOrderBy('post.updated_at', 'DESC');
 
-    let posts: Post[], total: number;
-
-    if (page && pageSize) {
-      [posts, total] = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
-      [posts, total] = await queryBuilder.getManyAndCount();
-    }
-
-    return {
-      posts,
-      total,
-    };
+    return await this.findPosts(queryBuilder, page, pageSize);
   }
 
   async findHotPosts(page: number, pageSize: number) {
@@ -77,21 +85,7 @@ export class PostsService {
       .addSelect('post.comment_num + post.like_num', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
       .addOrderBy('totalScore', 'DESC');
 
-    let hotPosts: Post[], total: number;
-
-    if (page && pageSize) {
-      [hotPosts, total] = await queryBuilder
-        .skip(page * pageSize)
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      [hotPosts, total] = await queryBuilder.getManyAndCount();
-    }
-
-    return {
-      hotPosts,
-      total,
-    };
+    return await this.findPosts(queryBuilder, page, pageSize);
   }
 
   async findDeletedPosts(page: number, pageSize: number) {
@@ -100,25 +94,21 @@ export class PostsService {
       .where('post.deleted_at IS NOT NULL')
       .orderBy('post.updated_at', 'DESC');
 
-    let posts: Post[], total: number;
-
-    if (page && pageSize) {
-      [posts, total] = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
-      [posts, total] = await queryBuilder.getManyAndCount();
-    }
-
-    return {
-      posts,
-      total,
-    };
+    return await this.findPosts(queryBuilder, page, pageSize);
   }
 
   async findOne(id: number): Promise<Post> {
+    const post = await this.findOneWithoutIncrementingViews(id);
+    post.views++;
+    return await this.postRepository.save(post);
+  }
+
+  async create(postData: CreatePostDto) {
+    const newPost = this.postRepository.create({ ...postData, views: 1 });
+    return await this.postRepository.save(newPost);
+  }
+
+  async findOneWithoutIncrementingViews(id: number) {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.poll', 'poll')
@@ -132,13 +122,8 @@ export class PostsService {
     return post;
   }
 
-  async create(postData: CreatePostDto) {
-    const newPost = this.postRepository.create(postData);
-    return await this.postRepository.save(newPost);
-  }
-
   async remove(id: number) {
-    const existingPost = await this.findOne(id);
+    const existingPost = await this.findOneWithoutIncrementingViews(id);
     if (!existingPost) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
     }
@@ -146,8 +131,8 @@ export class PostsService {
   }
 
   async update(id: number, updateData: UpdatePostDto) {
-    await this.findOne(id);
+    await this.findOneWithoutIncrementingViews(id);
     await this.postRepository.update(id, updateData);
-    return this.findOne(id);
+    return this.findOneWithoutIncrementingViews(id);
   }
 }

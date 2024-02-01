@@ -24,7 +24,8 @@ export class PollsService {
   ) {}
 
   async create(postId: number, createPollDto: CreatePollDto) {
-    const post = await this.postsService.findOne(postId);
+    const post =
+      await this.postsService.findOneWithoutIncrementingViews(postId);
     if (post.poll)
       throw new PollConflictException('이미 투표 항목이 존재하는 게시글입니다');
     const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =

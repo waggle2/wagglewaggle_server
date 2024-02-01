@@ -18,7 +18,7 @@ export class FilesService {
     uploadFilesDto: UploadFilesDto,
   ) {
     const { postId } = uploadFilesDto;
-    await this.postsService.findOne(postId);
+    await this.postsService.findOneWithoutIncrementingViews(postId);
     const imageUrls = files.map((file) => file['location']);
     await this.postsRepository.update(postId, { imageUrls });
   }
