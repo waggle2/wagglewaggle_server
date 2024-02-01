@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { Sticker } from '@/domain/sticker/entities/sticker.entity';
@@ -51,11 +52,12 @@ export class Comment {
   // Todo
   // user: User;
   @CreateDateColumn({ name: 'created_at' })
+  @Index()
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
-  deletedAt: Date;
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 }

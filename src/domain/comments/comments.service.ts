@@ -1,28 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostsService } from '../posts/posts.service';
+import { Post } from '@/domain/posts/entities/post.entity';
+import { CommentNotFoundException } from '@/exceptions/domain/comments.exception';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Post)
+    private readonly postsRepository: Repository<Post>,
     private readonly postService: PostsService,
   ) {}
 
   async findAll(): Promise<Comment[]> {
-    const queryBuilder = this.commentRepository
+    return this.commentRepository
       .createQueryBuilder('comment')
-      .where('comment.deleted_at IS NULL');
-
-    return await queryBuilder.getMany();
+      .where('comment.deleted_at IS NULL')
+      .orderBy('comment.created_at', 'ASC')
+      .getMany();
   }
 
-  async findOne(id: number): Promise<Comment | null> {
+  async findOne(id: number): Promise<Comment> {
     const queryBuilder = this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.post', 'post')
@@ -33,7 +37,9 @@ export class CommentsService {
 
     const comment = await queryBuilder.getOne();
 
-    if (!comment) throw new NotFoundException('댓글이 존재하지 않습니다.');
+    if (!comment)
+      throw new CommentNotFoundException('존재하지 않는 댓글입니다');
+
     return comment;
   }
 
@@ -47,14 +53,14 @@ export class CommentsService {
       // user
       post: { id: post?.id },
     });
+
+    await this.updatePostCommentNum(post, 1);
+
     return await this.commentRepository.save(newComment);
   }
 
   async addReply(parentId: number, createCommentDto: CreateCommentDto) {
     const parent = await this.findOne(parentId);
-    if (!parent) {
-      throw new NotFoundException('부모 댓글을 찾을 수 없습니다.');
-    }
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
@@ -62,28 +68,33 @@ export class CommentsService {
       parent: { id: parent.id },
     });
 
+    await this.updatePostCommentNum(parent.post, 1);
+
     return await this.commentRepository.save(newComment);
   }
 
   async remove(id: number) {
     const existingComment = await this.findOne(id);
-    if (!existingComment) {
-      throw new NotFoundException(`Comment with ID ${id} not found.`);
-    }
 
-    await this.commentRepository.update(id, { deletedAt: new Date() });
+    await this.commentRepository.softDelete(id);
 
-    return this.commentRepository.findOneBy({ id });
+    const post = existingComment.parent
+      ? existingComment.parent.post
+      : existingComment.post;
+    await this.updatePostCommentNum(post, -1);
   }
 
   async update(id: number, updateData: UpdateCommentDto) {
-    const existingComment = await this.findOne(id);
-    if (!existingComment) {
-      throw new NotFoundException(`Comment with ID ${id} not found.`);
-    }
-
+    await this.findOne(id);
     await this.commentRepository.update(id, updateData);
-
     return this.findOne(id);
+  }
+
+  private async updatePostCommentNum(
+    post: Post,
+    increment: number,
+  ): Promise<void> {
+    post.commentNum += increment;
+    await this.postsRepository.save(post);
   }
 }

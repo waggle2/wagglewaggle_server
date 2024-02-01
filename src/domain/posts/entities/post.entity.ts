@@ -32,6 +32,12 @@ export class Post {
   @Column({ name: 'is_anonymous' })
   isAnonymous: boolean;
 
+  @Column({ name: 'comment_num', default: 0 })
+  commentNum: number;
+
+  @Column({ name: 'like_num', default: 0 })
+  likeNum: number;
+
   @Column({
     type: 'json',
     nullable: true,
@@ -61,6 +67,7 @@ export class Post {
 
   @OneToOne('Poll', 'post', {
     cascade: true,
+    nullable: true,
     eager: true,
   })
   poll: Poll | null;
