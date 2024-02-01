@@ -15,9 +15,10 @@ import { Category } from '@/domain/categories/entities/category.entity';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
 import { Animal } from '@/domain/types/enum/animal.enum';
+import { Like } from '@/domain/likes/entities/like.entity';
 
 @Entity()
-@Index(['updatedAt', 'commentNum', 'likeNum'])
+@Index(['updatedAt'])
 export class Post {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -30,12 +31,6 @@ export class Post {
 
   @Column({ name: 'is_anonymous' })
   isAnonymous: boolean;
-
-  @Column({ name: 'comment_num', default: 0 })
-  commentNum: number;
-
-  @Column({ name: 'like_num', default: 0 })
-  likeNum: number;
 
   @Column({
     type: 'json',
@@ -53,8 +48,10 @@ export class Post {
   @Column({ name: 'preferred_response_animal', type: 'enum', enum: Animal })
   preferredResponseAnimal: Animal;
 
-  @Column({ type: 'json', nullable: true })
-  likes: number[]; // 좋아요 누른 유저 아이디
+  @OneToMany('Like', 'post', {
+    cascade: true,
+  })
+  likes: Like[];
 
   @OneToMany('Comment', 'post', {
     cascade: true,

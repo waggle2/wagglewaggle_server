@@ -6,6 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Animal } from '@/domain/types/enum/animal.enum';
+import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
 
 @Injectable()
 export class PostsService {
@@ -112,8 +113,8 @@ export class PostsService {
     }
 
     return {
-      data: posts,
-      meta: { total, page, last_page: Math.ceil(total / pageSize) },
+      posts,
+      total,
     };
   }
 
@@ -123,6 +124,7 @@ export class PostsService {
       .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('comments.replies', 'replies')
       .leftJoinAndSelect('comments.stickers', 'stickers')
+      .leftJoinAndSelect('post.likes', 'likes')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL')
@@ -130,7 +132,7 @@ export class PostsService {
 
     const post = await queryBuilder.getOne();
 
-    if (!post) throw new NotFoundException('게시글이 존재하지 않습니다.');
+    if (!post) throw new PostNotFoundException('존재하지 않는 게시글입니다.');
     return post;
   }
 
@@ -140,27 +142,16 @@ export class PostsService {
   }
 
   async remove(id: number) {
-    const existingPost = await this.postRepository.findOne({
-      where: { id, deletedAt: undefined },
-    });
-    if (!existingPost) {
-      throw new NotFoundException(`Post with ID ${id} not found.`);
-    }
-
-    return await this.postRepository.softDelete(id);
-  }
-
-  async update(id: number, updateData: UpdatePostDto) {
-    // 먼저 해당 id의 Post가 존재하는지 확인
     const existingPost = await this.findOne(id);
     if (!existingPost) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
     }
+    return await this.postRepository.softDelete(id);
+  }
 
-    // Post가 존재하면 업데이트 진행
+  async update(id: number, updateData: UpdatePostDto) {
+    await this.findOne(id);
     await this.postRepository.update(id, updateData);
-
-    // 업데이트된 Post 반환
     return this.findOne(id);
   }
 }
