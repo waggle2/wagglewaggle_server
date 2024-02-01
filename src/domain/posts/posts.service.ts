@@ -118,21 +118,17 @@ export class PostsService {
     };
   }
 
-  async findOne(id: number): Promise<Post | null> {
+  async findOne(id: number): Promise<Post> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.comments', 'comments')
-      .leftJoinAndSelect('comments.replies', 'replies')
-      .leftJoinAndSelect('comments.stickers', 'stickers')
-      .leftJoinAndSelect('post.likes', 'likes')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('post.deleted_at IS NULL')
       .andWhere('post.id = :id', { id });
 
     const post = await queryBuilder.getOne();
-
     if (!post) throw new PostNotFoundException('존재하지 않는 게시글입니다.');
+
     return post;
   }
 
