@@ -74,8 +74,8 @@ export class PostsService {
       .createQueryBuilder('post')
       .where('post.deleted_at IS NULL')
       .andWhere('post.updated_at > :date', { date: date48HoursAgo })
-      .addOrderBy('post.comment_num', 'DESC')
-      .addOrderBy('post.like_num', 'DESC');
+      .addSelect('post.comment_num + post.like_num', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
+      .addOrderBy('totalScore', 'DESC');
 
     let hotPosts: Post[], total: number;
 
