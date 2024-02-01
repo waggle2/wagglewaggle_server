@@ -3,5 +3,9 @@ export enum UncatchedExceptionEnum {
 }
 
 export enum PostExceptionEnum {
-  POST_NOT_FOUND = '4001',
+  POST_NOT_FOUND = '0001',
+}
+
+export enum CommentExceptionEnum {
+  COMMENT_NOT_FOUND = '1001',
 }
