@@ -10,52 +10,85 @@ import {
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Comment } from '@/domain/comments/entities/comment.entity';
+import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
 
 @Controller('comments')
 @ApiTags('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @Post(':postId')
   @ApiOperation({ summary: '댓글 생성' })
-  create(
+  @ApiCreatedResponse({
+    type: Comment,
+    description: '댓글 생성 성공',
+  })
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+    description: '존재하지 않는 게시물입니다',
+  })
+  @Post(':postId')
+  async create(
     @Param('postId') postId: string,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return this.commentsService.create(+postId, createCommentDto);
+    return await this.commentsService.create(+postId, createCommentDto);
   }
 
-  @Post('/reply/:commentId')
   @ApiOperation({ summary: '대댓글 생성' })
-  addReply(
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Post('/reply/:commentId')
+  async addReply(
     @Param('commentId') commentId: string,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return this.commentsService.addReply(+commentId, createCommentDto);
+    return await this.commentsService.addReply(+commentId, createCommentDto);
   }
 
-  @Get()
   @ApiOperation({ summary: '전체 댓글 조회' })
-  findAll() {
-    return this.commentsService.findAll();
+  @ApiOkResponse()
+  @Get()
+  async findAll() {
+    return await this.commentsService.findAll();
   }
 
-  @Get(':id')
   @ApiOperation({ summary: '단일 댓글 조회' })
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
+  @ApiOkResponse()
+  @ApiNotFoundResponse()
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.commentsService.findOne(+id);
   }
 
-  @Patch(':id')
   @ApiOperation({ summary: '댓글 수정' })
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
+  @ApiNotFoundResponse()
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return await this.commentsService.update(+id, updateCommentDto);
   }
 
-  @Delete(':id')
   @ApiOperation({ summary: '댓글 삭제' })
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
+  @ApiOkResponse()
+  @ApiNotFoundResponse()
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    await this.commentsService.remove(+id);
+    return { message: '댓글이 성공적으로 삭제되었습니다' };
   }
 }
