@@ -91,6 +91,7 @@ export class PostsService {
   async findDeletedPosts(page: number, pageSize: number) {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
+      .withDeleted()
       .where('post.deleted_at IS NOT NULL')
       .orderBy('post.updated_at', 'DESC');
 
@@ -122,6 +123,12 @@ export class PostsService {
     return post;
   }
 
+  async update(id: number, updateData: UpdatePostDto) {
+    await this.findOneWithoutIncrementingViews(id);
+    await this.postRepository.update(id, updateData);
+    return this.findOneWithoutIncrementingViews(id);
+  }
+
   async remove(id: number) {
     const existingPost = await this.findOneWithoutIncrementingViews(id);
     if (!existingPost) {
@@ -130,9 +137,13 @@ export class PostsService {
     return await this.postRepository.softDelete(id);
   }
 
-  async update(id: number, updateData: UpdatePostDto) {
-    await this.findOneWithoutIncrementingViews(id);
-    await this.postRepository.update(id, updateData);
-    return this.findOneWithoutIncrementingViews(id);
+  async removeMany(ids: number[]) {
+    if (!ids || ids.length === 0)
+      throw new PostNotFoundException('삭제할 게시글이 없습니다');
+
+    const result = await this.postRepository.softDelete(ids);
+
+    if (result.affected === 0)
+      throw new PostNotFoundException('삭제할 게시글이 없습니다');
   }
 }
