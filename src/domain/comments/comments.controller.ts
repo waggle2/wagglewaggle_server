@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -16,10 +17,15 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { Comment } from '@/domain/comments/entities/comment.entity';
 import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
+import {
+  CommentBadRequestException,
+  CommentNotFoundException,
+} from '@/exceptions/domain/comments.exception';
 
 @Controller('comments')
 @ApiTags('comments')
@@ -56,25 +62,44 @@ export class CommentsController {
     return await this.commentsService.addReply(+commentId, createCommentDto);
   }
 
-  @ApiOperation({ summary: '전체 댓글 조회' })
-  @ApiOkResponse()
+  @ApiOperation({ summary: '전체 댓글 조회 및 게시글별 댓글 조회' })
+  @ApiOkResponse({
+    type: Array<Comment>,
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+  })
+  @ApiQuery({
+    name: 'postId',
+    description:
+      '쿼리 파라미터로 게시글 아이디를 넘겨 해당하는 댓글 목록을 조회합니다',
+  })
   @Get()
-  async findAll() {
+  async findAll(@Query('postId') postId: number) {
+    if (postId) return await this.commentsService.findCommentsByPostId(postId);
     return await this.commentsService.findAll();
   }
 
   @ApiOperation({ summary: '단일 댓글 조회' })
-  @ApiOkResponse()
-  @ApiNotFoundResponse()
+  @ApiOkResponse({
+    type: Comment,
+  })
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+  })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.commentsService.findOne(+id);
   }
 
   @ApiOperation({ summary: '댓글 수정' })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    type: Comment,
+  })
   @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+  })
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -84,11 +109,37 @@ export class CommentsController {
   }
 
   @ApiOperation({ summary: '댓글 삭제' })
-  @ApiOkResponse()
-  @ApiNotFoundResponse()
+  @ApiOkResponse({
+    type: String,
+  })
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+  })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.commentsService.remove(+id);
+    return { message: '댓글이 성공적으로 삭제되었습니다' };
+  }
+
+  @ApiOperation({ summary: '댓글 여러 개 삭제' })
+  @ApiOkResponse({
+    type: String,
+  })
+  @ApiBadRequestResponse({
+    type: CommentBadRequestException,
+  })
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+  })
+  @ApiQuery({
+    description: '삭제할 댓글 아이디 리스트',
+    name: 'ids',
+    example: [1, 2],
+    type: Array<number>,
+  })
+  @Delete()
+  async removeMany(@Query('ids') ids: number[]) {
+    await this.commentsService.removeMany(ids);
     return { message: '댓글이 성공적으로 삭제되었습니다' };
   }
 }

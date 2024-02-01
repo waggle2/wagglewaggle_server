@@ -6,7 +6,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostsService } from '../posts/posts.service';
 import { Post } from '@/domain/posts/entities/post.entity';
-import { CommentNotFoundException } from '@/exceptions/domain/comments.exception';
+import {
+  CommentBadRequestException,
+  CommentNotFoundException,
+} from '@/exceptions/domain/comments.exception';
 
 @Injectable()
 export class CommentsService {
@@ -21,21 +24,35 @@ export class CommentsService {
   async findAll(): Promise<Comment[]> {
     return this.commentRepository
       .createQueryBuilder('comment')
+      .leftJoin('comment.post', 'post')
+      .addSelect('post.id', 'postId')
       .where('comment.deleted_at IS NULL')
       .orderBy('comment.created_at', 'ASC')
-      .getMany();
+      .getRawMany();
   }
 
-  async findOne(id: number): Promise<Comment> {
-    const queryBuilder = this.commentRepository
+  async findCommentsByPostId(postId: number): Promise<Comment[]> {
+    await this.postService.findOneWithoutIncrementingViews(postId);
+    return this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.stickers', 'stickers')
       .where('comment.deleted_at IS NULL')
-      .andWhere('comment.id = :id', { id });
+      .andWhere('post.id = :postId', { postId })
+      .orderBy('comment.created_at', 'ASC')
+      .getMany();
+  }
 
-    const comment = await queryBuilder.getOne();
+  async findOne(id: number): Promise<Comment> {
+    const comment = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoinAndSelect('comment.replies', 'replies')
+      .leftJoinAndSelect('comment.stickers', 'stickers')
+      .where('comment.deleted_at IS NULL')
+      .andWhere('comment.id = :id', { id })
+      .getOne();
 
     if (!comment)
       throw new CommentNotFoundException('존재하지 않는 댓글입니다');
@@ -82,6 +99,40 @@ export class CommentsService {
       ? existingComment.parent.post
       : existingComment.post;
     await this.updatePostCommentNum(post, -1);
+  }
+
+  async removeMany(ids: number[]) {
+    if (!ids || ids.length === 0)
+      throw new CommentBadRequestException('삭제할 댓글이 없습니다');
+
+    // 댓글들 찾기
+    const deletedComments = await this.commentRepository
+      .createQueryBuilder('comment')
+      .whereInIds(ids)
+      .leftJoinAndSelect('comment.parent', 'parent')
+      .leftJoinAndSelect('comment.post', 'post')
+      .getMany();
+
+    // 게시글 ID 추출
+    const postIds = deletedComments
+      .map((comment) =>
+        comment.parent ? comment.parent.post.id : comment.post.id,
+      )
+      .filter((postId, index, self) => self.indexOf(postId) === index);
+
+    const result = await this.commentRepository.softDelete(ids);
+
+    if (result.affected === 0)
+      throw new CommentNotFoundException('삭제할 댓글이 없습니다');
+
+    // 게시글들의 댓글 개수 갱신
+    for (const postId of postIds) {
+      const post =
+        await this.postService.findOneWithoutIncrementingViews(postId);
+      if (post) {
+        await this.updatePostCommentNum(post, -1);
+      }
+    }
   }
 
   async update(id: number, updateData: UpdateCommentDto) {
