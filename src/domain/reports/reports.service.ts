@@ -16,7 +16,7 @@ export class ReportsService {
   ) {}
 
   async reportPost(postId: number, createReportDto: CreateReportDto) {
-    await this.postsService.findOne(postId);
+    await this.postsService.findOneWithoutIncrementingViews(postId);
     const postReport = this.reportsRepository.create({
       ...createReportDto,
       // user

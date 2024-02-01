@@ -17,7 +17,8 @@ export class LikesService {
 
   async create(postId: number) {
     // user가 해당 post에 이미 좋아요를 눌렀으면 conflict
-    const post = await this.postsService.findOne(postId);
+    const post =
+      await this.postsService.findOneWithoutIncrementingViews(postId);
     const like = this.likesRepository.create({
       post: { id: post?.id },
     });

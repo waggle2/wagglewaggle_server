@@ -17,6 +17,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { Tag } from '@/domain/types/enum/tags.enum';
@@ -119,13 +120,34 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: '게시글 삭제' })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    type: String,
+  })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
   })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.postsService.remove(+id);
+    return { message: '게시글이 성공적으로 삭제되었습니다' };
+  }
+
+  @ApiOperation({ summary: '게시글 여러 개 삭제' })
+  @ApiOkResponse({
+    type: String,
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+  })
+  @ApiQuery({
+    description: '삭제할 게시글 아이디 리스트',
+    name: 'ids',
+    example: [1, 2],
+    type: Array<number>,
+  })
+  @Delete()
+  async removeMany(@Query('ids') ids: number[]) {
+    await this.postsService.removeMany(ids);
     return { message: '게시글이 성공적으로 삭제되었습니다' };
   }
 }

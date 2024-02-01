@@ -11,3 +11,13 @@ export class CommentNotFoundException extends BaseException {
     );
   }
 }
+
+export class CommentBadRequestException extends BaseException {
+  constructor(message: string) {
+    super(
+      CommentExceptionEnum.COMMENT_BAD_REQUEST,
+      HttpStatus.BAD_REQUEST,
+      message,
+    );
+  }
+}
