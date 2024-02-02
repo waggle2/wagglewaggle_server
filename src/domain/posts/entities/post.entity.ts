@@ -6,19 +6,18 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  ManyToOne,
   OneToOne,
   Index,
 } from 'typeorm';
 import { Comment } from '../../comments/entities/comment.entity';
-import { Category } from '@/domain/categories/entities/category.entity';
 import { Tag } from '@/domain/types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
 import { Animal } from '@/domain/types/enum/animal.enum';
 import { Like } from '@/domain/likes/entities/like.entity';
+import { Category } from '@/domain/types/enum/category.enum';
 
 @Entity()
-@Index(['updatedAt'])
+@Index(['category', 'updatedAt'])
 export class Post {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -57,6 +56,9 @@ export class Post {
   @Column({ name: 'preferred_response_animal', type: 'enum', enum: Animal })
   preferredResponseAnimal: Animal;
 
+  @Column({ type: 'enum', enum: Category, nullable: false })
+  category: Category;
+
   @OneToMany('Like', 'post', {
     cascade: true,
   })
@@ -74,9 +76,6 @@ export class Post {
     eager: true,
   })
   poll: Poll | null;
-
-  @ManyToOne('Category', 'posts')
-  category: Category;
 
   // Todo
   // user: User

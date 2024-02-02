@@ -9,11 +9,19 @@ export class AllExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest();
     const response = ctx.getResponse();
 
+    console.log(exception);
+
     const res =
-      exception instanceof BaseException ? exception : new UncatchedException();
+      exception instanceof BaseException
+        ? exception
+        : new UncatchedException(exception.status, exception.response.message);
 
     res.timestamp = this.formatDate(new Date());
     res.path = request.url;
+
+    if (res instanceof UncatchedException && res.statusCode === 500) {
+      res.message = '현재 이용이 원활하지 않습니다.';
+    }
 
     response.status(res.statusCode).json({
       errorCode: res.errorCode,

@@ -29,6 +29,7 @@ import {
 } from '@/domain/types/decorators/pagination.decorator';
 import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
+import { Category } from '@/domain/types/enum/category.enum';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -60,10 +61,17 @@ export class PostsController {
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
     @Query('tags') tags: Tag | Tag[],
+    @Query('category') category: Category,
     @Query('animal')
     animal: Animal,
   ) {
-    return await this.postsService.findAll(animal, tags, page, pageSize);
+    return await this.postsService.findAll(
+      animal,
+      category,
+      tags,
+      page,
+      pageSize,
+    );
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })

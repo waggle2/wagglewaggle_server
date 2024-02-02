@@ -10,6 +10,7 @@ import {
   PostBadRequestException,
   PostNotFoundException,
 } from '@/exceptions/domain/posts.exception';
+import { Category } from '@/domain/types/enum/category.enum';
 
 @Injectable()
 export class PostsService {
@@ -43,6 +44,7 @@ export class PostsService {
 
   async findAll(
     animal: Animal,
+    category: Category,
     tags: Tag | Tag[],
     page: number,
     pageSize: number,
@@ -54,6 +56,12 @@ export class PostsService {
     if (animal) {
       queryBuilder.andWhere('post.animal = :animal', {
         animal: animal.valueOf(),
+      });
+    }
+
+    if (category) {
+      queryBuilder.andWhere('post.category = :category', {
+        category: category.valueOf(),
       });
     }
 

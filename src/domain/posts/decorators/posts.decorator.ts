@@ -13,6 +13,11 @@ export function FindAllDecorator() {
       description: '검색할 게시글 동물',
     }),
     ApiQuery({
+      name: 'category',
+      required: false,
+      description: '검색할 게시글 카테고리',
+    }),
+    ApiQuery({
       name: 'tags',
       required: false,
       description: '검색할 게시글 태그 목록',
