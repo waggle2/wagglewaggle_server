@@ -16,8 +16,8 @@ import { Post } from '@/domain/posts/entities/post.entity';
 
 @Entity({ name: 'users' })
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({
     name: 'authentication_provider',
@@ -43,13 +43,13 @@ export class User {
   @Column({ type: 'enum', enum: State, default: State.JOINED })
   state: State;
 
-  @Column({ type: 'json' })
+  @Column({ default: 0 })
   points: number;
 
   @Column({ name: 'primary_animal', type: 'enum', enum: Animal })
   primaryAnimal: Animal;
 
-  @Column({ name: 'second_animal', type: 'enum', enum: Animal })
+  @Column({ name: 'second_animal', type: 'enum', enum: Animal, nullable: true })
   secondAnimal: Animal;
 
   @OneToMany('Post', 'user')

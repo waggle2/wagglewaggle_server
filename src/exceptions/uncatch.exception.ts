@@ -7,7 +7,7 @@ export class UncatchedException extends BaseException {
     super(
       UncatchedExceptionEnum.UNCATCHED,
       HttpStatus.INTERNAL_SERVER_ERROR,
-      '현재 이용이 원할하지 않습니다.',
+      '현재 이용이 원활하지 않습니다.',
     );
   }
 }

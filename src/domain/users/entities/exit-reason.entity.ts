@@ -7,7 +7,7 @@ export class ExitReason {
   id: number;
 
   @Column()
-  userId: number;
+  userId: string;
 
   @Column({ type: 'enum', enum: ExitReasonEnum })
   reason: ExitReasonEnum;
