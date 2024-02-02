@@ -14,8 +14,9 @@ export class CreateUserDto {
     example: 'email',
     description: '가입 방식(kakao, naver, google, email)',
     required: true,
+    enum: AuthenticationProvider,
   })
-  @IsString()
+  @IsEnum(AuthenticationProvider)
   readonly authenticationProvider: AuthenticationProvider;
 
   @ApiProperty({
@@ -68,6 +69,7 @@ export class CreateUserDto {
     example: '여성',
     description: '성별(남성, 여성)',
     required: true,
+    enum: Gender,
   })
   @IsEnum(Gender)
   readonly gender: Gender;
@@ -76,6 +78,7 @@ export class CreateUserDto {
     example: '곰',
     description: '동물 자아(곰, 여우, 개, 고양이)',
     required: true,
+    enum: Animal,
   })
   @IsEnum(Animal)
   readonly primaryAnimal: Animal;

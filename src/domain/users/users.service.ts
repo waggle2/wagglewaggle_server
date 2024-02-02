@@ -17,6 +17,7 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { ExitReason } from './entities/exit-reason.entity';
+import { UserNotFoundException } from '@/exceptions/domain/users.exception';
 
 @Injectable()
 export class UsersService {
@@ -51,9 +52,10 @@ export class UsersService {
       socialId: socialId || null,
       primaryAnimal,
     });
+    await this.userRepository.save(user);
 
     const credential = this.credentialRepository.create({
-      user,
+      user: { id: user.id },
       email: email || null,
       password: password || null,
       nickname,
@@ -62,12 +64,10 @@ export class UsersService {
     });
 
     const userAuthority = this.userAuthorityRepository.create({
-      user,
+      user: { id: user.id },
     });
-
     await this.credentialRepository.save(credential);
     await this.userAuthorityRepository.save(userAuthority);
-    await this.userRepository.save(user);
   }
 
   async sendSignupCode(email: string): Promise<void> {
@@ -100,7 +100,7 @@ export class UsersService {
   async sendPasswordResetCode(email: string): Promise<void> {
     const existingUser = await this.findByEmail(email);
     if (!existingUser) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
 
     const emailVerificationCode = Math.floor(Math.random() * 1000000)
@@ -150,6 +150,7 @@ export class UsersService {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .innerJoinAndSelect('user.credential', 'credential')
+      .leftJoinAndSelect('user.authorities', 'authorities')
       .where('credential.email = :email', { email })
       .andWhere('user.deletedAt IS NULL')
       .getOne();
@@ -157,13 +158,13 @@ export class UsersService {
     return user;
   }
 
-  async findById(id: number): Promise<User> {
+  async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
       relations: ['credential', 'authorities'],
     });
     if (!user) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
 
     return user;
@@ -220,7 +221,7 @@ export class UsersService {
     return true;
   }
 
-  async remove(id: number, exitReasonDto: ExitReasonDto): Promise<void> {
+  async remove(id: string, exitReasonDto: ExitReasonDto): Promise<void> {
     const user = await this.findById(id);
     user.state = State.WITHDRAWN;
     await this.userRepository.save(user);

@@ -20,3 +20,12 @@ export enum PollExceptionEnum {
 export enum StickerExceptionEnum {
   STICKER_NOT_FOUND = '3001',
 }
+
+export enum AuthExceptionEnum {
+  USER_UNAUTHORIZED = '4001',
+  SOCIAL_LOGIN_FORBIDDEN = '4003',
+}
+
+export enum UserExceptionEnum {
+  USER_NOT_FOUND = '5001',
+}

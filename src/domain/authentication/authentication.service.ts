@@ -1,8 +1,6 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -10,13 +8,18 @@ import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import TokenPayload from './interfaces/token-payload.interface';
 import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom, map } from 'rxjs';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Credential } from '../users/entities/credential.entity';
+import {
+  SocialLoginForbiddenException,
+  UserUnauthorizedException,
+} from '@/exceptions/domain/authentication.exception';
+import { UserNotFoundException } from '@/exceptions/domain/users.exception';
 
 @Injectable()
 export class AuthenticationService {
@@ -42,16 +45,16 @@ export class AuthenticationService {
         ...registrationData,
         password: hashedPassword,
       });
+    } else {
+      await this.usersService.create(registrationData);
     }
-
-    await this.usersService.create(registrationData);
   }
 
   // 로그인
   async emailLogin(email: string, hashedPassword: string): Promise<User> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
 
     const isMatchPassword = await this.comparePassword(
@@ -59,7 +62,7 @@ export class AuthenticationService {
       user.credential.password,
     );
     if (!isMatchPassword) {
-      throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+      throw new UserUnauthorizedException('비밀번호가 일치하지 않습니다.');
     }
 
     return user;
@@ -103,7 +106,7 @@ export class AuthenticationService {
 
     const user = await this.usersService.findBySocialId(userData.socialId);
     if (!user) {
-      throw new NotFoundException('회원가입이 필요합니다.', userData);
+      return { message: '회원가입이 필요합니다.', userData };
     }
 
     const accessCookie = await this.getCookieWithAccessToken(user);
@@ -118,6 +121,7 @@ export class AuthenticationService {
     data.append('grant_type', 'authorization_code');
     data.append('client_id', client_id);
     data.append('code', code);
+    data.append('redirect_url', process.env.KAKAO_REDIRECT_URL);
 
     const request = this.httpService
       .post('https://kauth.kakao.com/oauth/token', data, {
@@ -128,7 +132,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data?.access_token))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('API not available');
         }),
       );
 
@@ -150,7 +154,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Kakao API not available');
         }),
       );
 
@@ -185,7 +189,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data?.access_token))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Naver API not available');
         }),
       );
 
@@ -207,7 +211,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Naver API not available');
         }),
       );
 
@@ -244,7 +248,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data?.access_token))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Google API not available');
         }),
       );
 
@@ -266,7 +270,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data))
       .pipe(
         catchError(() => {
-          throw new ForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Google API not available');
         }),
       );
 
@@ -280,7 +284,9 @@ export class AuthenticationService {
 
   // 로그아웃 (빈 값의 쿠키 반환)
   async getCookieForLogout() {
-    return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+    const accessCookie = `accessToken=; HttpOnly; Path=/; Max-Age=0`;
+    const refreshCookie = `refreshToken=; HttpOnly; Path=/; Max-Age=0`;
+    return { accessCookie, refreshCookie };
   }
 
   // 비밀번호 수정
@@ -321,7 +327,10 @@ export class AuthenticationService {
       userId: user.id,
       authorities: user.authorities,
     }; // JWT 토큰의 페이로드로 사용될 객체 생성
-    const token = this.jwtService.sign(payload);
+    const token = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME'),
+    });
     return `accessToken=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`; // JWT 토큰을 쿠키 형태로 반환, 쿠키이름=토큰 값, Path=쿠키가 적용되는 URL 경로
   }
 
@@ -329,7 +338,7 @@ export class AuthenticationService {
   async getCookieWithRefreshToken(user: User) {
     const payload: TokenPayload = { userId: user.id };
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      secret: this.configService.get<string>('JWT_SECRET'),
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
     });
     return `refreshToken=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_EXPIRATION_TIME')}`;
