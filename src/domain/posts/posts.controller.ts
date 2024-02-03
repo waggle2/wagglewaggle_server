@@ -47,7 +47,10 @@ export class PostsController {
     return await this.postsService.create(createPostDto);
   }
 
-  @ApiOperation({ summary: '전체 게시글 조회' })
+  @ApiOperation({
+    summary: '전체 게시글 조회 및 검색',
+    description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
+  })
   @ApiOkResponse({
     type: Array<PostEntity>,
     description: '게시물 목록을 불러오는 데 성공했습니다',
@@ -62,10 +65,12 @@ export class PostsController {
     @Query('pageSize') pageSize: number,
     @Query('tags') tags: Tag | Tag[],
     @Query('category') category: Category,
+    @Query('text') text: string,
     @Query('animal')
     animal: Animal,
   ) {
     return await this.postsService.findAll(
+      text,
       animal,
       category,
       tags,

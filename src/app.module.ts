@@ -22,6 +22,7 @@ import { HealthCheckController } from './health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickerModule } from '@/domain/sticker/sticker.module';
 import { LikesModule } from '@/domain/likes/likes.module';
+import { SearchModule } from '@/search/search.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { LikesModule } from '@/domain/likes/likes.module';
     ReportsModule,
     StickerModule,
     LikesModule,
+    SearchModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],

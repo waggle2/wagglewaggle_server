@@ -11,12 +11,14 @@ import {
   PostNotFoundException,
 } from '@/exceptions/domain/posts.exception';
 import { Category } from '@/domain/types/enum/category.enum';
+import { SearchService } from '@/search/search.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    private readonly searchService: SearchService,
   ) {}
 
   private async findPosts(
@@ -43,45 +45,62 @@ export class PostsService {
   }
 
   async findAll(
+    text: string,
     animal: Animal,
     category: Category,
     tags: Tag | Tag[],
     page: number,
     pageSize: number,
   ) {
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .where('post.deleted_at IS NULL');
+    const esQuery = {
+      query: {
+        bool: {
+          must: [],
+        },
+      },
+      sort: [
+        {
+          updatedAt: {
+            order: 'desc',
+          },
+        },
+      ],
+    };
+
+    if (pageSize) {
+      esQuery['from'] = (page - 1) * pageSize;
+      esQuery['size'] = pageSize;
+    }
+
+    if (text) {
+      esQuery.query.bool.must.push({
+        multi_match: {
+          query: text,
+          fields: ['title', 'content'],
+        },
+      });
+    }
 
     if (animal) {
-      queryBuilder.andWhere('post.animal = :animal', {
-        animal: animal.valueOf(),
+      esQuery.query.bool.must.push({
+        match: { preferredResponseAnimal: animal.valueOf() },
       });
     }
 
     if (category) {
-      queryBuilder.andWhere('post.category = :category', {
-        category: category.valueOf(),
-      });
+      esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
     }
 
     if (tags && tags.length > 0) {
       const tagsArray = Array.isArray(tags) ? tags : [tags];
-
-      const tagConditions = tagsArray.map(
-        (tag, index) => `JSON_CONTAINS(post.tags, :tag${index})`,
-      );
-      const parameters = tagsArray.reduce((params, tag, index) => {
-        params[`tag${index}`] = JSON.stringify(tag);
-        return params;
-      }, {});
-
-      queryBuilder.andWhere(`(${tagConditions.join(' AND ')})`, parameters);
+      tagsArray.map((tag: Tag) => {
+        esQuery.query.bool.must.push({
+          match: { tags: tag.valueOf() },
+        });
+      });
     }
 
-    queryBuilder.addOrderBy('post.updated_at', 'DESC');
-
-    return await this.findPosts(queryBuilder, page, pageSize);
+    return await this.searchService.search(esQuery);
   }
 
   async findHotPosts(page: number, pageSize: number) {
@@ -115,11 +134,6 @@ export class PostsService {
     return await this.postRepository.save(post);
   }
 
-  async create(postData: CreatePostDto) {
-    const newPost = this.postRepository.create({ ...postData, views: 1 });
-    return await this.postRepository.save(newPost);
-  }
-
   async findOneWithoutIncrementingViews(id: number) {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
@@ -134,10 +148,23 @@ export class PostsService {
     return post;
   }
 
+  async create(postData: CreatePostDto) {
+    const newPost = this.postRepository.create({ ...postData, views: 1 });
+    const post = await this.postRepository.save(newPost);
+
+    await this.searchService.indexPost(post);
+
+    return post;
+  }
+
   async update(id: number, updateData: UpdatePostDto) {
     await this.findOneWithoutIncrementingViews(id);
     await this.postRepository.update(id, updateData);
-    return this.findOneWithoutIncrementingViews(id);
+
+    const updatedPost = await this.findOneWithoutIncrementingViews(id);
+    await this.searchService.update(id, updatedPost);
+
+    return updatedPost;
   }
 
   async remove(id: number) {
@@ -145,7 +172,8 @@ export class PostsService {
     if (!existingPost) {
       throw new NotFoundException(`Post with ID ${id} not found.`);
     }
-    return await this.postRepository.softDelete(id);
+    await this.postRepository.softDelete(id);
+    await this.searchService.remove(id);
   }
 
   async removeMany(ids: number[]) {
@@ -156,5 +184,7 @@ export class PostsService {
 
     if (result.affected === 0)
       throw new PostNotFoundException('삭제할 게시글이 없습니다');
+
+    await this.searchService.removeMany(ids);
   }
 }
