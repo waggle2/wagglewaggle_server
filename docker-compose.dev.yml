@@ -15,3 +15,26 @@ services:
       - "5002:5000"
     environment:
       NODE_ENV: development
+
+  es01:
+    image: elasticsearch:8.12.0
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    #      - xpack.security.enabled=true  # SSL/TLS
+    #      - xpack.security.transport.ssl.enabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+volumes:
+  data01: {}
