@@ -12,9 +12,11 @@ export class SearchService {
 
   async createIndex() {
     const index = this.configService.get('ES_INDEX');
+    const env = this.configService.get('NODE_ENV');
     const checkIndex = await this.esService.indices.exists({
       index,
     });
+
     if (!checkIndex) {
       await this.esService.indices.create({
         index,
@@ -91,6 +93,15 @@ export class SearchService {
               type: 'date',
             },
           },
+        },
+      });
+    }
+
+    if (env !== 'production') {
+      await this.esService.deleteByQuery({
+        index,
+        query: {
+          match_all: {},
         },
       });
     }

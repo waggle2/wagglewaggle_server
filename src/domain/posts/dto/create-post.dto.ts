@@ -42,6 +42,7 @@ export class CreatePostDto {
 
   @ApiProperty({
     example: '곰',
+    name: 'preferred_response_animal',
     description: '희망 댭변 동물',
     enum: Animal,
   })
