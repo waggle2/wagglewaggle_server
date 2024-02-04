@@ -14,7 +14,8 @@ import { ApiOperation } from '@nestjs/swagger';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import RequestWithUser from './interfaces/request-with-user.interface';
 import { Response } from 'express';
-import JwtAuthenticationGuard from './guards/jwt-authentication.guard';
+import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
+import { RefreshAuthenticationGuard } from './guards/refresh-authentication.guard';
 
 @Controller('authentication')
 export class AuthenticationController {
@@ -42,7 +43,7 @@ export class AuthenticationController {
       await this.authenticationService.getCookieWithRefreshToken(user);
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     user.credential.password = undefined;
-    return response.send(user);
+    return response.send({ message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -62,7 +63,7 @@ export class AuthenticationController {
       return response.send({ message, userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ user });
+    return response.send({ message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -83,7 +84,7 @@ export class AuthenticationController {
       return response.send({ message, userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ user });
+    return response.send({ message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -103,7 +104,7 @@ export class AuthenticationController {
       return response.send({ message, userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ user });
+    return response.send({ message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -130,5 +131,18 @@ export class AuthenticationController {
       password,
       newPassword,
     );
+  }
+
+  @Post('refresh-token')
+  @UseGuards(RefreshAuthenticationGuard)
+  @ApiOperation({ summary: '액세스 토큰 재발급' })
+  async refreshToken(
+    @Req() request: RequestWithUser,
+    @Res() response: Response,
+  ) {
+    const accessCookie =
+      await this.authenticationService.getCookieWithAccessToken(request.user);
+    response.setHeader('Set-Cookie', [accessCookie]);
+    return response.send({ message: '새로운 액세스 토큰이 발급되었습니다.' });
   }
 }

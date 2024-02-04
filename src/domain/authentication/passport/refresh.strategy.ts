@@ -3,25 +3,27 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import TokenPayload from '../interfaces/token-payload.interface';
-import { UsersService } from '@/domain/users/users.service';
+import { AuthenticationService } from '../authentication.service';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private readonly usersService: UsersService) {
+export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
+  constructor(private readonly authenticationService: AuthenticationService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          return request?.cookies?.accessToken;
+          return request?.cookies?.refreshToken;
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: process.env.JWT_REFRESH_SECRET,
       passReqToCallback: true,
     });
   }
   async validate(req: Request, payload: TokenPayload) {
-    const user = await this.usersService.findById(payload.id);
-    req.user = user; // payload(request의 user 프로퍼티와 jwtService.verify()를 통해 검증해준 user 객체를 동일시해야함)
-    return user;
+    const refreshToken = req.cookies['refreshToken'];
+    return this.authenticationService.refreshTokenMatches(
+      refreshToken,
+      payload.id,
+    );
   }
 }

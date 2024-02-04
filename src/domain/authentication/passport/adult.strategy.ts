@@ -18,9 +18,6 @@ export class AdultStrategy extends PassportStrategy(Strategy) {
         (request: Request) => {
           return request?.cookies?.accessToken;
         },
-        (request: Request) => {
-          return request?.cookies?.refreshToken;
-        },
       ]),
       secretOrKey: configService.get('JWT_SECRET'),
       passReqToCallback: true,
@@ -28,7 +25,7 @@ export class AdultStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: TokenPayload): Promise<void> {
-    const user = await this.userService.findById(payload.userId);
+    const user = await this.userService.findById(payload.id);
 
     if (user.isVerified) {
       if (new Date(user.credential.birthYear).getFullYear() <= 1999) {
