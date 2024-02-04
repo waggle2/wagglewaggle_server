@@ -28,6 +28,8 @@ export class AuthenticationService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     @InjectRepository(Credential)
     private readonly credentialRepository: Repository<Credential>,
   ) {}
@@ -324,23 +326,43 @@ export class AuthenticationService {
   // access token 생성, 쿠키 반환
   async getCookieWithAccessToken(user: User) {
     const payload: TokenPayload = {
-      userId: user.id,
+      id: user.id,
       authorities: user.authorities,
-    }; // JWT 토큰의 페이로드로 사용될 객체 생성
-    const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME'),
-    });
-    return `accessToken=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`; // JWT 토큰을 쿠키 형태로 반환, 쿠키이름=토큰 값, Path=쿠키가 적용되는 URL 경로
+    };
+    const token = await this.jwtService.signAsync(payload);
+    return `accessToken=${token}; HttpOnly; Path=/`; // JWT 토큰을 쿠키 형태로 반환
   }
 
   // refresh token 생성, 쿠키 반환
   async getCookieWithRefreshToken(user: User) {
-    const payload: TokenPayload = { userId: user.id };
+    const payload: TokenPayload = { id: user.id };
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
     });
-    return `refreshToken=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_EXPIRATION_TIME')}`;
+
+    // 유저 객체에 refresh token 저장
+    await this.usersService.setCurrentRefreshToken(token, user.id);
+
+    return `refreshToken=${token}; HttpOnly; Path=/`;
+  }
+
+  async refreshTokenMatches(refreshToken: string, refreshUserId: string) {
+    const user = await this.usersService.findById(refreshUserId);
+    // 사용자가 존재하지 않거나 refresh token이 null일 경우 (만료됐을 경우)
+    if (!user || !user.currentRefreshToken) {
+      throw new UserUnauthorizedException('Refresh token expired.');
+    }
+
+    // 유저 DB에 저장된 암호화된 refresh token 값과 받은 refresh token 값 비교
+    const isRefreshTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.currentRefreshToken,
+    );
+    // 사용자가 유효한 리프레시 토큰을 제공했지만, 사용자가 저장한 토큰과 일치하지 않을 때 (탈취되었을 위험)
+    if (!isRefreshTokenMatching) {
+      throw new UserUnauthorizedException('Invalid refresh token.');
+    }
+    return user;
   }
 }

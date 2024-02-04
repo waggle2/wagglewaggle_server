@@ -1,7 +1,7 @@
 import { UserAuthority } from '../../users/entities/user-authority.entity';
 
 interface TokenPayload {
-  userId: string;
+  id: string;
   authorities?: UserAuthority[];
 }
 export default TokenPayload;

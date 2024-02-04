@@ -7,14 +7,14 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class JwtAuthenticationGuard extends AuthGuard('jwt') {
+export class RefreshAuthenticationGuard extends AuthGuard('refresh') {
   async canActivate(context: ExecutionContext) {
     try {
       await super.canActivate(context);
       return true;
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        throw new UserUnauthorizedException('Access token expired.');
+        throw new UserUnauthorizedException('Refresh token expired.');
       } else {
         throw error;
       }
