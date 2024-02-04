@@ -18,6 +18,7 @@ import { lastValueFrom } from 'rxjs';
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { ExitReason } from './entities/exit-reason.entity';
 import { UserNotFoundException } from '@/exceptions/domain/users.exception';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -234,5 +235,22 @@ export class UsersService {
       exitReason.otherReasons = exitReasonDto.otherReasons;
     }
     await this.exitReasonRepository.save(exitReason);
+  }
+
+  // refresh token을 데이터베이스에 저장
+  async setCurrentRefreshToken(
+    refreshToken: string,
+    userId: string,
+  ): Promise<void> {
+    const currentRefreshToken =
+      await this.getCurrentHashedRefreshToken(refreshToken);
+    await this.userRepository.update(userId, {
+      currentRefreshToken: currentRefreshToken,
+    });
+  }
+
+  async getCurrentHashedRefreshToken(refreshToken: string): Promise<string> {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(refreshToken, salt);
   }
 }

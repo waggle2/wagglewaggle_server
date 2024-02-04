@@ -5,10 +5,13 @@ import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './passport/jwt.strategy';
+import { RefreshStrategy } from './passport/refresh.strategy';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '@/domain/users/entities/user.entity';
 import { Credential } from '../users/entities/credential.entity';
+import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
+import { JwtStrategy } from './passport/jwt.strategy';
 
 @Module({
   imports: [
@@ -16,20 +19,25 @@ import { Credential } from '../users/entities/credential.entity';
     UsersModule,
     PassportModule,
     HttpModule,
-    TypeOrmModule.forFeature([Credential]),
+    TypeOrmModule.forFeature([User, Credential]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JMT_SECRET'),
+        secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get('JWT_EXPIRATION_TIME'),
+          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME'),
         },
       }),
     }),
   ],
   controllers: [AuthenticationController],
-  providers: [AuthenticationService, JwtStrategy],
+  providers: [
+    AuthenticationService,
+    JwtStrategy,
+    RefreshStrategy,
+    JwtAuthenticationGuard,
+  ],
   exports: [AuthenticationService],
 })
 export class AuthenticationModule {}

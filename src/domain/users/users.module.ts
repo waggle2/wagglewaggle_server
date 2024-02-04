@@ -8,6 +8,8 @@ import { UserAuthority } from './entities/user-authority.entity';
 import { ExitReason } from './entities/exit-reason.entity';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { HttpModule } from '@nestjs/axios';
+import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -15,7 +17,12 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, RedisCacheService],
+  providers: [
+    UsersService,
+    JwtService,
+    RedisCacheService,
+    JwtAuthenticationGuard,
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}

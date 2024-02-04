@@ -52,6 +52,9 @@ export class User {
   @Column({ name: 'second_animal', type: 'enum', enum: Animal, nullable: true })
   secondAnimal: Animal;
 
+  @Column({ name: 'current_refresh_token', nullable: true })
+  currentRefreshToken: string;
+
   @OneToMany('Post', 'user')
   posts: Post[];
 

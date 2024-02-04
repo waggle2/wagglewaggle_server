@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import JwtAuthenticationGuard from '../authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { ExitReasonDto } from './dto/exit-reason.dto';
+import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 
 @Controller('users')
 @ApiTags('users')
