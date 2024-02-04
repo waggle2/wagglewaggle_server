@@ -9,8 +9,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserAuthority } from './user-authority.entity';
-import { AuthenticationProvider, State } from '@/domain/types/enum/user.enum';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { AuthenticationProvider, State } from '@/@types/enum/user.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import { Credential } from './credential.entity';
 import { Post } from '@/domain/posts/entities/post.entity';
 

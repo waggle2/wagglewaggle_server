@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import { Comment } from '@/domain/comments/entities/comment.entity';
 
 @Entity({ name: 'stickers' })

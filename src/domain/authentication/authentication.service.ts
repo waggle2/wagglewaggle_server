@@ -18,8 +18,8 @@ import { Credential } from '../users/entities/credential.entity';
 import {
   SocialLoginForbiddenException,
   UserUnauthorizedException,
-} from '@/exceptions/domain/authentication.exception';
-import { UserNotFoundException } from '@/exceptions/domain/users.exception';
+} from '@/lib/exceptions/domain/authentication.exception';
+import { UserNotFoundException } from '@/lib/exceptions/domain/users.exception';
 
 @Injectable()
 export class AuthenticationService {

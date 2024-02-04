@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
 import { RedisCacheModule } from '@/domain/redis-cache/redis-cache.module';
-import { SearchModule } from '@/search/search.module';
+import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Post]), RedisCacheModule, SearchModule],

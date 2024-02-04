@@ -4,14 +4,14 @@ import { Post } from './entities/post.entity';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Tag } from '@/domain/types/enum/tags.enum';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Tag } from '@/@types/enum/tags.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import {
   PostBadRequestException,
   PostNotFoundException,
-} from '@/exceptions/domain/posts.exception';
-import { Category } from '@/domain/types/enum/category.enum';
-import { SearchService } from '@/search/search.service';
+} from '@/lib/exceptions/domain/posts.exception';
+import { Category } from '@/@types/enum/category.enum';
+import { SearchService } from '@/domain/search/search.service';
 
 @Injectable()
 export class PostsService {

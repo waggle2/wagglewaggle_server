@@ -1,5 +1,5 @@
-import { Animal } from '@/domain/types/enum/animal.enum';
-import { AuthenticationProvider, Gender } from '@/domain/types/enum/user.enum';
+import { Animal } from '@/@types/enum/animal.enum';
+import { AuthenticationProvider, Gender } from '@/@types/enum/user.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEnum,

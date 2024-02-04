@@ -1,6 +1,6 @@
 import { IsEnum, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ReportReason } from '@/domain/types/enum/report-reason.enum';
+import { ReportReason } from '@/@types/enum/report-reason.enum';
 
 export class CreateReportDto {
   @ApiProperty({

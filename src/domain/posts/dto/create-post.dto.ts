@@ -7,9 +7,9 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { Tag } from '@/domain/types/enum/tags.enum';
-import { Animal } from '@/domain/types/enum/animal.enum';
-import { Category } from '@/domain/types/enum/category.enum';
+import { Tag } from '@/@types/enum/tags.enum';
+import { Animal } from '@/@types/enum/animal.enum';
+import { Category } from '@/@types/enum/category.enum';
 
 export class CreatePostDto {
   @ApiProperty({

@@ -3,7 +3,7 @@ import { applyDecorators } from '@nestjs/common';
 import {
   PageQuery,
   PageSizeQuery,
-} from '@/domain/types/decorators/pagination.decorator';
+} from '@/@types/decorators/pagination.decorator';
 
 export function FindAllDecorator() {
   return applyDecorators(

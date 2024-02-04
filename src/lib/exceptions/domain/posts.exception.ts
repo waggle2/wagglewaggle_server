@@ -1,5 +1,5 @@
-import { BaseException } from '@/exceptions/base.exception';
-import { PostExceptionEnum } from '@/exceptions/exception.enum';
+import { BaseException } from '@/lib/exceptions/base.exception';
+import { PostExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
 
 export class PostNotFoundException extends BaseException {

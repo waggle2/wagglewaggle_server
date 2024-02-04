@@ -1,5 +1,5 @@
-import { BaseException } from '@/exceptions/base.exception';
-import { CommentExceptionEnum } from '@/exceptions/exception.enum';
+import { BaseException } from '@/lib/exceptions/base.exception';
+import { CommentExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
 
 export class CommentNotFoundException extends BaseException {

@@ -20,16 +20,16 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { Tag } from '@/domain/types/enum/tags.enum';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Tag } from '@/@types/enum/tags.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
 import {
   PageQuery,
   PageSizeQuery,
-} from '@/domain/types/decorators/pagination.decorator';
-import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
+} from '@/@types/decorators/pagination.decorator';
+import { PostNotFoundException } from '@/lib/exceptions/domain/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
-import { Category } from '@/domain/types/enum/category.enum';
+import { Category } from '@/@types/enum/category.enum';
 
 @Controller('posts')
 @ApiTags('posts')
