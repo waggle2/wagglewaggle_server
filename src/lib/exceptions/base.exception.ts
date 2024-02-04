@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import { IBaseException } from '@/exceptions/base.exception.interface';
+import { IBaseException } from '@/lib/exceptions/base.exception.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class BaseException extends HttpException implements IBaseException {

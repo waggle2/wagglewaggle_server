@@ -1,5 +1,5 @@
-import { BaseException } from '@/exceptions/base.exception';
-import { AuthExceptionEnum } from '@/exceptions/exception.enum';
+import { BaseException } from '@/lib/exceptions/base.exception';
+import { AuthExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
 
 export class SocialLoginForbiddenException extends BaseException {

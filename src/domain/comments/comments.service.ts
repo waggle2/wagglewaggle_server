@@ -9,7 +9,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import {
   CommentBadRequestException,
   CommentNotFoundException,
-} from '@/exceptions/domain/comments.exception';
+} from '@/lib/exceptions/domain/comments.exception';
 
 @Injectable()
 export class CommentsService {

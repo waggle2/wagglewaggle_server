@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Post, UploadedFiles } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UploadFilesDto } from '@/domain/files/dto/upload-files.dto';
 import { FilesService } from '@/domain/files/files.service';
-import { createS3Client } from '@/config/s3.config';
+import { createS3Client } from '@/lib/config/s3.config';
 import { ConfigService } from '@nestjs/config';
 import { DeleteObjectsCommand } from '@aws-sdk/client-s3';
 import { DeleteFilesDto } from '@/domain/files/dto/delete-files.dto';

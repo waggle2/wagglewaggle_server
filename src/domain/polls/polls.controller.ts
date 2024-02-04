@@ -23,7 +23,7 @@ import { Poll } from '@/domain/polls/entities/poll.entity';
 import {
   PollConflictException,
   PollNotFoundException,
-} from '@/exceptions/domain/polls.exception';
+} from '@/lib/exceptions/domain/polls.exception';
 
 @Controller('polls')
 @ApiTags('polls')

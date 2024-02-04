@@ -5,7 +5,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Gender } from '@/domain/types/enum/user.enum';
+import { Gender } from '@/@types/enum/user.enum';
 import { User } from './user.entity';
 
 @Entity({ name: 'credentials' })

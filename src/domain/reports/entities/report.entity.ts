@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '@/domain/users/entities/user.entity';
-import { ReportReason } from '@/domain/types/enum/report-reason.enum';
+import { ReportReason } from '@/@types/enum/report-reason.enum';
 
 @Entity({ name: 'reports' })
 export class Report {

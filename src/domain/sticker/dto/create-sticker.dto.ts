@@ -1,4 +1,4 @@
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

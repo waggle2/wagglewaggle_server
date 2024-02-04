@@ -1,6 +1,6 @@
-import { PollExceptionEnum } from '@/exceptions/exception.enum';
+import { PollExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
-import { BaseException } from '@/exceptions/base.exception';
+import { BaseException } from '@/lib/exceptions/base.exception';
 
 export class PollConflictException extends BaseException {
   constructor(message: string) {

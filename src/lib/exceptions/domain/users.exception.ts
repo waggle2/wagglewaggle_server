@@ -1,5 +1,5 @@
-import { BaseException } from '@/exceptions/base.exception';
-import { UserExceptionEnum } from '@/exceptions/exception.enum';
+import { BaseException } from '@/lib/exceptions/base.exception';
+import { UserExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
 
 export class UserNotFoundException extends BaseException {

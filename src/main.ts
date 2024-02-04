@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AllExceptionFilter } from '@/filter/exception.filter';
+import { AllExceptionFilter } from '@/lib/filter/exception.filter';
 import * as cookieParser from 'cookie-parser';
 import * as process from 'process';
 

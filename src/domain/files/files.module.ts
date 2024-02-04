@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { FilesController } from './files.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { multerOptionsFactory } from '@/config/multer-options.factory';
+import { multerOptionsFactory } from '@/lib/config/multer-options.factory';
 import { FilesService } from '@/domain/files/files.service';
 import { PostsModule } from '@/domain/posts/posts.module';
 import { TypeOrmModule } from '@nestjs/typeorm';

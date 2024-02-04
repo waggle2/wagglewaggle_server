@@ -1,6 +1,6 @@
-import { StickerExceptionEnum } from '@/exceptions/exception.enum';
+import { StickerExceptionEnum } from '@/lib/exceptions/exception.enum';
 import { HttpStatus } from '@nestjs/common';
-import { BaseException } from '@/exceptions/base.exception';
+import { BaseException } from '@/lib/exceptions/base.exception';
 
 export class StickerNotFoundException extends BaseException {
   constructor(message: string) {

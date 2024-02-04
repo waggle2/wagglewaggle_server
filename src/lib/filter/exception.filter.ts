@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
-import { BaseException } from '@/exceptions/base.exception';
-import { UncatchedException } from '@/exceptions/uncatch.exception';
+import { BaseException } from '@/lib/exceptions/base.exception';
+import { UncatchedException } from '@/lib/exceptions/uncatch.exception';
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {

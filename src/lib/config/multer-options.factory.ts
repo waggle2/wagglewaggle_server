@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import * as mime from 'mime-types';
 import * as multerS3 from 'multer-s3';
-import { createS3Client } from '@/config/s3.config';
+import { createS3Client } from '@/lib/config/s3.config';
 
 export const multerOptionsFactory = (
   configService: ConfigService,

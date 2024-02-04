@@ -1,4 +1,4 @@
-import { ExitReasonEnum } from '@/domain/types/enum/user.enum';
+import { ExitReasonEnum } from '@/@types/enum/user.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString, ValidateIf } from 'class-validator';
 

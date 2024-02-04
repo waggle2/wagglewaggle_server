@@ -10,11 +10,11 @@ import {
   Index,
 } from 'typeorm';
 import { Comment } from '../../comments/entities/comment.entity';
-import { Tag } from '@/domain/types/enum/tags.enum';
+import { Tag } from '@/@types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Animal } from '@/@types/enum/animal.enum';
 import { Like } from '@/domain/likes/entities/like.entity';
-import { Category } from '@/domain/types/enum/category.enum';
+import { Category } from '@/@types/enum/category.enum';
 
 @Entity()
 @Index(['category', 'updatedAt'])

@@ -10,7 +10,7 @@ import { PollItemsService } from '../pollItems/pollItems.service';
 import {
   PollConflictException,
   PollNotFoundException,
-} from '@/exceptions/domain/polls.exception';
+} from '@/lib/exceptions/domain/polls.exception';
 
 @Injectable()
 export class PollsService {

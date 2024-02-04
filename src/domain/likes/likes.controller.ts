@@ -7,7 +7,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { PostNotFoundException } from '@/exceptions/domain/posts.exception';
+import { PostNotFoundException } from '@/lib/exceptions/domain/posts.exception';
 import { Like } from '@/domain/likes/entities/like.entity';
 
 @ApiTags('likes')

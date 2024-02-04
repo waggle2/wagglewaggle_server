@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserAuthority } from './entities/user-authority.entity';
 import { Credential } from './entities/credential.entity';
-import { ExitReasonEnum, State } from '../types/enum/user.enum';
+import { ExitReasonEnum, State } from '@/@types/enum/user.enum';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,7 +17,7 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { ExitReason } from './entities/exit-reason.entity';
-import { UserNotFoundException } from '@/exceptions/domain/users.exception';
+import { UserNotFoundException } from '@/lib/exceptions/domain/users.exception';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

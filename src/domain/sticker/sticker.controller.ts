@@ -11,8 +11,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Sticker } from '@/domain/sticker/entities/sticker.entity';
-import { CommentNotFoundException } from '@/exceptions/domain/comments.exception';
-import { StickerNotFoundException } from '@/exceptions/domain/stickers.exception';
+import { CommentNotFoundException } from '@/lib/exceptions/domain/comments.exception';
+import { StickerNotFoundException } from '@/lib/exceptions/domain/stickers.exception';
 
 @ApiTags('stickers')
 @Controller('stickers')

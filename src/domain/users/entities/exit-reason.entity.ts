@@ -1,4 +1,4 @@
-import { ExitReasonEnum } from '@/domain/types/enum/user.enum';
+import { ExitReasonEnum } from '@/@types/enum/user.enum';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'exit_reasons' })
