@@ -123,14 +123,25 @@ export class AuthenticationController {
   @ApiOperation({ summary: '비밀번호 수정' })
   async updatePassword(
     @Req() request: RequestWithUser,
-    @Body() password: string,
-    newPassword: string,
+    @Body('password') password: string,
+    @Body('newPassword') newPassword: string,
   ) {
-    return await this.authenticationService.updatePassword(
+    await this.authenticationService.updatePassword(
       request.user,
       password,
       newPassword,
     );
+    return { message: '비밀번호가 변경되었습니다.' };
+  }
+
+  @Patch('password-reset')
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    await this.authenticationService.resetPassword(email, newPassword);
+    return { message: '비밀번호가 재설정되었습니다.' };
   }
 
   @Post('refresh-token')

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -19,7 +15,10 @@ import {
   SocialLoginForbiddenException,
   UserUnauthorizedException,
 } from '@/lib/exceptions/domain/authentication.exception';
-import { UserNotFoundException } from '@/lib/exceptions/domain/users.exception';
+import {
+  UserBadRequestException,
+  UserNotFoundException,
+} from '@/lib/exceptions/domain/users.exception';
 
 @Injectable()
 export class AuthenticationService {
@@ -38,7 +37,7 @@ export class AuthenticationService {
   async register(registrationData: CreateUserDto): Promise<void> {
     const { authenticationProvider, email, password } = registrationData;
     if (authenticationProvider === 'email' && (!email || !password)) {
-      throw new BadRequestException('이메일 및 비밀번호가 필요합니다.');
+      throw new UserBadRequestException('이메일 및 비밀번호가 필요합니다.');
     }
 
     if (password) {
@@ -292,19 +291,38 @@ export class AuthenticationService {
   }
 
   // 비밀번호 수정
-  async updatePassword(user: User, password: string, newPassword: string) {
+  async updatePassword(
+    user: User,
+    password: string,
+    newPassword: string,
+  ): Promise<void> {
     const isMatch = await this.comparePassword(
       password,
       user.credential.password,
     );
     if (!isMatch) {
-      throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+      throw new UserUnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
     }
 
     const hashedPassword = await this.hashPassword(newPassword);
 
     await this.credentialRepository.update(
       { user },
+      { password: hashedPassword },
+    );
+  }
+
+  // 비밀번호 재설정
+  async resetPassword(email: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+
+    await this.credentialRepository.update(
+      { email },
       { password: hashedPassword },
     );
   }
