@@ -67,7 +67,7 @@ export class PostsService {
       ],
     };
 
-    if (pageSize) {
+    if (page && pageSize) {
       esQuery['from'] = (page - 1) * pageSize;
       esQuery['size'] = pageSize;
     }

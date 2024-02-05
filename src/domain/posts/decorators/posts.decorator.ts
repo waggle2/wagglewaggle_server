@@ -33,6 +33,6 @@ export function FindAllDecorator() {
       example: ['조언해줘', '수다수다'],
     }),
     PageQuery(),
-    PageSizeQuery,
+    PageSizeQuery(),
   );
 }
