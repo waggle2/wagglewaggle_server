@@ -6,8 +6,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Animal } from '@/domain/types/enum/animal.enum';
-import { ItemType } from '@/domain/types/enum/item-type.enum';
+import { Animal } from '@/@types/enum/animal.enum';
+import { ItemType } from '@/@types/enum/item-type.enum';
 
 @Entity({ name: 'items' })
 export class Item {

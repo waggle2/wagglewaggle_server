@@ -1,8 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsBoolean, IsEnum, IsString, Length } from 'class-validator';
-import { Tag } from '@/domain/types/enum/tags.enum';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  Length,
+} from 'class-validator';
+import { Tag } from '@/@types/enum/tags.enum';
+import { Animal } from '@/@types/enum/animal.enum';
+import { Category } from '@/@types/enum/category.enum';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -34,7 +41,8 @@ export class CreatePostDto {
   readonly isAnonymous: boolean = true;
 
   @ApiProperty({
-    example: 'bear',
+    example: '곰',
+    name: 'preferred_response_animal',
     description: '희망 댭변 동물',
     enum: Animal,
   })
@@ -43,11 +51,25 @@ export class CreatePostDto {
   readonly preferredResponseAnimal: Animal;
 
   @ApiProperty({
-    example: '["dating", "advise"]',
+    example: '["수다수다", "조언해줘"]',
     description: '게시글 태그 목록',
     isArray: true,
+    required: true,
     enum: Tag,
   })
   @IsEnum(Tag, { each: true })
   readonly tags: Tag[];
+
+  @ApiProperty({
+    example: '연애',
+    description: '게시글 카테고리',
+    enum: Category,
+    required: true,
+  })
+  @IsEnum(Category)
+  @IsNotEmpty({
+    message:
+      '"연애", "이별", "짝사랑", "썸", "19" 중 하나의 태그를 선택해야 합니다',
+  })
+  readonly category: Category;
 }

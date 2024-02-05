@@ -1,5 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export default class JwtAuthenticationGuard extends AuthGuard('jwt') {}
+export class JwtAuthenticationGuard extends AuthGuard('jwt') {
+  async canActivate(context: ExecutionContext) {
+    try {
+      await super.canActivate(context);
+      return true;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new UserUnauthorizedException('Access token expired.');
+      } else {
+        throw error;
+      }
+    }
+  }
+}

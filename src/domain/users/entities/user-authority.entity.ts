@@ -5,7 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AuthorityName } from '@/domain/types/enum/user.enum';
+import { AuthorityName } from '@/@types/enum/user.enum';
 import { User } from './user.entity';
 
 @Entity({ name: 'user_authorities' })

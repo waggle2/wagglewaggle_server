@@ -6,18 +6,18 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  ManyToOne,
   OneToOne,
   Index,
 } from 'typeorm';
 import { Comment } from '../../comments/entities/comment.entity';
-import { Category } from '@/domain/categories/entities/category.entity';
-import { Tag } from '@/domain/types/enum/tags.enum';
+import { Tag } from '@/@types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
-import { Animal } from '@/domain/types/enum/animal.enum';
+import { Animal } from '@/@types/enum/animal.enum';
+import { Like } from '@/domain/likes/entities/like.entity';
+import { Category } from '@/@types/enum/category.enum';
 
 @Entity()
-@Index(['updatedAt', 'commentNum', 'likeNum'])
+@Index(['category', 'updatedAt'])
 export class Post {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -37,6 +37,9 @@ export class Post {
   @Column({ name: 'like_num', default: 0 })
   likeNum: number;
 
+  @Column({ default: 0 })
+  views: number;
+
   @Column({
     type: 'json',
     nullable: true,
@@ -53,8 +56,13 @@ export class Post {
   @Column({ name: 'preferred_response_animal', type: 'enum', enum: Animal })
   preferredResponseAnimal: Animal;
 
-  @Column({ type: 'json', nullable: true })
-  likes: number[]; // 좋아요 누른 유저 아이디
+  @Column({ type: 'enum', enum: Category, nullable: false })
+  category: Category;
+
+  @OneToMany('Like', 'post', {
+    cascade: true,
+  })
+  likes: Like[];
 
   @OneToMany('Comment', 'post', {
     cascade: true,
@@ -64,12 +72,10 @@ export class Post {
 
   @OneToOne('Poll', 'post', {
     cascade: true,
+    nullable: true,
     eager: true,
   })
   poll: Poll | null;
-
-  @ManyToOne('Category', 'posts')
-  category: Category;
 
   // Todo
   // user: User

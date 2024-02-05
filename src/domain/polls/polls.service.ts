@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePollDto } from './dto/create-poll.dto';
 import { UpdatePollDto } from './dto/update-poll.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,10 @@ import { Repository } from 'typeorm';
 import { Post } from '../posts/entities/post.entity';
 import { PostsService } from '../posts/posts.service';
 import { PollItemsService } from '../pollItems/pollItems.service';
+import {
+  PollConflictException,
+  PollNotFoundException,
+} from '@/lib/exceptions/domain/polls.exception';
 
 @Injectable()
 export class PollsService {
@@ -20,7 +24,10 @@ export class PollsService {
   ) {}
 
   async create(postId: number, createPollDto: CreatePollDto) {
-    const post = await this.postsService.findOne(postId);
+    const post =
+      await this.postsService.findOneWithoutIncrementingViews(postId);
+    if (post.poll)
+      throw new PollConflictException('이미 투표 항목이 존재하는 게시글입니다');
     const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =
       createPollDto;
 
@@ -50,7 +57,7 @@ export class PollsService {
   async findOne(id: number) {
     const poll = await this.pollsRepository.findOneBy({ id });
     if (!poll) {
-      throw new NotFoundException('해당 투표가 존재하지 않습니다');
+      throw new PollNotFoundException('해당 투표가 존재하지 않습니다');
     }
     return poll;
   }

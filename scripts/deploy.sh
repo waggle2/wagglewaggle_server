@@ -7,16 +7,24 @@ echo "> 프로젝트 폴더로 이동"
 cd $REPOSITORY || exit 1
 
 echo "> git pull"
-git pull origin dev
+git pull origin main || exit 1
 
 echo "> 소스코드 빌드"
 docker-compose -f $DOCKER_COMPOSE_FILE build || exit 1
 
 echo "> 현재 실행중인 컨테이너 확인"
 
+CURRENT_CONTAINER_ES=$(docker ps | grep es01)
 CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5001")
 CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5002")
 
+
+echo "> ES가 꺼져 있으면 배포"
+
+if [ -z "$CURRENT_CONTAINER_ES" ]; then
+  docker-compose -f $DOCKER_COMPOSE_FILE up -d es01 || exit 1
+  sleep 30
+fi
 
 echo "> 5001번 포트에 대한 배포"
 

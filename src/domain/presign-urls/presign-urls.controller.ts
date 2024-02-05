@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PresignUrlsDto } from '@/domain/presign-urls/dto/presign-urls.dto';
-import { createS3Client } from '@/config/s3.config';
+import { createS3Client } from '@/lib/config/s3.config';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 

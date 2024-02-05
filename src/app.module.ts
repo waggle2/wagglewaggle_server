@@ -3,12 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeormConfig } from './config/typeorm.config';
+import { TypeormConfig } from '@/lib/config/typeorm.config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PostsModule } from './domain/posts/posts.module';
 import { CommentsModule } from './domain/comments/comments.module';
 import { PollsModule } from './domain/polls/polls.module';
-import { CategoriesModule } from './domain/categories/categories.module';
 import { PollItemsModule } from './domain/pollItems/pollItems.module';
 import { UsersModule } from './domain/users/users.module';
 import { ItemsModule } from './domain/items/items.module';
@@ -17,9 +16,13 @@ import { PresignUrlsModule } from '@/domain/presign-urls/presign-urls.module';
 import { AuthenticationModule } from './domain/authentication/authentication.module';
 import * as Joi from 'joi';
 import { RedisCacheModule } from './domain/redis-cache/redis-cache.module';
-import { mailerConfigFactory } from './config/mailer.config';
+import { mailerConfigFactory } from '@/lib/config/mailer.config';
 import { RedisModule } from '@nestjs-modules/ioredis';
-import { HealthCheckController } from './health-check/health-check.controller';
+import { HealthCheckController } from '@/domain/health-check/health-check.controller';
+import { ReportsModule } from '@/domain/reports/reports.module';
+import { StickerModule } from '@/domain/sticker/sticker.module';
+import { LikesModule } from '@/domain/likes/likes.module';
+import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
   imports: [
@@ -52,7 +55,6 @@ import { HealthCheckController } from './health-check/health-check.controller';
     PostsModule,
     CommentsModule,
     PollsModule,
-    CategoriesModule,
     PollItemsModule,
     UsersModule,
     ItemsModule,
@@ -60,6 +62,10 @@ import { HealthCheckController } from './health-check/health-check.controller';
     PresignUrlsModule,
     AuthenticationModule,
     RedisCacheModule,
+    ReportsModule,
+    StickerModule,
+    LikesModule,
+    SearchModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],

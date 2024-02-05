@@ -8,8 +8,10 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { Sticker } from '@/domain/sticker/entities/sticker.entity';
 
 @Entity()
 export class Comment {
@@ -34,7 +36,7 @@ export class Comment {
     nullable: true,
   })
   @JoinColumn({ name: 'comment_id' })
-  parent: Comment;
+  parent: Comment | null;
 
   @OneToMany('Comment', 'parent', {
     cascade: true,
@@ -42,14 +44,20 @@ export class Comment {
   })
   replies: Comment[];
 
+  @OneToMany('Sticker', 'comment', {
+    cascade: true,
+  })
+  stickers: Sticker[];
+
   // Todo
   // user: User;
   @CreateDateColumn({ name: 'created_at' })
+  @Index()
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
-  deletedAt: Date;
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 }

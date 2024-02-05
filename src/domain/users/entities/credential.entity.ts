@@ -5,7 +5,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Gender } from '@/domain/types/enum/user.enum';
+import { Gender } from '@/@types/enum/user.enum';
 import { User } from './user.entity';
 
 @Entity({ name: 'credentials' })
@@ -20,13 +20,13 @@ export class Credential {
   @Column({ nullable: true, unique: true })
   email: string | null;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ nullable: true })
   password: string | null;
 
   @Column({ unique: true })
   nickname: string;
 
-  @Column({ type: 'json', name: 'birth_year' })
+  @Column({ name: 'birth_year' })
   birthYear: number;
 
   @Column({ type: 'enum', enum: Gender })
