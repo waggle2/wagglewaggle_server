@@ -23,6 +23,7 @@ echo "> ES가 꺼져 있으면 배포"
 
 if [ -z "$CURRENT_CONTAINER_ES" ]; then
   docker-compose -f $DOCKER_COMPOSE_FILE up -d es01 || exit 1
+  sleep 30
 fi
 
 echo "> 5001번 포트에 대한 배포"
