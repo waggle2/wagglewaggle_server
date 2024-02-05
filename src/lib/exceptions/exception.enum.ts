@@ -28,4 +28,5 @@ export enum AuthExceptionEnum {
 
 export enum UserExceptionEnum {
   USER_NOT_FOUND = '5001',
+  USER_BAD_REQUEST = '5000',
 }

@@ -8,7 +8,7 @@ import {
   HttpCode,
   UseGuards,
   Req,
-  Query,
+  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -23,22 +23,36 @@ export class UsersController {
 
   @HttpCode(200)
   @Post('/email-verification')
-  @ApiOperation({ summary: '이메일 인증코드 전송' })
-  async sendVerificationCode(@Body() email: string) {
-    return await this.usersService.sendSignupCode(email);
+  @ApiOperation({ summary: '회원가입 이메일 인증코드 전송' })
+  async sendSignupCode(@Body('email') email: string) {
+    await this.usersService.sendSignupCode(email);
+    return { message: '회원가입 이메일 인증코드가 전송되었습니다.' };
+  }
+
+  @HttpCode(200)
+  @Post('/email-verification/password')
+  @ApiOperation({ summary: '비밀번호 재설정 이메일 인증코드 전송' })
+  async sendPasswordResetCode(@Body('email') email: string) {
+    await this.usersService.sendPasswordResetCode(email);
+    return { message: '비밀번호 재설정 이메일 인증코드가 전송되었습니다.' };
   }
 
   @HttpCode(200)
   @Post('/email-verification/confirm')
   @ApiOperation({ summary: '이메일 인증코드 확인' })
-  async verifyEmail(@Body() email: string, verificationCode: number) {
-    return await this.usersService.verifyEmail(email, verificationCode);
+  async verifyEmail(
+    @Body('email') email: string,
+    @Body('verificationCode') verificationCode: number,
+  ) {
+    const result = await this.usersService.verifyEmail(email, verificationCode);
+    return { verified: result };
   }
 
-  @Get('/nickname-check')
+  @Get('/nickname-check/:nickname')
   @ApiOperation({ summary: '닉네임 중복 확인' })
-  async checkNickname(@Body() nickname: string) {
-    return await this.usersService.checkNickname(nickname);
+  async checkNickname(@Param('nickname') nickname: string) {
+    const result = await this.usersService.checkNickname(nickname);
+    return { available: result };
   }
 
   @Get()
@@ -55,22 +69,22 @@ export class UsersController {
   @ApiOperation({ summary: '닉네임 수정' })
   async updateNickname(
     @Req() request: RequestWithUser,
-    @Body() nickname: string,
+    @Body('nickname') nickname: string,
   ) {
-    return await this.usersService.updateNickname(request.user, nickname);
+    await this.usersService.updateNickname(request.user, nickname);
+    return { message: '닉네임이 변경되었습니다.' };
   }
 
-  @Patch('/verification')
+  @Patch('/verification/:impUid')
   @UseGuards(JwtAuthenticationGuard)
-  @ApiOperation({ summary: '본인인증' })
+  @ApiOperation({ summary: '본인 인증' })
   async updateVerificationStatus(
     @Req() request: RequestWithUser,
-    @Query() queryParams: any,
+    @Param('impUid') impUid: string,
   ) {
-    const { imp_uid } = queryParams;
     return await this.usersService.updateVerificationStatus(
       request.user,
-      imp_uid,
+      impUid,
     );
   }
 
@@ -82,6 +96,7 @@ export class UsersController {
     @Body() exitReasonDto: ExitReasonDto,
   ) {
     const { user } = request;
-    return await this.usersService.remove(user.id, exitReasonDto);
+    await this.usersService.remove(user.id, exitReasonDto);
+    return { message: '회원 탈퇴가 완료되었습니다.' };
   }
 }

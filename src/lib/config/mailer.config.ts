@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { MailerOptions } from '@nestjs-modules/mailer';
+import * as path from 'path';
 
 export async function mailerConfigFactory(
   configService: ConfigService,
@@ -18,7 +19,7 @@ export async function mailerConfigFactory(
       from: `"와글와글" <${configService.get<string>('GMAIL_USER')}>`,
     },
     template: {
-      dir: __dirname + '/templates',
+      dir: path.join(__dirname + '/../templates'),
       adapter: new HandlebarsAdapter(),
       options: {
         strict: true,

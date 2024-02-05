@@ -292,7 +292,11 @@ export class AuthenticationService {
   }
 
   // 비밀번호 수정
-  async updatePassword(user: User, password: string, newPassword: string) {
+  async updatePassword(
+    user: User,
+    password: string,
+    newPassword: string,
+  ): Promise<void> {
     const isMatch = await this.comparePassword(
       password,
       user.credential.password,
@@ -305,6 +309,21 @@ export class AuthenticationService {
 
     await this.credentialRepository.update(
       { user },
+      { password: hashedPassword },
+    );
+  }
+
+  // 비밀번호 재설정
+  async resetPassword(email: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+
+    await this.credentialRepository.update(
+      { email },
       { password: hashedPassword },
     );
   }
