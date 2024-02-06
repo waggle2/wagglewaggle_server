@@ -1,11 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsString,
   Length,
+  ValidateNested,
 } from 'class-validator';
 import { Tag } from '@/@types/enum/tags.enum';
 import { Animal } from '@/@types/enum/animal.enum';
@@ -72,4 +74,14 @@ export class CreatePostDto {
       '"연애", "이별", "짝사랑", "썸", "19" 중 하나의 태그를 선택해야 합니다',
   })
   readonly category: Category;
+
+  @ApiProperty({
+    name: 'image_urls',
+    description:
+      '업로드할 이미지 url 배열, S3에 업로드하고 반환되는 이미지 url들을 담습니다',
+    type: [String],
+  })
+  @IsArray()
+  @Expose({ name: 'image_urls' })
+  readonly imageUrls: string[];
 }

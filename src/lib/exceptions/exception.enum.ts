@@ -5,6 +5,7 @@ export enum UncatchedExceptionEnum {
 export enum PostExceptionEnum {
   // 400
   POST_BAD_REQUEST = '0000',
+  POST_ALREADY_DELETED = '0001',
 
   // 403
   AUTHOR_DIFFERENT_USER = '0030',
@@ -16,6 +17,7 @@ export enum PostExceptionEnum {
 export enum CommentExceptionEnum {
   // 400
   COMMENT_BAD_REQUEST = '1000',
+  COMMENT_ALREADY_DELETED = '1001',
 
   // 403
   AUTHOR_DIFFERENT_USER = '1030',

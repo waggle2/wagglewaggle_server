@@ -21,3 +21,23 @@ export class CommentBadRequestException extends BaseException {
     );
   }
 }
+
+export class CommentAuthorDifferentException extends BaseException {
+  constructor(message: string) {
+    super(
+      CommentExceptionEnum.AUTHOR_DIFFERENT_USER,
+      HttpStatus.FORBIDDEN,
+      message,
+    );
+  }
+}
+
+export class CommentAlreadyDeletedException extends BaseException {
+  constructor(message: string) {
+    super(
+      CommentExceptionEnum.COMMENT_ALREADY_DELETED,
+      HttpStatus.BAD_REQUEST,
+      message,
+    );
+  }
+}

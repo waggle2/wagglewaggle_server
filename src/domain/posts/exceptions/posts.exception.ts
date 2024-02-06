@@ -13,11 +13,21 @@ export class PostBadRequestException extends BaseException {
     super(PostExceptionEnum.POST_BAD_REQUEST, HttpStatus.BAD_REQUEST, message);
   }
 }
-export class PostAuthorDifferentUserException extends BaseException {
+export class PostAuthorDifferentException extends BaseException {
   constructor(message: string) {
     super(
       PostExceptionEnum.AUTHOR_DIFFERENT_USER,
       HttpStatus.FORBIDDEN,
+      message,
+    );
+  }
+}
+
+export class PostAlreadyDeletedException extends BaseException {
+  constructor(message: string) {
+    super(
+      PostExceptionEnum.POST_ALREADY_DELETED,
+      HttpStatus.BAD_REQUEST,
       message,
     );
   }
