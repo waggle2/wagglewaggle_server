@@ -22,7 +22,7 @@ export class PollItem {
   poll: Poll;
 
   @Column({ name: 'user_ids', type: 'json' })
-  userIds: string[];
+  userIds: string[] = [];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

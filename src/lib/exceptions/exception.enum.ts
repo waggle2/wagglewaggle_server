@@ -27,8 +27,15 @@ export enum CommentExceptionEnum {
 }
 
 export enum PollExceptionEnum {
-  POLL_NOT_FOUND = '2001',
-  POLL_CONFLICT = '2002',
+  // 403
+  AUTHOR_DIFFERENT_USER = '2030',
+
+  // 404
+  POLL_NOT_FOUND = '2040',
+
+  // 409
+  POLL_CONFLICT = '2090',
+  ALREADY_VOTE = '2091',
 }
 
 export enum StickerExceptionEnum {
@@ -43,4 +50,12 @@ export enum AuthExceptionEnum {
 export enum UserExceptionEnum {
   USER_NOT_FOUND = '5001',
   USER_BAD_REQUEST = '5000',
+}
+
+export enum LikeExceptionEnum {
+  // 403
+  DIFFERENT_USER = '6030',
+
+  // 409
+  ALREADY_LIKE = '6090',
 }
