@@ -15,15 +15,17 @@ export class Report {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @ManyToOne('User', 'reports')
-  @JoinColumn({ name: 'reporter_id' })
+  @ManyToOne('User', 'reports', {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'reporter_id', referencedColumnName: 'id' })
   reporter: User;
 
-  @Column({ name: 'post_id', nullable: true })
-  postId: number | null;
+  @Column({ name: 'post_id' })
+  postId: number;
 
-  @Column({ name: 'comment_id', nullable: true })
-  commentId: number | null;
+  @Column({ name: 'comment_id' })
+  commentId: number;
 
   @Column()
   content: string;
@@ -32,6 +34,7 @@ export class Report {
     name: 'reason',
     type: 'enum',
     enum: ReportReason,
+    nullable: false,
   })
   reason: ReportReason;
 

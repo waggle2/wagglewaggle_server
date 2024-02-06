@@ -14,17 +14,17 @@ export class Sticker {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  // Todo: 나중에 nullable false로
-  @Column({ name: 'user_id', nullable: true })
-  userId: number | null;
+  @Column({ name: 'user_id', nullable: false })
+  userId: string;
 
   @ManyToOne('Comment', 'stickers', {
+    nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'comment_id' })
   comment: Comment;
 
-  @Column({ type: 'enum', enum: Animal })
+  @Column({ type: 'enum', enum: Animal, nullable: false })
   animal: Animal;
 
   @CreateDateColumn({ name: 'created_at' })

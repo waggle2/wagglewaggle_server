@@ -12,11 +12,12 @@ export class Like {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  // Todo
-  @Column({ name: 'user_id', nullable: true })
-  userId: number | null;
+  @Column({ name: 'user_id', nullable: false })
+  userId: string;
 
-  @ManyToOne('Post', 'likes')
-  @JoinColumn({ name: 'post_id' })
+  @ManyToOne('Post', 'likes', {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'post_id', referencedColumnName: 'id' })
   post: Post;
 }
