@@ -21,7 +21,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Comment } from '@/domain/comments/entities/comment.entity';
-import { PostNotFoundException } from '@/lib/exceptions/domain/posts.exception';
+import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import {
   CommentBadRequestException,
   CommentNotFoundException,

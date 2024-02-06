@@ -3,12 +3,24 @@ export enum UncatchedExceptionEnum {
 }
 
 export enum PostExceptionEnum {
+  // 400
   POST_BAD_REQUEST = '0000',
-  POST_NOT_FOUND = '0004',
+
+  // 403
+  AUTHOR_DIFFERENT_USER = '0030',
+
+  // 404
+  POST_NOT_FOUND = '0040',
 }
 
 export enum CommentExceptionEnum {
+  // 400
   COMMENT_BAD_REQUEST = '1000',
+
+  // 403
+  AUTHOR_DIFFERENT_USER = '1030',
+
+  // 404
   COMMENT_NOT_FOUND = '1004',
 }
 
