@@ -186,3 +186,45 @@ export class PostsController {
     return { message: '게시글이 성공적으로 삭제되었습니다' };
   }
 }
+
+@ApiTags('likes')
+@Controller('likes')
+export class LikesController {
+  constructor(private readonly postsService: PostsService) {}
+
+  @ApiOperation({ summary: '좋아요' })
+  @ApiCreatedResponse({
+    type: String,
+    description: '좋아요 성공',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Post(':postId')
+  async likePost(@Req() req: RequestWithUser, @Param('postId') postId: string) {
+    const { user } = req;
+    await this.postsService.likePost(user, +postId);
+    return { message: '성공적으로 처리되었습니다' };
+  }
+
+  @ApiOperation({
+    summary: '좋아요 취소',
+    description: '좋아요 아이디를 받아 삭제합니다',
+  })
+  @ApiOkResponse({
+    type: String,
+    description: '좋아요 취소 성공',
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+    description: '존재하지 않는 게시글입니다',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Delete(':postId')
+  async cancelLike(
+    @Req() req: RequestWithUser,
+    @Param('postId') postId: string,
+  ) {
+    const { user } = req;
+    await this.postsService.cancelLike(user, +postId);
+    return { message: '좋아요가 취소되었습니다.' };
+  }
+}

@@ -15,7 +15,6 @@ import { Comment } from '../../comments/entities/comment.entity';
 import { Tag } from '@/@types/enum/tags.enum';
 import { Poll } from '@/domain/polls/entities/poll.entity';
 import { Animal } from '@/@types/enum/animal.enum';
-import { Like } from '@/domain/likes/entities/like.entity';
 import { Category } from '@/@types/enum/category.enum';
 import { User } from '@/domain/users/entities/user.entity';
 
@@ -36,9 +35,6 @@ export class Post {
 
   @Column({ name: 'comment_num', default: 0 })
   commentNum: number;
-
-  @Column({ name: 'like_num', default: 0 })
-  likeNum: number;
 
   @Column({ default: 0 })
   views: number;
@@ -65,10 +61,8 @@ export class Post {
   @Column({ type: 'enum', enum: Category, nullable: false })
   category: Category;
 
-  @OneToMany('Like', 'post', {
-    cascade: true,
-  })
-  likes: Like[];
+  @Column({ type: 'simple-array', nullable: true })
+  likes: string[];
 
   @OneToMany('Comment', 'post', {
     cascade: true,

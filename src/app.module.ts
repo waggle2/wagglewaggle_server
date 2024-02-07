@@ -21,7 +21,6 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from '@/domain/health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickerModule } from '@/domain/sticker/sticker.module';
-import { LikesModule } from '@/domain/likes/likes.module';
 import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
@@ -64,7 +63,6 @@ import { SearchModule } from '@/domain/search/search.module';
     RedisCacheModule,
     ReportsModule,
     StickerModule,
-    LikesModule,
     SearchModule,
   ],
   controllers: [AppController, HealthCheckController],

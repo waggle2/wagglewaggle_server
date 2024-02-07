@@ -16,6 +16,10 @@ import { Category } from '@/@types/enum/category.enum';
 import { SearchService } from '@/domain/search/search.service';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
+import {
+  AlreadyLikeException,
+  LikeDifferentUserException,
+} from '@/domain/posts/exceptions/likes.exception';
 
 @Injectable()
 export class PostsService {
@@ -249,5 +253,30 @@ export class PostsService {
       throw new PostNotFoundException('삭제할 게시물이 없습니다');
 
     await this.searchService.removeMany(ids);
+  }
+
+  async likePost(user: User, postId: number) {
+    const post = await this.findOneWithoutIncrementingViews(postId);
+
+    if (!post.likes) {
+      post.likes = [user.id];
+    } else {
+      if (post.likes.includes(user.id)) {
+        throw new AlreadyLikeException('이미 좋아요를 누른 게시물입니다');
+      }
+      post.likes.push(user.id);
+    }
+
+    await this.postRepository.save(post);
+  }
+
+  async cancelLike(user: User, postId: number) {
+    const post = await this.findOneWithoutIncrementingViews(postId);
+
+    if (!post.likes.includes(user.id))
+      throw new LikeDifferentUserException('잘못된 접근입니다');
+
+    post.likes = post.likes.filter((userId) => userId !== user.id);
+    await this.postRepository.save(post);
   }
 }
