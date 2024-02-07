@@ -20,3 +20,9 @@ export class UserUnauthorizedException extends BaseException {
     );
   }
 }
+
+export class UserReportForbiddenException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.REPORT_FORBIDDEN, HttpStatus.FORBIDDEN, message);
+  }
+}

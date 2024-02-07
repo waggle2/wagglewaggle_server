@@ -7,9 +7,13 @@ import { Repository } from 'typeorm';
 import { PostsService } from '../posts/posts.service';
 import { Post } from '@/domain/posts/entities/post.entity';
 import {
+  CommentAlreadyDeletedException,
+  CommentAuthorDifferentException,
   CommentBadRequestException,
   CommentNotFoundException,
-} from '@/lib/exceptions/domain/comments.exception';
+} from '@/domain/comments/exceptions/comments.exception';
+import { User } from '@/domain/users/entities/user.entity';
+import { AuthorityName } from '@/@types/enum/user.enum';
 
 @Injectable()
 export class CommentsService {
@@ -35,7 +39,8 @@ export class CommentsService {
     await this.postService.findOneWithoutIncrementingViews(postId);
     return this.commentRepository
       .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoinAndSelect('comment.author', 'author')
+      .leftJoin('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.stickers', 'stickers')
       .where('comment.deleted_at IS NULL')
@@ -47,6 +52,7 @@ export class CommentsService {
   async findOne(id: number): Promise<Comment> {
     const comment = await this.commentRepository
       .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.author', 'author')
       .leftJoinAndSelect('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.stickers', 'stickers')
@@ -61,14 +67,15 @@ export class CommentsService {
   }
 
   async create(
+    user: User,
     postId: number,
     createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
     const post = await this.postService.findOneWithoutIncrementingViews(postId);
     const newComment = this.commentRepository.create({
       ...createCommentDto,
-      // user
-      post: { id: post?.id },
+      author: { id: user.id },
+      post: { id: post.id },
     });
 
     await this.updatePostCommentNum(post, 1);
@@ -76,12 +83,16 @@ export class CommentsService {
     return await this.commentRepository.save(newComment);
   }
 
-  async addReply(parentId: number, createCommentDto: CreateCommentDto) {
+  async addReply(
+    user: User,
+    parentId: number,
+    createCommentDto: CreateCommentDto,
+  ) {
     const parent = await this.findOne(parentId);
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
-      // user
+      author: { id: user.id },
       parent: { id: parent.id },
     });
 
@@ -90,8 +101,21 @@ export class CommentsService {
     return await this.commentRepository.save(newComment);
   }
 
-  async remove(id: number) {
+  async remove(user: User, id: number) {
     const existingComment = await this.findOne(id);
+
+    const userAuthorities = user.authorities.map(
+      (authority) => authority.authorityName,
+    );
+
+    const isAuthorOrAdmin =
+      user.id === existingComment.author.id ||
+      userAuthorities.includes(AuthorityName.ADMIN);
+
+    if (!isAuthorOrAdmin)
+      throw new CommentAuthorDifferentException(
+        '댓글을 삭제할 권한이 없습니다',
+      );
 
     await this.commentRepository.softDelete(id);
 
@@ -101,20 +125,35 @@ export class CommentsService {
     await this.updatePostCommentNum(post, -1);
   }
 
-  async removeMany(ids: number[]) {
+  async removeMany(user: User, ids: number[]) {
     if (!ids || ids.length === 0)
       throw new CommentBadRequestException('삭제할 댓글이 없습니다');
 
-    // 댓글들 찾기
     const deletedComments = await this.commentRepository
       .createQueryBuilder('comment')
-      .whereInIds(ids)
+      .leftJoinAndSelect('comment.author', 'author')
+      .withDeleted()
+      .where('comment.deleted_at IS NOT NULL')
+      .getMany();
+
+    const deletedCommentsIds = deletedComments.map((post) => post.id);
+
+    for (const id of ids) {
+      if (deletedCommentsIds.includes(id)) {
+        throw new CommentAlreadyDeletedException('잘못된 접근입니다');
+      }
+    }
+
+    const comments = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.author', 'author')
       .leftJoinAndSelect('comment.parent', 'parent')
       .leftJoinAndSelect('comment.post', 'post')
+      .whereInIds(ids)
       .getMany();
 
     // 게시글 ID 추출
-    const postIds = deletedComments
+    const postIds = comments
       .map((comment) =>
         comment.parent ? comment.parent.post.id : comment.post.id,
       )
@@ -135,8 +174,14 @@ export class CommentsService {
     }
   }
 
-  async update(id: number, updateData: UpdateCommentDto) {
-    await this.findOne(id);
+  async update(user: User, id: number, updateData: UpdateCommentDto) {
+    const comment = await this.findOne(id);
+
+    if (user.id !== comment.author.id)
+      throw new CommentAuthorDifferentException(
+        '댓글을 수정할 권한이 없습니다',
+      );
+
     await this.commentRepository.update(id, updateData);
     return this.findOne(id);
   }

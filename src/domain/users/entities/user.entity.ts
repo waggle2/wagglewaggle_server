@@ -55,11 +55,11 @@ export class User {
   @Column({ name: 'current_refresh_token', nullable: true })
   currentRefreshToken: string;
 
-  @OneToMany('Post', 'user')
+  @OneToMany('Post', 'author')
   posts: Post[];
 
-  // @OneToMany(() => Comment, (comment) => comment.user)
-  // comments: Comment[];
+  @OneToMany('Comment', 'author')
+  comments: Comment[];
 
   // @OneToMany(() => Message, (message) => message.user)
   // messages: Message[];
@@ -67,7 +67,7 @@ export class User {
   // @OneToMany(() => Item, (item) => item.user)
   // items: Item[];
 
-  // @OneToMany(() => Sticker, (sticker) => sticker.user)
+  // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];
 
   // @Column({

@@ -4,66 +4,75 @@ import { UpdatePollDto } from './dto/update-poll.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Poll } from './entities/poll.entity';
 import { Repository } from 'typeorm';
-import { Post } from '../posts/entities/post.entity';
 import { PostsService } from '../posts/posts.service';
 import { PollItemsService } from '../pollItems/pollItems.service';
 import {
+  PollAuthorDifferentException,
   PollConflictException,
   PollNotFoundException,
-} from '@/lib/exceptions/domain/polls.exception';
+} from '@/domain/polls/exceptions/polls.exception';
+import { User } from '@/domain/users/entities/user.entity';
 
 @Injectable()
 export class PollsService {
   constructor(
     @InjectRepository(Poll)
     private readonly pollsRepository: Repository<Poll>,
-    @InjectRepository(Post)
-    private readonly postsRepository: Repository<Post>,
     private readonly postsService: PostsService,
     private readonly pollItemsService: PollItemsService,
   ) {}
 
-  async create(postId: number, createPollDto: CreatePollDto) {
+  async create(user: User, postId: number, createPollDto: CreatePollDto) {
     const post =
       await this.postsService.findOneWithoutIncrementingViews(postId);
+
+    if (post.author.id !== user.id)
+      throw new PollAuthorDifferentException('잘못된 접근입니다');
+
     if (post.poll)
       throw new PollConflictException('이미 투표 항목이 존재하는 게시글입니다');
+
     const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =
       createPollDto;
 
-    const pollItems = await Promise.all(
-      pollItemDtos.map((pollItemDto) =>
-        this.pollItemsService.create(pollItemDto),
-      ),
-    );
     const poll = this.pollsRepository.create({
       title,
-      pollItems,
+      post: { id: postId },
       isAnonymous,
       allowMultipleChoices,
       endedAt,
     });
 
-    post!.poll = poll;
-    await this.postsRepository.save(post!);
+    poll.pollItems = await Promise.all(
+      pollItemDtos.map((pollItemDto) =>
+        this.pollItemsService.create(pollItemDto),
+      ),
+    );
 
     return await this.pollsRepository.save(poll);
   }
 
-  async findAll() {
-    return await this.pollsRepository.find();
-  }
-
   async findOne(id: number) {
-    const poll = await this.pollsRepository.findOneBy({ id });
+    const poll = await this.pollsRepository
+      .createQueryBuilder('poll')
+      .leftJoinAndSelect('poll.post', 'post')
+      .leftJoinAndSelect('post.author', 'author')
+      .where('poll.id = :id', { id })
+      .getOne();
+
     if (!poll) {
       throw new PollNotFoundException('해당 투표가 존재하지 않습니다');
     }
+
     return poll;
   }
 
-  async update(id: number, updatePollDto: UpdatePollDto) {
+  async update(user: User, id: number, updatePollDto: UpdatePollDto) {
     const existingPoll = await this.findOne(id);
+
+    if (existingPoll.post.author.id !== user.id)
+      throw new PollAuthorDifferentException('잘못된 접근입니다');
+
     const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =
       updatePollDto;
 
@@ -82,13 +91,12 @@ export class PollsService {
     return await this.pollsRepository.save(existingPoll);
   }
 
-  async remove(id: number) {
+  async remove(user: User, id: number) {
     const poll = await this.findOne(id);
-    await Promise.all(
-      poll.pollItems.map((pollItem) =>
-        this.pollItemsService.remove(pollItem.id),
-      ),
-    );
+
+    if (poll.post.author.id !== user.id)
+      throw new PollAuthorDifferentException('잘못된 접근입니다');
+
     await this.pollsRepository.remove([poll]);
   }
 }

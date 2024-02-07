@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { BaseException } from '@/lib/exceptions/base.exception';
 import { UncatchedException } from '@/lib/exceptions/uncatch.exception';
+import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
@@ -9,12 +10,18 @@ export class AllExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest();
     const response = ctx.getResponse();
 
-    console.log(exception);
+    let res: BaseException;
 
-    const res =
-      exception instanceof BaseException
-        ? exception
-        : new UncatchedException(exception.status, exception.response.message);
+    if (exception instanceof BaseException) {
+      res = exception;
+    } else if (exception instanceof QueryFailedError) {
+      res = new UncatchedException(500, 'Query failed: ' + exception.message);
+    } else {
+      res = new UncatchedException(
+        exception.status || 500,
+        exception.response?.message || '현재 이용이 원활하지 않습니다',
+      );
+    }
 
     res.timestamp = this.formatDate(new Date());
     res.path = request.url;

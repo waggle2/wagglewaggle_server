@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -21,11 +23,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Comment } from '@/domain/comments/entities/comment.entity';
-import { PostNotFoundException } from '@/lib/exceptions/domain/posts.exception';
+import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import {
   CommentBadRequestException,
   CommentNotFoundException,
-} from '@/lib/exceptions/domain/comments.exception';
+} from '@/domain/comments/exceptions/comments.exception';
+import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
+import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
 
 @Controller('comments')
 @ApiTags('comments')
@@ -42,24 +46,34 @@ export class CommentsController {
     type: PostNotFoundException,
     description: '존재하지 않는 게시물입니다',
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Post(':postId')
   async create(
+    @Req() req: RequestWithUser,
     @Param('postId') postId: string,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return await this.commentsService.create(+postId, createCommentDto);
+    const { user } = req;
+    return await this.commentsService.create(user, +postId, createCommentDto);
   }
 
   @ApiOperation({ summary: '대댓글 생성' })
   @ApiCreatedResponse()
   @ApiBadRequestResponse()
   @ApiNotFoundResponse()
+  @UseGuards(JwtAuthenticationGuard)
   @Post('/reply/:commentId')
   async addReply(
+    @Req() req: RequestWithUser,
     @Param('commentId') commentId: string,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return await this.commentsService.addReply(+commentId, createCommentDto);
+    const { user } = req;
+    return await this.commentsService.addReply(
+      user,
+      +commentId,
+      createCommentDto,
+    );
   }
 
   @ApiOperation({ summary: '전체 댓글 조회 및 게시글별 댓글 조회' })
@@ -100,12 +114,15 @@ export class CommentsController {
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
   async update(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
-    return await this.commentsService.update(+id, updateCommentDto);
+    const { user } = req;
+    return await this.commentsService.update(user, +id, updateCommentDto);
   }
 
   @ApiOperation({ summary: '댓글 삭제' })
@@ -115,9 +132,11 @@ export class CommentsController {
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.commentsService.remove(+id);
+  async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
+    const { user } = req;
+    await this.commentsService.remove(user, +id);
     return { message: '댓글이 성공적으로 삭제되었습니다' };
   }
 
@@ -137,9 +156,14 @@ export class CommentsController {
     example: [1, 2],
     type: Array<number>,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Delete()
-  async removeMany(@Query('ids') ids: number[]) {
-    await this.commentsService.removeMany(ids);
+  async removeMany(@Req() req: RequestWithUser, @Query('ids') ids: number[]) {
+    const { user } = req;
+    const idsStr = ids.map((id) => +id);
+
+    await this.commentsService.removeMany(user, idsStr);
+
     return { message: '댓글이 성공적으로 삭제되었습니다' };
   }
 }

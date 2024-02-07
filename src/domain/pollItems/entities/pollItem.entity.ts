@@ -9,19 +9,20 @@ import {
 } from 'typeorm';
 import { Poll } from '@/domain/polls/entities/poll.entity';
 
-@Entity()
+@Entity('poll_items')
 export class PollItem {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   content: string;
 
   @ManyToOne('Poll', 'pollItems', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'poll_id' })
+  @JoinColumn({ name: 'poll_id', referencedColumnName: 'id' })
   poll: Poll;
 
-  // users: User[]
+  @Column({ name: 'user_ids', type: 'json' })
+  userIds: string[] = [];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

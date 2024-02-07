@@ -11,19 +11,19 @@ import {
 import { Post } from '@/domain/posts/entities/post.entity';
 import { PollItem } from '@/domain/pollItems/entities/pollItem.entity';
 
-@Entity()
+@Entity('polls')
 export class Poll {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   title: string;
 
   @Column({
     name: 'is_end',
     default: false,
   })
-  isEnd: boolean;
+  isEnd: boolean; // 투표가 종료되었는지 여부
 
   @Column({
     name: 'is_anonymous',
@@ -31,14 +31,14 @@ export class Poll {
   })
   isAnonymous: boolean;
 
-  @Column({ name: 'allow_multiple_choices', default: true })
+  @Column({ name: 'allow_multiple_choices', default: false })
   allowMultipleChoices: boolean;
 
   @Column({ name: 'ended_at' })
   endedAt: Date;
 
   @OneToOne('Post', 'poll', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'post_id' })
+  @JoinColumn({ name: 'post_id', referencedColumnName: 'id' })
   post: Post;
 
   @OneToMany('PollItem', 'poll', {
