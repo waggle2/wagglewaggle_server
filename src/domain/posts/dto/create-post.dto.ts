@@ -7,7 +7,6 @@ import {
   IsNotEmpty,
   IsString,
   Length,
-  ValidateNested,
 } from 'class-validator';
 import { Tag } from '@/@types/enum/tags.enum';
 import { Animal } from '@/@types/enum/animal.enum';
