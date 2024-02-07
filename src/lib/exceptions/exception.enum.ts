@@ -39,7 +39,14 @@ export enum PollExceptionEnum {
 }
 
 export enum StickerExceptionEnum {
-  STICKER_NOT_FOUND = '3001',
+  // 403
+  DIFFERENT_USER = '3030',
+
+  // 404
+  STICKER_NOT_FOUND = '3040',
+
+  // 409
+  ALREADY_STICKER = '3090',
 }
 
 export enum AuthExceptionEnum {
@@ -59,12 +66,4 @@ export enum LikeExceptionEnum {
 
   // 409
   ALREADY_LIKE = '6090',
-}
-
-export enum StickerExceptionEnum {
-  // 403
-  DIFFERENT_USER = '7030',
-
-  // 409
-  ALREADY_STICKER = '7090',
 }

@@ -21,9 +21,9 @@ import {
 } from '@nestjs/swagger';
 import { Sticker } from '@/domain/stickers/entities/sticker.entity';
 import { CommentNotFoundException } from '@/domain/comments/exceptions/comments.exception';
-import { StickerNotFoundException } from '@/lib/exceptions/domain/stickers.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
+import { StickerNotFoundException } from '@/domain/stickers/exceptions/stickers.exception';
 
 @ApiTags('stickers')
 @Controller('stickers')

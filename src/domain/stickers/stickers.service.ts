@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateStickerDto } from './dto/create-sticker.dto';
 import { UpdateStickerDto } from './dto/update-sticker.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { Comment } from '@/domain/comments/entities/comment.entity';
 import {
   StickerAlreadyExistsException,
   StickerDifferentUserException,
+  StickerNotFoundException,
 } from '@/domain/stickers/exceptions/stickers.exception';
 
 @Injectable()
@@ -19,6 +20,23 @@ export class StickersService {
     @InjectRepository(Comment)
     private readonly commentsRepository: Repository<Comment>,
   ) {}
+
+  private async findStickerById(id: number): Promise<Sticker> {
+    const sticker = await this.stickersRepository.findOneBy({ id });
+    if (!sticker) {
+      throw new StickerNotFoundException(`해당 스티커가 존재하지 않습니다`);
+    }
+    return sticker;
+  }
+
+  private async handleStickerUserPermission(
+    user: User,
+    sticker: Sticker,
+  ): Promise<void> {
+    if (sticker.userId !== user.id) {
+      throw new StickerDifferentUserException('해당 권한이 없습니다');
+    }
+  }
 
   async create(
     user: User,
@@ -31,54 +49,41 @@ export class StickersService {
       .where('comment.id = :id', { id: commentId })
       .getOne();
 
-    comment.stickers.forEach((sticker) => {
-      if (sticker.userId === user.id) {
-        throw new StickerAlreadyExistsException(
-          '이미 스티커를 남긴 댓글입니다다',
-        );
-      }
-    });
+    if (!comment) {
+      throw new StickerNotFoundException('댓글이 존재하지 않습니다');
+    }
+
+    const existingSticker = comment.stickers.find(
+      (sticker) => sticker.userId === user.id,
+    );
+
+    if (existingSticker) {
+      throw new StickerAlreadyExistsException('이미 스티커를 남긴 댓글입니다');
+    }
 
     const sticker = this.stickersRepository.create({
       ...createStickerDto,
       userId: user.id,
-      comment: { id: comment.id },
+      comment,
     });
 
     return await this.stickersRepository.save(sticker);
   }
 
   async findOne(id: number) {
-    return await this.stickersRepository.findOneBy({ id });
+    return await this.findStickerById(id);
   }
 
   async update(user: User, id: number, updateStickerDto: UpdateStickerDto) {
-    const existingSticker = await this.findOne(id);
-
-    if (!existingSticker) {
-      throw new NotFoundException(`Sticker with ID ${id} not found`);
-    }
-
-    if (existingSticker.userId !== user.id) {
-      throw new StickerDifferentUserException('해당 권한이 없습니다');
-    }
-
+    const sticker = await this.findStickerById(id);
+    await this.handleStickerUserPermission(user, sticker);
     await this.stickersRepository.update(id, updateStickerDto);
-
     return this.findOne(id);
   }
 
   async remove(user: User, id: number) {
-    const existingSticker = await this.findOne(id);
-
-    if (!existingSticker) {
-      throw new NotFoundException(`Sticker with ID ${id} not found`);
-    }
-
-    if (existingSticker.userId !== user.id) {
-      throw new StickerDifferentUserException('해당 권한이 없습니다');
-    }
-
+    const sticker = await this.findStickerById(id);
+    await this.handleStickerUserPermission(user, sticker);
     await this.stickersRepository.delete(id);
   }
 }

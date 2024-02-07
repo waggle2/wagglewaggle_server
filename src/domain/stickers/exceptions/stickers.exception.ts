@@ -13,3 +13,13 @@ export class StickerDifferentUserException extends BaseException {
     super(StickerExceptionEnum.DIFFERENT_USER, HttpStatus.FORBIDDEN, message);
   }
 }
+
+export class StickerNotFoundException extends BaseException {
+  constructor(message: string) {
+    super(
+      StickerExceptionEnum.STICKER_NOT_FOUND,
+      HttpStatus.NOT_FOUND,
+      message,
+    );
+  }
+}
