@@ -40,7 +40,7 @@ export class CommentsService {
     return this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoin('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('comment.stickers', 'stickers')
       .where('comment.deleted_at IS NULL')

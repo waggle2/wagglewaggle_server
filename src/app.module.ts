@@ -20,7 +20,7 @@ import { mailerConfigFactory } from '@/lib/config/mailer.config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from '@/domain/health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
-import { StickerModule } from '@/domain/sticker/sticker.module';
+import { StickersModule } from '@/domain/stickers/stickers.module';
 import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
@@ -62,7 +62,7 @@ import { SearchModule } from '@/domain/search/search.module';
     AuthenticationModule,
     RedisCacheModule,
     ReportsModule,
-    StickerModule,
+    StickersModule,
     SearchModule,
   ],
   controllers: [AppController, HealthCheckController],

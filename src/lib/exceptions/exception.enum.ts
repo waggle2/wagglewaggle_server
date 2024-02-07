@@ -59,3 +59,11 @@ export enum LikeExceptionEnum {
   // 409
   ALREADY_LIKE = '6090',
 }
+
+export enum StickerExceptionEnum {
+  // 403
+  DIFFERENT_USER = '7030',
+
+  // 409
+  ALREADY_STICKER = '7090',
+}

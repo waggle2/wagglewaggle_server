@@ -1,5 +1,14 @@
-import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { StickerService } from './sticker.service';
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { StickersService } from './stickers.service';
 import { CreateStickerDto } from './dto/create-sticker.dto';
 import { UpdateStickerDto } from './dto/update-sticker.dto';
 import {
@@ -10,14 +19,16 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Sticker } from '@/domain/sticker/entities/sticker.entity';
-import { CommentNotFoundException } from '@/lib/exceptions/domain/comments.exception';
+import { Sticker } from '@/domain/stickers/entities/sticker.entity';
+import { CommentNotFoundException } from '@/domain/comments/exceptions/comments.exception';
 import { StickerNotFoundException } from '@/lib/exceptions/domain/stickers.exception';
+import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
+import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
 
 @ApiTags('stickers')
 @Controller('stickers')
-export class StickerController {
-  constructor(private readonly stickerService: StickerService) {}
+export class StickersController {
+  constructor(private readonly stickerService: StickersService) {}
 
   @ApiOperation({ summary: '스티커 생성' })
   @ApiCreatedResponse({
@@ -27,12 +38,15 @@ export class StickerController {
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Post(':commentId')
   async create(
+    @Req() req: RequestWithUser,
     @Param('commentId') commentId: number,
     @Body() createStickerDto: CreateStickerDto,
   ) {
-    return await this.stickerService.create(commentId, createStickerDto);
+    const { user } = req;
+    return await this.stickerService.create(user, commentId, createStickerDto);
   }
 
   @ApiOperation({
@@ -46,12 +60,15 @@ export class StickerController {
   @ApiNotFoundResponse({
     type: StickerNotFoundException,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
   async update(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateStickerDto: UpdateStickerDto,
   ) {
-    return await this.stickerService.update(+id, updateStickerDto);
+    const { user } = req;
+    return await this.stickerService.update(user, +id, updateStickerDto);
   }
 
   @ApiOperation({ summary: '스티커 삭제' })
@@ -61,9 +78,11 @@ export class StickerController {
   @ApiNotFoundResponse({
     type: StickerNotFoundException,
   })
+  @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.stickerService.remove(+id);
+  async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
+    const { user } = req;
+    await this.stickerService.remove(user, +id);
     return { message: '스티커가 성공적으로 삭제되었습니다.' };
   }
 }

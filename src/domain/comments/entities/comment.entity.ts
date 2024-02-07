@@ -11,7 +11,7 @@ import {
   Index,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
-import { Sticker } from '@/domain/sticker/entities/sticker.entity';
+import { Sticker } from '@/domain/stickers/entities/sticker.entity';
 import { User } from '@/domain/users/entities/user.entity';
 
 @Entity('comments')

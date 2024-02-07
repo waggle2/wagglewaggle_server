@@ -67,7 +67,7 @@ export class User {
   // @OneToMany(() => Item, (item) => item.user)
   // items: Item[];
 
-  // @OneToMany(() => Sticker, (sticker) => sticker.user)
+  // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];
 
   // @Column({

@@ -1,7 +1,7 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -24,9 +24,7 @@ export class Sticker {
   @JoinColumn({ name: 'comment_id' })
   comment: Comment;
 
+  @Index()
   @Column({ type: 'enum', enum: Animal, nullable: false })
   animal: Animal;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
 }
