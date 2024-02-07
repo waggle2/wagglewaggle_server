@@ -43,8 +43,9 @@ export enum StickerExceptionEnum {
 }
 
 export enum AuthExceptionEnum {
-  USER_UNAUTHORIZED = '4001',
-  SOCIAL_LOGIN_FORBIDDEN = '4003',
+  USER_UNAUTHORIZED = '4010',
+  SOCIAL_LOGIN_FORBIDDEN = '4030',
+  REPORT_FORBIDDEN = '4031',
 }
 
 export enum UserExceptionEnum {
