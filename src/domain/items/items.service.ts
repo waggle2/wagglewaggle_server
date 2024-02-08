@@ -30,30 +30,52 @@ export class ItemsService {
   async findItemsByAnimalAndType(
     animal: Animal,
     itemType: ItemType,
-  ): Promise<Item[]> {
-    return await this.itemRepository.find({
+    user: User,
+  ): Promise<{
+    items: Item[];
+    points: number;
+  }> {
+    const items = await this.itemRepository.find({
       where: { animal, itemType },
       order: { createdAt: 'DESC' },
     });
+
+    let points: number;
+    switch (animal) {
+      case Animal.BEAR:
+        points = user.bearPoints;
+        break;
+      case Animal.CAT:
+        points = user.catPoints;
+        break;
+      case Animal.DOG:
+        points = user.dogPoints;
+        break;
+      case Animal.FOX:
+        points = user.foxPoints;
+        break;
+    }
+    return { items, points };
   }
 
   // 장바구니에 아이템 추가
-  async addToCart(id: number, user: User): Promise<void> {
+  async addToCart(id: number, animal: Animal, user: User): Promise<void> {
     const item = await this.findOne(id);
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
       .where('user.id = :userId', { userId: user.id })
+      .andWhere('item_cart.animal = :animal', { animal })
       .getOne();
-    if (!itemCart) {
+    if (!itemCart || !itemCart.items) {
       throw new ItemNotFoundException(`Cart not found for user ${user.id}`);
-    }
-
-    if (!itemCart.items) {
-      itemCart.items = [];
     } else if (itemCart.items.find((itemId) => Number(itemId) === item.id)) {
       throw new ItemBadRequestException(
         '장바구니에 이미 같은 아이템이 있습니다.',
+      );
+    } else if (item.animal !== animal) {
+      throw new ItemBadRequestException(
+        '아이템이 해당 동물 장바구니와 일치하지 않습니다.',
       );
     }
 
@@ -64,15 +86,17 @@ export class ItemsService {
 
   // 장바구니 조회
   async getCartItems(
+    animal: Animal,
     user: User,
   ): Promise<{ items: Item[]; totalPoints: number }> {
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
       .where('user.id = :userId', { userId: user.id })
+      .andWhere('item_cart.animal = :animal', { animal })
       .getOne();
     if (!itemCart || !itemCart.items) {
-      return { items: [], totalPoints: 0 };
+      throw new ItemNotFoundException(`Cart not found for user ${user.id}`);
     }
 
     const items = await this.itemRepository
@@ -88,53 +112,68 @@ export class ItemsService {
   }
 
   // 장바구니 전체 아이템 구매
-  async purchaseAllCartItems(user: User): Promise<number> {
+  async purchaseAllCartItems(animal: Animal, user: User): Promise<number> {
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
       .where('user.id = :userId', { userId: user.id })
+      .andWhere('item_cart.animal = :animal', { animal })
       .getOne();
     if (!itemCart) {
       throw new ItemNotFoundException(`Cart not found for user ${user.id}`);
     } else if (!itemCart.items) {
-      throw new ItemBadRequestException('선택한 아이템이 없습니다.');
+      throw new ItemBadRequestException('No items selected.');
     }
 
+    let pointsField: string;
+    switch (animal) {
+      case Animal.BEAR:
+        pointsField = 'bearPoints';
+        break;
+      case Animal.CAT:
+        pointsField = 'catPoints';
+        break;
+      case Animal.DOG:
+        pointsField = 'dogPoints';
+        break;
+      case Animal.FOX:
+        pointsField = 'foxPoints';
+        break;
+    }
+    if (user[pointsField] < itemCart.totalPoints) {
+      throw new ItemBadRequestException('포인트가 부족합니다.');
+    }
+    user[pointsField] -= itemCart.totalPoints;
     const itemsArray = await this.itemRepository
       .createQueryBuilder('item')
       .whereInIds(itemCart.items)
       .getMany();
-
-    if (user.points < itemCart.totalPoints) {
-      throw new ItemBadRequestException('포인트가 부족합니다.');
-    }
-    user.points -= itemCart.totalPoints; // 유저 포인트에서 차감
-    if (!user.items) {
-      user.items = itemCart.items;
-    } else {
-      user.items.push(...itemCart.items); // user.items에 추가
-    }
+    console.log(1);
+    user.items = user.items
+      ? [...user.items, ...itemCart.items]
+      : itemCart.items;
     await this.userRepository.save(user);
-
+    console.log(2);
     for (const item of itemsArray) {
       item.purchasedCount += 1; // 아이템 구매 수량 +1
       await this.itemRepository.save(item);
     }
-
+    console.log(3);
     itemCart.items = [];
     itemCart.totalPoints = 0;
     await this.itemCartRepository.save(itemCart);
 
-    return user.points;
+    return user[pointsField];
   }
 
   // 장바구니 아이템 취소
-  async removeFromCart(id: number, user: User): Promise<void> {
+  async removeFromCart(id: number, animal: Animal, user: User): Promise<void> {
     const item = await this.findOne(id);
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
       .where('user.id = :userId', { userId: user.id })
+      .andWhere('item_cart.animal = :animal', { animal })
       .getOne();
     if (!itemCart) {
       throw new ItemNotFoundException(`Cart not found for user ${user.id}`);
@@ -146,11 +185,12 @@ export class ItemsService {
   }
 
   // 장바구니 전체 아이템 취소
-  async removeAllFromCart(user: User): Promise<void> {
+  async removeAllFromCart(animal: Animal, user: User): Promise<void> {
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
       .where('user.id = :userId', { userId: user.id })
+      .andWhere('item_cart.animal = :animal', { animal })
       .getOne();
     if (!itemCart) {
       throw new ItemNotFoundException(`Cart not found for user ${user.id}`);
