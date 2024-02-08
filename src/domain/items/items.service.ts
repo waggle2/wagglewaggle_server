@@ -148,17 +148,14 @@ export class ItemsService {
       .createQueryBuilder('item')
       .whereInIds(itemCart.items)
       .getMany();
-    console.log(1);
     user.items = user.items
       ? [...user.items, ...itemCart.items]
       : itemCart.items;
     await this.userRepository.save(user);
-    console.log(2);
     for (const item of itemsArray) {
       item.purchasedCount += 1; // 아이템 구매 수량 +1
       await this.itemRepository.save(item);
     }
-    console.log(3);
     itemCart.items = [];
     itemCart.totalPoints = 0;
     await this.itemCartRepository.save(itemCart);
