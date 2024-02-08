@@ -18,6 +18,8 @@ import {
 } from '@/lib/exceptions/domain/users.exception';
 import * as bcrypt from 'bcrypt';
 import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import { ItemCart } from '../items/entities/item-cart.entity';
+import { Item } from '../items/entities/item.entity';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +32,10 @@ export class UsersService {
     private readonly credentialRepository: Repository<Credential>,
     @InjectRepository(ExitReason)
     private readonly exitReasonRepository: Repository<ExitReason>,
+    @InjectRepository(ItemCart)
+    private readonly itemCartRepository: Repository<ItemCart>,
+    @InjectRepository(Item)
+    private readonly itemRepository: Repository<Item>,
     private readonly mailerService: MailerService,
     private readonly redisCacheService: RedisCacheService,
     private readonly httpService: HttpService,
@@ -69,6 +75,11 @@ export class UsersService {
     });
     await this.credentialRepository.save(credential);
     await this.userAuthorityRepository.save(userAuthority);
+
+    const itemCart = this.credentialRepository.create({
+      user: { id: user.id },
+    });
+    await this.itemCartRepository.save(itemCart);
   }
 
   // 회원가입 이메일 인증 코드 전송
@@ -172,6 +183,15 @@ export class UsersService {
     });
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    if (user.profileItems && user.profileItems.length > 0) {
+      const profileItems = await this.itemRepository
+        .createQueryBuilder('item')
+        .whereInIds(user.profileItems)
+        .getMany();
+
+      user.profileItems = profileItems;
     }
 
     return user;

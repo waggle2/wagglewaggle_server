@@ -26,6 +26,9 @@ export class Item {
   @Column()
   price: number;
 
+  @Column()
+  image: string;
+
   @Column({ name: 'purchased_count', type: 'int', default: 0 })
   purchasedCount: number;
 

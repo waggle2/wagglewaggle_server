@@ -35,4 +35,12 @@ export class CreateItemDto {
   })
   @IsNumber()
   readonly price: number;
+
+  @ApiProperty({
+    example: 'https://example.com/image.jpg',
+    description: '이미지 url',
+    required: true,
+  })
+  @IsString()
+  readonly image: string;
 }

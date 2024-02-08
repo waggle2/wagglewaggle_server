@@ -6,12 +6,12 @@ export class ExitReason {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
   @Column({ type: 'enum', enum: ExitReasonEnum })
   reason: ExitReasonEnum;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'other_reasons', type: 'text', nullable: true })
   otherReasons: string; // Only applicable if reason is 'OTHER'
 }

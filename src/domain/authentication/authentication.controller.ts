@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import RequestWithUser from './interfaces/request-with-user.interface';
 import { Response } from 'express';
@@ -18,6 +18,7 @@ import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
 import { RefreshAuthenticationGuard } from './guards/refresh-authentication.guard';
 
 @Controller('authentication')
+@ApiTags('authentication')
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
@@ -108,8 +109,8 @@ export class AuthenticationController {
   }
 
   @HttpCode(200)
-  @UseGuards(JwtAuthenticationGuard)
   @Post('/logout')
+  @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '로그아웃' })
   async logout(@Res() response: Response) {
     const { accessCookie, refreshCookie } =
