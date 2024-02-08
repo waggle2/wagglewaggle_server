@@ -18,6 +18,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ItemType } from '@/@types/enum/item-type.enum';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
+import { Animal } from '@/@types/enum/animal.enum';
 
 @Controller('items')
 @ApiTags('items')
@@ -25,32 +26,17 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   /* 포인트샵 페이지 */
-  @Get('/cat')
-  @ApiOperation({ summary: '고양이 아이템 조회' })
-  async findCatItems(@Query('itemType') itemType: ItemType) {
-    return await this.itemsService.findCatItems(itemType);
-  }
-
-  @Get('/dog')
-  @ApiOperation({ summary: '개 아이템 조회' })
-  async findDogItems(@Query('itemType') itemType: ItemType) {
-    return await this.itemsService.findDogItems(itemType);
-  }
-
-  @Get('/fox')
-  @ApiOperation({ summary: '여우 아이템 조회' })
-  async findFoxItems(@Query('itemType') itemType: ItemType) {
-    return await this.itemsService.findFoxItems(itemType);
-  }
-
-  @Get('/bear')
-  @ApiOperation({ summary: '곰 아이템 조회' })
-  async findBearItems(@Query('itemType') itemType: ItemType) {
-    return await this.itemsService.findBearItems(itemType);
+  @Get()
+  @ApiOperation({ summary: '동물별 아이템 조회' })
+  async findItemsByAnimalAndType(
+    @Query('animal') animal: Animal,
+    @Query('itemType') itemType: ItemType,
+  ) {
+    return await this.itemsService.findItemsByAnimalAndType(animal, itemType);
   }
 
   @HttpCode(200)
-  @Post(':id')
+  @Post('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니에 아이템 추가' })
   async addToCart(@Param('id') id: string, @Req() req: RequestWithUser) {
@@ -58,14 +44,14 @@ export class ItemsController {
     return { message: '장바구니에 아이템이 추가되었습니다.' };
   }
 
-  @Get()
+  @Get('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 조회' })
   async getCartItems(@Req() req: RequestWithUser) {
     return await this.itemsService.getCartItems(req.user);
   }
 
-  @Patch()
+  @Patch('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 전체 아이템 구매' })
   async purchaseAllCartItems(@Req() req: RequestWithUser) {
@@ -78,7 +64,7 @@ export class ItemsController {
     };
   }
 
-  @Delete(':id')
+  @Delete('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 아이템 취소' })
   async removeFromCart(@Param('id') id: string, @Req() req: RequestWithUser) {
@@ -86,7 +72,7 @@ export class ItemsController {
     return { message: '장바구니에서 선택한 아이템이 삭제되었습니다.' };
   }
 
-  @Delete()
+  @Delete('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 전체 아이템 취소' })
   async removeAllFromCart(@Req() req: RequestWithUser) {

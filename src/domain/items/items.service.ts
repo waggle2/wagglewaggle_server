@@ -26,34 +26,13 @@ export class ItemsService {
 
   /* 포인트샵 페이지 */
 
-  // 고양이 아이템 조회
-  async findCatItems(itemType: ItemType): Promise<Item[]> {
+  // 동물별 아이템 조회
+  async findItemsByAnimalAndType(
+    animal: Animal,
+    itemType: ItemType,
+  ): Promise<Item[]> {
     return await this.itemRepository.find({
-      where: { animal: Animal.CAT, itemType },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  // 개 아이템 조회
-  async findDogItems(itemType: ItemType): Promise<Item[]> {
-    return await this.itemRepository.find({
-      where: { animal: Animal.DOG, itemType },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  // 여우 아이템 조회
-  async findFoxItems(itemType: ItemType): Promise<Item[]> {
-    return await this.itemRepository.find({
-      where: { animal: Animal.FOX, itemType },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  // 곰 아이템 조회
-  async findBearItems(itemType: ItemType): Promise<Item[]> {
-    return await this.itemRepository.find({
-      where: { animal: Animal.BEAR, itemType },
+      where: { animal, itemType },
       order: { createdAt: 'DESC' },
     });
   }
