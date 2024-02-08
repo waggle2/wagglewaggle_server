@@ -13,6 +13,8 @@ import { AuthenticationProvider, State } from '@/@types/enum/user.enum';
 import { Animal } from '@/@types/enum/animal.enum';
 import { Credential } from './credential.entity';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { ItemCart } from '@/domain/items/entities/item-cart.entity';
+import { Item } from '@/domain/items/entities/item.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -64,8 +66,14 @@ export class User {
   // @OneToMany(() => Message, (message) => message.user)
   // messages: Message[];
 
-  // @OneToMany(() => Item, (item) => item.user)
-  // items: Item[];
+  @Column({ type: 'simple-array', nullable: true })
+  profileItems: Item[] | number[]; // 착용한 아이템
+
+  @Column({ type: 'simple-array', nullable: true })
+  items: number[]; // 갖고 있는 아이템
+
+  @OneToOne('ItemCart', 'user', { cascade: true })
+  itemCart: ItemCart;
 
   // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];

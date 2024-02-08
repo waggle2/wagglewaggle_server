@@ -10,10 +10,19 @@ import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { HttpModule } from '@nestjs/axios';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { JwtService } from '@nestjs/jwt';
+import { ItemCart } from '../items/entities/item-cart.entity';
+import { Item } from '../items/entities/item.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Credential, UserAuthority, ExitReason]),
+    TypeOrmModule.forFeature([
+      User,
+      Credential,
+      UserAuthority,
+      ExitReason,
+      ItemCart,
+      Item,
+    ]),
     HttpModule,
   ],
   controllers: [UsersController],

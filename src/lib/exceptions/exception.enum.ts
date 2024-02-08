@@ -56,8 +56,13 @@ export enum AuthExceptionEnum {
 }
 
 export enum UserExceptionEnum {
-  USER_NOT_FOUND = '5001',
   USER_BAD_REQUEST = '5000',
+  USER_NOT_FOUND = '5001',
+}
+
+export enum ItemExceptionEnum {
+  ITEM_BAD_REQUEST = '6000',
+  ITEM_NOT_FOUND = '6001',
 }
 
 export enum LikeExceptionEnum {
