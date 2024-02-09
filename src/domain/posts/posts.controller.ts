@@ -118,7 +118,7 @@ export class PostsController {
     description: '게시글이 성공적으로 생성되었습니다',
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Post()
   async create(
     @Req() req: RequestWithUser,
@@ -136,7 +136,7 @@ export class PostsController {
   @ApiNotFoundResponse({
     type: PostNotFoundException,
   })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
   async update(
     @Req() req: RequestWithUser,
@@ -154,7 +154,7 @@ export class PostsController {
   @ApiNotFoundResponse({
     type: PostNotFoundException,
   })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
@@ -175,7 +175,7 @@ export class PostsController {
     example: [1, 2],
     type: Array<number>,
   })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Delete()
   async removeMany(@Req() req: RequestWithUser, @Query('ids') ids: number[]) {
     const { user } = req;
@@ -197,7 +197,7 @@ export class LikesController {
     type: String,
     description: '좋아요 성공',
   })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Post(':postId')
   async likePost(@Req() req: RequestWithUser, @Param('postId') postId: string) {
     const { user } = req;
@@ -217,7 +217,7 @@ export class LikesController {
     type: PostNotFoundException,
     description: '존재하지 않는 게시글입니다',
   })
-  @UseGuards(JwtAuthenticationGuard)
+  // @UseGuards(JwtAuthenticationGuard)
   @Delete(':postId')
   async cancelLike(
     @Req() req: RequestWithUser,
