@@ -27,35 +27,52 @@ export class ItemsController {
 
   /* 포인트샵 페이지 */
   @Get()
+  @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '동물별 아이템 조회' })
   async findItemsByAnimalAndType(
     @Query('animal') animal: Animal,
     @Query('itemType') itemType: ItemType,
+    @Req() req: RequestWithUser,
   ) {
-    return await this.itemsService.findItemsByAnimalAndType(animal, itemType);
+    return await this.itemsService.findItemsByAnimalAndType(
+      animal,
+      itemType,
+      req.user,
+    );
   }
 
   @HttpCode(200)
   @Post('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니에 아이템 추가' })
-  async addToCart(@Param('id') id: string, @Req() req: RequestWithUser) {
-    await this.itemsService.addToCart(+id, req.user);
+  async addToCart(
+    @Param('id') id: string,
+    @Body('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.itemsService.addToCart(+id, animal, req.user);
     return { message: '장바구니에 아이템이 추가되었습니다.' };
   }
 
   @Get('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 조회' })
-  async getCartItems(@Req() req: RequestWithUser) {
-    return await this.itemsService.getCartItems(req.user);
+  async getCartItems(
+    @Body('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
+    return await this.itemsService.getCartItems(animal, req.user);
   }
 
   @Patch('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 전체 아이템 구매' })
-  async purchaseAllCartItems(@Req() req: RequestWithUser) {
+  async purchaseAllCartItems(
+    @Body('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
     const remainingPoints = await this.itemsService.purchaseAllCartItems(
+      animal,
       req.user,
     );
     return {
@@ -67,16 +84,23 @@ export class ItemsController {
   @Delete('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 아이템 취소' })
-  async removeFromCart(@Param('id') id: string, @Req() req: RequestWithUser) {
-    await this.itemsService.removeFromCart(+id, req.user);
+  async removeFromCart(
+    @Param('id') id: string,
+    @Body('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.itemsService.removeFromCart(+id, animal, req.user);
     return { message: '장바구니에서 선택한 아이템이 삭제되었습니다.' };
   }
 
   @Delete('/cart')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니 전체 아이템 취소' })
-  async removeAllFromCart(@Req() req: RequestWithUser) {
-    await this.itemsService.removeAllFromCart(req.user);
+  async removeAllFromCart(
+    @Body('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.itemsService.removeAllFromCart(animal, req.user);
     return { message: '장바구니의 전체 아이템이 삭제되었습니다.' };
   }
 

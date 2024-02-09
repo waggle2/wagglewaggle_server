@@ -12,6 +12,7 @@ import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authenticat
 import { JwtService } from '@nestjs/jwt';
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
+import { ProfileItems } from './entities/profile-items.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Item } from '../items/entities/item.entity';
       ExitReason,
       ItemCart,
       Item,
+      ProfileItems,
     ]),
     HttpModule,
   ],

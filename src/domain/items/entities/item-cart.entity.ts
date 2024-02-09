@@ -2,19 +2,23 @@ import {
   Column,
   Entity,
   JoinColumn,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '@/domain/users/entities/user.entity';
+import { Animal } from '@/@types/enum/animal.enum';
 
 @Entity({ name: 'item_cart' })
 export class ItemCart {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @OneToOne('User', 'itemCart', { onDelete: 'CASCADE' })
+  @ManyToOne('User', 'itemCart', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ type: 'enum', enum: Animal })
+  animal: Animal;
 
   @Column({ type: 'simple-array', nullable: true })
   items: number[];

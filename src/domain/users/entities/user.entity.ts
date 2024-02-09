@@ -14,7 +14,7 @@ import { Animal } from '@/@types/enum/animal.enum';
 import { Credential } from './credential.entity';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ItemCart } from '@/domain/items/entities/item-cart.entity';
-import { Item } from '@/domain/items/entities/item.entity';
+import { ProfileItems } from './profile-items.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -45,14 +45,26 @@ export class User {
   @Column({ type: 'enum', enum: State, default: State.JOINED })
   state: State;
 
-  @Column({ default: 0 })
-  points: number;
-
   @Column({ name: 'primary_animal', type: 'enum', enum: Animal })
   primaryAnimal: Animal;
 
   @Column({ name: 'second_animal', type: 'enum', enum: Animal, nullable: true })
   secondAnimal: Animal;
+
+  @Column({ name: 'profile_anumal', type: 'enum', enum: Animal })
+  profileAnimal: Animal;
+
+  @Column({ default: 0 })
+  catPoints: number;
+
+  @Column({ default: 0 })
+  bearPoints: number;
+
+  @Column({ default: 0 })
+  dogPoints: number;
+
+  @Column({ default: 0 })
+  foxPoints: number;
 
   @Column({ name: 'current_refresh_token', nullable: true })
   currentRefreshToken: string;
@@ -66,14 +78,17 @@ export class User {
   // @OneToMany(() => Message, (message) => message.user)
   // messages: Message[];
 
-  @Column({ type: 'simple-array', nullable: true })
-  profileItems: Item[] | number[]; // 착용한 아이템
+  @OneToMany('ProfileItems', 'user', {
+    cascade: true,
+    nullable: true,
+  })
+  profileItems: ProfileItems[]; // 착용한 아이템
 
   @Column({ type: 'simple-array', nullable: true })
   items: number[]; // 갖고 있는 아이템
 
-  @OneToOne('ItemCart', 'user', { cascade: true })
-  itemCart: ItemCart;
+  @OneToMany('ItemCart', 'user', { cascade: true })
+  itemCart: ItemCart[];
 
   // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];

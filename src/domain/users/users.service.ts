@@ -20,6 +20,7 @@ import * as bcrypt from 'bcrypt';
 import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
+import { Animal } from '@/@types/enum/animal.enum';
 
 @Injectable()
 export class UsersService {
@@ -58,8 +59,20 @@ export class UsersService {
       authenticationProvider,
       socialId: socialId || null,
       primaryAnimal,
+      profileAnimal: primaryAnimal,
     });
     await this.userRepository.save(user);
+
+    const animals = [Animal.CAT, Animal.BEAR, Animal.DOG, Animal.FOX];
+    const itemCartPromises = animals.map(async (animal) => {
+      const itemCart = this.itemCartRepository.create({
+        user: { id: user.id },
+        animal,
+        items: [],
+      });
+      return this.itemCartRepository.save(itemCart);
+    });
+    await Promise.all(itemCartPromises);
 
     const credential = this.credentialRepository.create({
       user: { id: user.id },
@@ -75,11 +88,6 @@ export class UsersService {
     });
     await this.credentialRepository.save(credential);
     await this.userAuthorityRepository.save(userAuthority);
-
-    const itemCart = this.credentialRepository.create({
-      user: { id: user.id },
-    });
-    await this.itemCartRepository.save(itemCart);
   }
 
   // 회원가입 이메일 인증 코드 전송
@@ -179,19 +187,18 @@ export class UsersService {
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['credential', 'authorities'],
+      relations: [
+        'credential',
+        'authorities',
+        'profileItems',
+        'profileItems.emoji',
+        'profileItems.background',
+        'profileItems.wallpaper',
+        'profileItems.frame',
+      ],
     });
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
-    if (user.profileItems && user.profileItems.length > 0) {
-      const profileItems = await this.itemRepository
-        .createQueryBuilder('item')
-        .whereInIds(user.profileItems)
-        .getMany();
-
-      user.profileItems = profileItems;
     }
 
     return user;
