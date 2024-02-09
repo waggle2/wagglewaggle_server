@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionFilter } from '@/lib/filter/exception.filter';
 import * as cookieParser from 'cookie-parser';
 import * as process from 'process';
+import { swaggerConfigFactory } from '@/lib/config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,12 +26,8 @@ async function bootstrap() {
   });
   app.use(cookieParser());
 
-  const config = new DocumentBuilder()
-    .setTitle('wagglewaggle API')
-    .setDescription('와글와글 API 문서입니다')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const swaggerConfig = swaggerConfigFactory();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/v1/api-docs', app, document);
 
   await app.listen(process.env.PORT || 5000);

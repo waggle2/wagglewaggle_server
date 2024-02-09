@@ -16,6 +16,7 @@ import RequestWithUser from './interfaces/request-with-user.interface';
 import { Response } from 'express';
 import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
 import { RefreshAuthenticationGuard } from './guards/refresh-authentication.guard';
+import { LoginDto } from '@/domain/authentication/dto/login.dto';
 
 @Controller('authentication')
 @ApiTags('authentication')
@@ -32,12 +33,8 @@ export class AuthenticationController {
   @HttpCode(200)
   @Post('/login')
   @ApiOperation({ summary: '이메일 로그인' })
-  async emailLogin(
-    @Body('email') email: string,
-    @Body('password') password: string,
-    @Res() response: Response,
-  ) {
-    const user = await this.authenticationService.emailLogin(email, password);
+  async emailLogin(@Body() loginDto: LoginDto, @Res() response: Response) {
+    const user = await this.authenticationService.emailLogin(loginDto);
     const accessCookie =
       await this.authenticationService.getCookieWithAccessToken(user);
     const refreshCookie =

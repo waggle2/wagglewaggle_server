@@ -19,6 +19,7 @@ import {
   UserBadRequestException,
   UserNotFoundException,
 } from '@/lib/exceptions/domain/users.exception';
+import { LoginDto } from '@/domain/authentication/dto/login.dto';
 
 @Injectable()
 export class AuthenticationService {
@@ -52,14 +53,15 @@ export class AuthenticationService {
   }
 
   // 로그인
-  async emailLogin(email: string, hashedPassword: string): Promise<User> {
+  async emailLogin(loginDto: LoginDto): Promise<User> {
+    const { email, password } = loginDto;
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
 
     const isMatchPassword = await this.comparePassword(
-      hashedPassword,
+      password,
       user.credential.password,
     );
     if (!isMatchPassword) {
