@@ -46,7 +46,7 @@ export class CommentsController {
     type: PostNotFoundException,
     description: '존재하지 않는 게시물입니다',
   })
-  // @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @Post(':postId')
   async create(
     @Req() req: RequestWithUser,
@@ -61,7 +61,7 @@ export class CommentsController {
   @ApiCreatedResponse()
   @ApiBadRequestResponse()
   @ApiNotFoundResponse()
-  // @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @Post('/reply/:commentId')
   async addReply(
     @Req() req: RequestWithUser,
@@ -114,7 +114,7 @@ export class CommentsController {
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
   })
-  // @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
   async update(
     @Req() req: RequestWithUser,
@@ -132,7 +132,7 @@ export class CommentsController {
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
   })
-  // @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
@@ -156,7 +156,7 @@ export class CommentsController {
     example: [1, 2],
     type: Array<number>,
   })
-  // @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @Delete()
   async removeMany(@Req() req: RequestWithUser, @Query('ids') ids: number[]) {
     const { user } = req;
