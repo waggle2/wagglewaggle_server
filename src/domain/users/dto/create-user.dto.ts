@@ -21,7 +21,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: '3145587907',
-    description: '소셜 고유 id',
+    description: '소셜 고유 id (가입 방식이 email이라면 해당 데이터 제외)',
     required: false,
   })
   @IsString()
@@ -31,7 +31,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'asd@gmail.com',
-    description: '이메일',
+    description: '이메일 (가입 방식이 email인 경우에만 필수)',
     required: false,
   })
   @IsString()
@@ -41,7 +41,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'P@ssw0rd!123',
-    description: '비밀번호',
+    description: '비밀번호 (가입 방식이 email인 경우에만 필수)',
     required: false,
   })
   @IsString()
