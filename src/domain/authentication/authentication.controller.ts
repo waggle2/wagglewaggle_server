@@ -17,6 +17,7 @@ import { Response } from 'express';
 import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
 import { RefreshAuthenticationGuard } from './guards/refresh-authentication.guard';
 import { LoginDto } from '@/domain/authentication/dto/login.dto';
+import { HttpResponse } from '@/@types/http-response';
 
 @Controller('authentication')
 @ApiTags('authentication')
@@ -31,6 +32,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 201 },
         message: {
           type: 'string',
           example: '회원가입이 완료되었습니다.',
@@ -45,7 +47,7 @@ export class AuthenticationController {
   })
   async register(@Body() createUserDto: CreateUserDto) {
     await this.authenticationService.register(createUserDto);
-    return { message: '회원가입이 완료되었습니다.' };
+    return HttpResponse.created('회원가입이 완료되었습니다.');
   }
 
   @HttpCode(200)
@@ -57,6 +59,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '로그인 되었습니다.',
@@ -80,7 +83,7 @@ export class AuthenticationController {
       await this.authenticationService.getCookieWithRefreshToken(user);
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     user.credential.password = undefined;
-    return response.send({ message: '로그인 되었습니다.' });
+    response.json({ code: 200, message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -92,6 +95,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '로그인 되었습니다.',
@@ -105,11 +109,12 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 302 },
         message: {
           type: 'string',
           example: '회원가입이 필요합니다.',
         },
-        userData: {
+        data: {
           type: 'object',
           properties: {
             socialId: {
@@ -140,10 +145,10 @@ export class AuthenticationController {
         null,
       );
     if (!user) {
-      return response.status(302).send({ message, userData });
+      response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ message: '로그인 되었습니다.' });
+    response.json({ code: 200, message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -155,6 +160,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '로그인 되었습니다.',
@@ -168,11 +174,12 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 302 },
         message: {
           type: 'string',
           example: '회원가입이 필요합니다.',
         },
-        userData: {
+        data: {
           type: 'object',
           properties: {
             socialId: {
@@ -204,10 +211,10 @@ export class AuthenticationController {
         state,
       );
     if (!user) {
-      return response.status(302).send({ message, userData });
+      response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ message: '로그인 되었습니다.' });
+    response.json({ code: 200, message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -219,6 +226,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '로그인 되었습니다.',
@@ -232,11 +240,12 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 302 },
         message: {
           type: 'string',
           example: '회원가입이 필요합니다.',
         },
-        userData: {
+        data: {
           type: 'object',
           properties: {
             socialId: {
@@ -267,10 +276,10 @@ export class AuthenticationController {
         null,
       );
     if (!user) {
-      return response.status(302).send({ message, userData });
+      response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ message: '로그인 되었습니다.' });
+    response.json({ code: 200, message: '로그인 되었습니다.' });
   }
 
   @HttpCode(200)
@@ -283,6 +292,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '로그아웃 되었습니다.',
@@ -294,7 +304,7 @@ export class AuthenticationController {
     const { accessCookie, refreshCookie } =
       await this.authenticationService.getCookieForLogout();
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
-    return response.send({ message: '로그아웃 되었습니다.' });
+    response.json({ code: 200, message: '로그아웃 되었습니다.' });
   }
 
   @Patch()
@@ -321,6 +331,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '비밀번호가 변경되었습니다.',
@@ -342,7 +353,7 @@ export class AuthenticationController {
       password,
       newPassword,
     );
-    return { message: '비밀번호가 변경되었습니다.' };
+    return HttpResponse.success('비밀번호가 변경되었습니다.');
   }
 
   @Patch('password-reset')
@@ -353,6 +364,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '비밀번호가 재설정되었습니다.',
@@ -384,7 +396,7 @@ export class AuthenticationController {
     @Body('newPassword') newPassword: string,
   ) {
     await this.authenticationService.resetPassword(email, newPassword);
-    return { message: '비밀번호가 재설정되었습니다.' };
+    return HttpResponse.success('비밀번호가 재설정되었습니다.');
   }
 
   @Post('refresh-token')
@@ -396,6 +408,7 @@ export class AuthenticationController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '새로운 액세스 토큰이 발급되었습니다.',
@@ -418,6 +431,9 @@ export class AuthenticationController {
     const accessCookie =
       await this.authenticationService.getCookieWithAccessToken(request.user);
     response.setHeader('Set-Cookie', [accessCookie]);
-    return response.send({ message: '새로운 액세스 토큰이 발급되었습니다.' });
+    response.json({
+      code: 200,
+      message: '새로운 액세스 토큰이 발급되었습니다.',
+    });
   }
 }

@@ -15,6 +15,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
+import { HttpResponse } from '@/@types/http-response';
 
 @Controller('users')
 @ApiTags('users')
@@ -41,6 +42,7 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '회원가입 이메일 인증코드가 전송되었습니다.',
@@ -58,7 +60,7 @@ export class UsersController {
   })
   async sendSignupCode(@Body('email') email: string) {
     await this.usersService.sendSignupCode(email);
-    return { message: '회원가입 이메일 인증코드가 전송되었습니다.' };
+    return HttpResponse.success('회원가입 이메일 인증코드가 전송되었습니다.');
   }
 
   @HttpCode(200)
@@ -81,6 +83,7 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '비밀번호 재설정 이메일 인증코드가 전송되었습니다.',
@@ -98,7 +101,9 @@ export class UsersController {
   })
   async sendPasswordResetCode(@Body('email') email: string) {
     await this.usersService.sendPasswordResetCode(email);
-    return { message: '비밀번호 재설정 이메일 인증코드가 전송되었습니다.' };
+    return HttpResponse.success(
+      '비밀번호 재설정 이메일 인증코드가 전송되었습니다.',
+    );
   }
 
   @HttpCode(200)
@@ -125,9 +130,19 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
-        verified: {
-          type: 'boolean',
-          example: 'true',
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '이메일 인증코드 검증 여부',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            verified: {
+              type: 'boolean',
+              example: 'true',
+            },
+          },
         },
       },
     },
@@ -137,7 +152,9 @@ export class UsersController {
     @Body('verificationCode') verificationCode: number,
   ) {
     const result = await this.usersService.verifyEmail(email, verificationCode);
-    return { verified: result };
+    return HttpResponse.success('이메일 인증코드 검증 여부', {
+      verified: result,
+    });
   }
 
   @Get('/nickname-check/:nickname')
@@ -148,16 +165,28 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
-        available: {
-          type: 'boolean',
-          example: 'true',
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '닉네임 사용 가능 여부',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            available: {
+              type: 'boolean',
+              example: 'true',
+            },
+          },
         },
       },
     },
   })
   async checkNickname(@Param('nickname') nickname: string) {
     const result = await this.usersService.checkNickname(nickname);
-    return { available: result };
+    return HttpResponse.success('닉네임 사용 가능 여부', {
+      available: result,
+    });
   }
 
   @Get()
@@ -169,46 +198,56 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
-        id: { type: 'string' },
-        authenticationProvider: { type: 'string' },
-        socialId: { type: 'string', nullable: true },
-        isVerified: { type: 'boolean' },
-        state: { type: 'string' },
-        primaryAnimal: { type: 'string' },
-        secondAnimal: { type: 'string', nullable: true },
-        profileAnimal: { type: 'string' },
-        catPoints: { type: 'integer' },
-        bearPoints: { type: 'integer' },
-        dogPoints: { type: 'integer' },
-        foxPoints: { type: 'integer' },
-        currentRefreshToken: { type: 'string' },
-        items: { type: 'array', items: { type: 'object' }, nullable: true },
-        createdAt: { type: 'string', format: 'date-time' },
-        updatedAt: { type: 'string', format: 'date-time' },
-        deletedAt: { type: 'string', nullable: true, format: 'date-time' },
-        credential: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '회원 정보가 조회되었습니다.',
+        },
+        data: {
           type: 'object',
           properties: {
-            id: { type: 'integer' },
-            email: { type: 'string' },
-            nickname: { type: 'string' },
-            birthYear: { type: 'integer' },
-            gender: { type: 'string' },
-          },
-        },
-        authorities: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'integer' },
-              authorityName: { type: 'string' },
+            id: { type: 'string' },
+            authenticationProvider: { type: 'string' },
+            socialId: { type: 'string', nullable: true },
+            isVerified: { type: 'boolean' },
+            state: { type: 'string' },
+            primaryAnimal: { type: 'string' },
+            secondAnimal: { type: 'string', nullable: true },
+            profileAnimal: { type: 'string' },
+            catPoints: { type: 'integer' },
+            bearPoints: { type: 'integer' },
+            dogPoints: { type: 'integer' },
+            foxPoints: { type: 'integer' },
+            currentRefreshToken: { type: 'string' },
+            items: { type: 'array', items: { type: 'object' }, nullable: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+            deletedAt: { type: 'string', nullable: true, format: 'date-time' },
+            credential: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer' },
+                email: { type: 'string' },
+                nickname: { type: 'string' },
+                birthYear: { type: 'integer' },
+                gender: { type: 'string' },
+              },
+            },
+            authorities: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer' },
+                  authorityName: { type: 'string' },
+                },
+              },
+            },
+            profileItems: {
+              type: 'array',
+              items: { type: 'object' },
             },
           },
-        },
-        profileItems: {
-          type: 'array',
-          items: { type: 'object' },
         },
       },
     },
@@ -220,7 +259,7 @@ export class UsersController {
   async findOne(@Req() request: RequestWithUser) {
     const { user } = request;
     user.credential.password = undefined;
-    return user;
+    return HttpResponse.success('회원 정보가 조회되었습니다.', user);
   }
 
   @Patch('/nickname')
@@ -243,6 +282,7 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '닉네임이 변경되었습니다.',
@@ -255,7 +295,7 @@ export class UsersController {
     @Body('nickname') nickname: string,
   ) {
     await this.usersService.updateNickname(request.user, nickname);
-    return { message: '닉네임이 변경되었습니다.' };
+    return HttpResponse.success('닉네임이 변경되었습니다.');
   }
 
   @Patch('/verification/:impUid')
@@ -265,8 +305,14 @@ export class UsersController {
     status: 200,
     description: 'true',
     schema: {
-      type: 'boolean',
-      example: true,
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '본인인증이 완료되었습니다.',
+        },
+      },
     },
   })
   @ApiResponse({
@@ -281,10 +327,8 @@ export class UsersController {
     @Req() request: RequestWithUser,
     @Param('impUid') impUid: string,
   ) {
-    return await this.usersService.updateVerificationStatus(
-      request.user,
-      impUid,
-    );
+    await this.usersService.updateVerificationStatus(request.user, impUid);
+    return HttpResponse.success('본인인증이 완료되었습니다.');
   }
 
   @Delete()
@@ -296,6 +340,7 @@ export class UsersController {
     schema: {
       type: 'object',
       properties: {
+        code: { type: 'number', example: 200 },
         message: {
           type: 'string',
           example: '회원 탈퇴가 완료되었습니다.',
@@ -309,6 +354,6 @@ export class UsersController {
   ) {
     const { user } = request;
     await this.usersService.remove(user.id, exitReasonDto);
-    return { message: '회원 탈퇴가 완료되었습니다.' };
+    return HttpResponse.success('회원 탈퇴가 완료되었습니다.');
   }
 }
