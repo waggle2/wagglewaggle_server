@@ -135,7 +135,7 @@ export class AuthenticationService {
       .pipe(map((res) => res.data?.access_token))
       .pipe(
         catchError(() => {
-          throw new SocialLoginForbiddenException('API not available');
+          throw new SocialLoginForbiddenException('Kakao API not available');
         }),
       );
 
