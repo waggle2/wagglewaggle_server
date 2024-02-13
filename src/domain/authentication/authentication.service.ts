@@ -350,7 +350,7 @@ export class AuthenticationService {
       authorities: user.authorities,
     };
     const token = await this.jwtService.signAsync(payload);
-    return `accessToken=${token}; HttpOnly; Path=/ Max-Age=${process.env.JWT_EXPIRATION_TIME}`; // JWT 토큰을 쿠키 형태로 반환
+    return `accessToken=${token}; HttpOnly; SameSite=None; Path=/`; // JWT 토큰을 쿠키 형태로 반환
   }
 
   // refresh token 생성, 쿠키 반환
@@ -364,7 +364,7 @@ export class AuthenticationService {
     // 유저 객체에 refresh token 저장
     await this.usersService.setCurrentRefreshToken(token, user.id);
 
-    return `refreshToken=${token}; HttpOnly; Path=/ Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}`;
+    return `refreshToken=${token}; HttpOnly; SameSite=None; Path=/`;
   }
 
   async refreshTokenMatches(refreshToken: string, refreshUserId: string) {
