@@ -16,7 +16,7 @@ export function TypeormConfig(configService: ConfigService) {
     database: configService.get(`DB_NAME`),
     autoLoadEntities: true,
     synchronize: isDev,
-    dropSchema: isDev,
+    // dropSchema: isDev,
     logging: logging,
   };
 
