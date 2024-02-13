@@ -14,7 +14,7 @@ import {
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ItemType } from '@/@types/enum/item-type.enum';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
@@ -27,12 +27,13 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   /* 포인트샵 페이지 */
-  @Get()
+  @Get('/animals')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '동물별 아이템 조회' })
   @ApiResponse({
     status: 200,
-    description: '동물별 아이템이 조회되었습니다.',
+    description:
+      '동물별 아이템 조회, 유저 해당 동물 포인트, 아이템 보유 여부(isOwned)',
     schema: {
       type: 'object',
       properties: {
@@ -59,6 +60,7 @@ export class ItemsController {
                   createdAt: { type: 'string', format: 'date-time' },
                   updatedAt: { type: 'string', format: 'date-time' },
                   deletedAt: { type: 'string', format: 'date-time' },
+                  isOwned: { type: 'boolean' },
                 },
               },
             },
@@ -121,7 +123,7 @@ export class ItemsController {
   @ApiOperation({ summary: '장바구니 조회' })
   @ApiResponse({
     status: 200,
-    description: '장바구니가 조회되었습니다.',
+    description: '장바구니 조회, 선택한 아이템 총 포인트',
     schema: {
       type: 'object',
       properties: {
@@ -174,7 +176,7 @@ export class ItemsController {
   @ApiOperation({ summary: '장바구니 전체 아이템 구매' })
   @ApiResponse({
     status: 200,
-    description: '아이템 구매가 완료되었습니다.',
+    description: '아이템 구매가 완료, 남은 해당 동물 포인트',
     schema: {
       type: 'object',
       properties: {
@@ -280,10 +282,291 @@ export class ItemsController {
   }
 
   /* 마이페이지 */
-  // TODO: 유저가 가진 아이템 조회 → *user*.items 조회할 때 아이템 최신순으로
-  // TODO: 아이템 착용 → 만약 아이템 동물과 유저 동물이 같지 않다면 오류, 아이템 타입이 같은 건 덮어씌우기
-  // TODO: 아이템 착용 취소
-  // TODO: 아이템 판매 → +포인트
+  @Get()
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '유저가 갖고 있는 아이템 조회(마이페이지)' })
+  @ApiResponse({
+    status: 200,
+    description: '유저가 갖고 있는 아이템이 조회되었습니다.',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '유저가 갖고 있는 아이템이 조회되었습니다.',
+        },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              animal: { type: 'string' },
+              itemType: { type: 'string' },
+              name: { type: 'string' },
+              price: { type: 'number' },
+              image: { type: 'string' },
+              purchasedCount: { type: 'number' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+              deletedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getUserItems(
+    @Query('animal') animal: Animal,
+    @Query('itemType') itemType: ItemType,
+    @Req() req: RequestWithUser,
+  ) {
+    const items = await this.itemsService.getUserItems(
+      animal,
+      itemType,
+      req.user,
+    );
+    return HttpResponse.success(
+      '유저가 갖고 있는 아이템이 조회되었습니다.',
+      items,
+    );
+  }
+
+  @Get('/profile')
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '유저가 착용하고 있는 아이템 조회(마이페이지)' })
+  @ApiResponse({
+    status: 200,
+    description:
+      '착용 아이템 조회, emoji, frame, wallpaper, background의 경우 없다면 null',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '유저가 착용하고 있는 아이템이 조회되었습니다.',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            animal: { type: 'string' },
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+              },
+            },
+            emoji: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            background: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            frame: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            wallpaper: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getUserProfileItems(
+    @Query('animal') animal: Animal,
+    @Req() req: RequestWithUser,
+  ) {
+    const items = await this.itemsService.getUserProfileItems(animal, req.user);
+    return HttpResponse.success(
+      '유저가 착용하고 있는 아이템이 조회되었습니다.',
+      items,
+    );
+  }
+
+  @Patch('/profile')
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '선택한 아이템 착용(마이페이지)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        animal: {
+          type: 'string',
+          example: 'example@example.com',
+        },
+        itemIds: {
+          type: 'array',
+          items: {
+            type: 'number',
+            example: [1, 2, 3],
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      '선택한 아이템 착용, emoji, frame, wallpaper, background의 경우 없다면 null',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '선택한 아이템을 착용하였습니다.',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            animal: { type: 'string' },
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+              },
+            },
+            emoji: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            background: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            frame: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            wallpaper: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                animal: { type: 'string' },
+                itemType: { type: 'string' },
+                name: { type: 'string' },
+                price: { type: 'number' },
+                image: { type: 'string' },
+                purchasedCount: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '아이템 타입이 중복되었습니다.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '선택한 동물과 일치하지 않는 아이템입니다.',
+  })
+  async equipItemToProfile(
+    @Body('animal') animal: Animal,
+    @Body('itemIds') itemIds: number[],
+    @Req() req: RequestWithUser,
+  ) {
+    const profileItems = await this.itemsService.equipItemToProfile(
+      animal,
+      itemIds,
+      req.user,
+    );
+    return HttpResponse.success(
+      '선택한 아이템을 착용하였습니다.',
+      profileItems,
+    );
+  }
 
   /* 관리자 페이지 */
   @Post()
