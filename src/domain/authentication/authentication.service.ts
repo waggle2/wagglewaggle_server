@@ -36,9 +36,26 @@ export class AuthenticationService {
 
   // 회원가입
   async register(registrationData: CreateUserDto): Promise<void> {
-    const { authenticationProvider, email, password } = registrationData;
+    const { authenticationProvider, socialId, email, password, nickname } =
+      registrationData;
     if (authenticationProvider === 'email' && (!email || !password)) {
       throw new UserBadRequestException('이메일 및 비밀번호가 필요합니다.');
+    }
+    if (socialId) {
+      const existingSocialId = await this.usersService.findBySocialId(socialId);
+      if (existingSocialId) {
+        throw new UserBadRequestException('존재하는 소셜id 입니다.');
+      }
+    }
+    if (email) {
+      const existingEmail = await this.usersService.findByEmail(email);
+      if (existingEmail) {
+        throw new UserBadRequestException('존재하는 이메일입니다.');
+      }
+    }
+    const result = await this.usersService.checkNickname(nickname);
+    if (result === false) {
+      throw new UserBadRequestException('존재하는 닉네임입니다.');
     }
 
     if (password) {
