@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Patch,
   Post,
@@ -399,7 +400,7 @@ export class AuthenticationController {
     return HttpResponse.success('비밀번호가 재설정되었습니다.');
   }
 
-  @Post('refresh-token')
+  @Get('refresh-token')
   @UseGuards(RefreshAuthenticationGuard)
   @ApiOperation({ summary: '액세스 토큰 재발급' })
   @ApiResponse({
