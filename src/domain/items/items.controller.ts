@@ -111,7 +111,7 @@ export class ItemsController {
   })
   async addToCart(
     @Param('id') id: string,
-    @Body('animal') animal: Animal,
+    @Query('animal') animal: Animal,
     @Req() req: RequestWithUser,
   ) {
     await this.itemsService.addToCart(+id, animal, req.user);
