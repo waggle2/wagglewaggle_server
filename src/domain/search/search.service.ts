@@ -12,7 +12,7 @@ export class SearchService {
 
   async createIndex() {
     const index = this.configService.get('ES_INDEX');
-    const env = this.configService.get('NODE_ENV');
+    // const env = this.configService.get('NODE_ENV');
     const checkIndex = await this.esService.indices.exists({
       index,
     });
@@ -71,7 +71,7 @@ export class SearchService {
                 },
               },
             },
-            preferredResponseAnimal: {
+            animalOfAuthor: {
               type: 'text',
               fields: {
                 keyword: {
@@ -97,14 +97,15 @@ export class SearchService {
       });
     }
 
-    if (env !== 'production') {
-      await this.esService.deleteByQuery({
-        index,
-        query: {
-          match_all: {},
-        },
-      });
-    }
+    // 개발 환경에서 초기에 데이터 날리는 부분
+    // if (env !== 'production') {
+    //   await this.esService.deleteByQuery({
+    //     index,
+    //     query: {
+    //       match_all: {},
+    //     },
+    //   });
+    // }
   }
 
   async indexPost(post: Post) {

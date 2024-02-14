@@ -5,14 +5,12 @@ import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Tag } from '@/@types/enum/tags.enum';
-import { Animal } from '@/@types/enum/animal.enum';
 import {
   PostAlreadyDeletedException,
   PostAuthorDifferentException,
   PostBadRequestException,
   PostNotFoundException,
 } from '@/domain/posts/exceptions/posts.exception';
-import { Category } from '@/@types/enum/category.enum';
 import { SearchService } from '@/domain/search/search.service';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
@@ -20,6 +18,8 @@ import {
   AlreadyLikeException,
   LikeDifferentUserException,
 } from '@/domain/posts/exceptions/likes.exception';
+import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
+import { PageOptionDto } from '@/common/dto/page/page-option.dto';
 
 @Injectable()
 export class PostsService {
@@ -52,14 +52,10 @@ export class PostsService {
     };
   }
 
-  async findAll(
-    text: string,
-    animal: Animal,
-    category: Category,
-    tags: Tag | Tag[],
-    page: number,
-    pageSize: number,
-  ) {
+  async findAll(postFindDto: PostFindDto, pageOptionDto: PageOptionDto) {
+    const { text, animal, category, tags } = postFindDto;
+    const { page, pageSize } = pageOptionDto;
+
     const esQuery = {
       query: {
         bool: {
@@ -91,7 +87,7 @@ export class PostsService {
 
     if (animal) {
       esQuery.query.bool.must.push({
-        match: { preferredResponseAnimal: animal.valueOf() },
+        match: { animalOfAuthor: animal.valueOf() },
       });
     }
 
@@ -111,7 +107,8 @@ export class PostsService {
     return await this.searchService.search(esQuery);
   }
 
-  async findHotPosts(page: number, pageSize: number) {
+  async findHotPosts(pageOpionDto: PageOptionDto) {
+    const { page, pageSize } = pageOpionDto;
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
@@ -121,13 +118,14 @@ export class PostsService {
       .leftJoinAndSelect('post.author', 'author')
       .where('post.deleted_at IS NULL')
       .andWhere('post.updated_at > :date', { date: date48HoursAgo })
-      .addSelect('post.comment_num + post.like_num', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
+      .addSelect('post.comment_num + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
       .addOrderBy('totalScore', 'DESC');
 
     return await this.findPosts(queryBuilder, page, pageSize);
   }
 
-  async findDeletedPosts(page: number, pageSize: number) {
+  async findDeletedPosts(pageOptionDto: PageOptionDto) {
+    const { page, pageSize } = pageOptionDto;
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .withDeleted()

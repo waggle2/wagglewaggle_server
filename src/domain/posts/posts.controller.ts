@@ -15,25 +15,27 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Tag } from '@/@types/enum/tags.enum';
-import { Animal } from '@/@types/enum/animal.enum';
-import { FindAllDecorator } from '@/domain/posts/decorators/posts.decorator';
-import {
-  PageQuery,
-  PageSizeQuery,
-} from '@/@types/decorators/pagination.decorator';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
-import { Category } from '@/@types/enum/category.enum';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
+import { HttpResponse } from '@/@types/http-response';
+import {
+  AlreadyLikeException,
+  LikeDifferentUserException,
+} from '@/domain/posts/exceptions/likes.exception';
+import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
+import { PageOptionDto } from '@/common/dto/page/page-option.dto';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -51,53 +53,31 @@ export class PostsController {
   @ApiBadRequestResponse({
     description: 'Bad Request',
   })
-  @FindAllDecorator()
   @Get()
   async findAll(
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
-    @Query('tags') tags: Tag | Tag[],
-    @Query('category') category: Category,
-    @Query('text') text: string,
-    @Query('animal')
-    animal: Animal,
+    @Query() postFindDto: PostFindDto,
+    @Query() pageOptionDto: PageOptionDto,
   ) {
-    return await this.postsService.findAll(
-      text,
-      animal,
-      category,
-      tags,
-      page,
-      pageSize,
-    );
+    const posts = await this.postsService.findAll(postFindDto, pageOptionDto);
+    return HttpResponse.success('게시글 정보가 조회되었습니다', posts);
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
   @ApiOkResponse({
     type: Array<PostEntity>,
   })
-  @PageQuery()
-  @PageSizeQuery()
   @Get('/hot-posts')
-  async findHotPosts(
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
-  ) {
-    return await this.postsService.findHotPosts(page, pageSize);
+  async findHotPosts(@Query() pageOptionDto: PageOptionDto) {
+    return await this.postsService.findHotPosts(pageOptionDto);
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
   @ApiOkResponse({
     type: Array<PostEntity>,
   })
-  @PageQuery()
-  @PageSizeQuery()
   @Get('/deleted-posts')
-  async findDeletedPosts(
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
-  ) {
-    return await this.postsService.findDeletedPosts(page, pageSize);
+  async findDeletedPosts(@Query() pageOptionDto: PageOptionDto) {
+    return await this.postsService.findDeletedPosts(pageOptionDto);
   }
 
   @ApiOperation({ summary: '단일 게시글 조회' })
@@ -193,25 +173,55 @@ export class LikesController {
   constructor(private readonly postsService: PostsService) {}
 
   @ApiOperation({ summary: '좋아요' })
-  @ApiCreatedResponse({
-    type: String,
-    description: '좋아요 성공',
+  @ApiResponse({
+    status: 201,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        message: {
+          type: 'string',
+          example: '성공적으로 처리되었습니다',
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+    description: '존재하지 않는 게시글입니다',
+  })
+  @ApiConflictResponse({
+    type: AlreadyLikeException,
+    description: '이미 좋아요를 누른 게시물입니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Post(':postId')
   async likePost(@Req() req: RequestWithUser, @Param('postId') postId: string) {
     const { user } = req;
     await this.postsService.likePost(user, +postId);
-    return { message: '성공적으로 처리되었습니다' };
+    return HttpResponse.created('성공적으로 처리되었습니다');
   }
 
   @ApiOperation({
     summary: '좋아요 취소',
     description: '좋아요 아이디를 받아 삭제합니다',
   })
-  @ApiOkResponse({
-    type: String,
-    description: '좋아요 취소 성공',
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '좋아요가 취소되었습니다',
+        },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    type: LikeDifferentUserException,
+    description: '잘못된 접근입니다',
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
@@ -225,6 +235,6 @@ export class LikesController {
   ) {
     const { user } = req;
     await this.postsService.cancelLike(user, +postId);
-    return { message: '좋아요가 취소되었습니다.' };
+    return HttpResponse.success('좋아요가 취소되었습니다.');
   }
 }

@@ -1,6 +1,5 @@
 import {
   IsArray,
-  IsBoolean,
   IsDate,
   IsOptional,
   IsString,
@@ -34,28 +33,16 @@ export class UpdatePollDto {
   @Expose({ name: 'poll_item_dtos' })
   readonly pollItemDtos: UpdatePollItemDto[];
 
-  @ApiProperty({
-    name: 'is_anonymous',
-    example: '점메추',
-    description: '투표 제목',
-    default: true,
-    nullable: true,
-  })
-  @IsBoolean()
-  @IsOptional()
-  @Expose({ name: 'is_anonymous' })
-  readonly isAnonymous: boolean;
-
-  @ApiProperty({
-    example: '점메추',
-    description: '복수 선택 가능',
-    default: false,
-    nullable: true,
-  })
-  @IsBoolean()
-  @IsOptional()
-  @Expose({ name: 'allow_multiple_choices' })
-  readonly allowMultipleChoices: boolean;
+  // @ApiProperty({
+  //   example: '점메추',
+  //   description: '복수 선택 가능',
+  //   default: false,
+  //   nullable: true,
+  // })
+  // @IsBoolean()
+  // @IsOptional()
+  // @Expose({ name: 'allow_multiple_choices' })
+  // readonly allowMultipleChoices: boolean;
 
   @ApiProperty({
     example: '',
