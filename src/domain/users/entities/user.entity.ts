@@ -55,16 +55,16 @@ export class User {
   profileAnimal: Animal;
 
   @Column({ default: 0 })
-  catPoints: number;
+  catCoins: number;
 
   @Column({ default: 0 })
-  bearPoints: number;
+  bearCoins: number;
 
   @Column({ default: 0 })
-  dogPoints: number;
+  dogCoins: number;
 
   @Column({ default: 0 })
-  foxPoints: number;
+  foxCoins: number;
 
   @Column({ name: 'current_refresh_token', nullable: true })
   currentRefreshToken: string;

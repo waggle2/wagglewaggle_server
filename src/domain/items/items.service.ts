@@ -37,26 +37,26 @@ export class ItemsService {
     user: User,
   ): Promise<{
     items: ItemWithOwnership[];
-    points: number;
+    coins: number;
   }> {
     const items = await this.itemRepository.find({
       where: { animal, itemType },
       order: { createdAt: 'DESC' },
     });
 
-    let points: number;
+    let coins: number;
     switch (animal) {
       case Animal.BEAR:
-        points = user.bearPoints;
+        coins = user.bearCoins;
         break;
       case Animal.CAT:
-        points = user.catPoints;
+        coins = user.catCoins;
         break;
       case Animal.DOG:
-        points = user.dogPoints;
+        coins = user.dogCoins;
         break;
       case Animal.FOX:
-        points = user.foxPoints;
+        coins = user.foxCoins;
         break;
     }
 
@@ -66,7 +66,7 @@ export class ItemsService {
       return { ...item, isOwned: !!isOwned };
     });
 
-    return { items: itemsWithOwnership, points };
+    return { items: itemsWithOwnership, coins };
   }
 
   // 장바구니에 아이템 추가
@@ -91,7 +91,7 @@ export class ItemsService {
     }
 
     itemCart.items.unshift(item.id);
-    itemCart.totalPoints += item.price; // 총 포인트에 해당 아이템 가격 더하기
+    itemCart.totalCoins += item.price; // 총 포인트에 해당 아이템 가격 더하기
     await this.itemCartRepository.save(itemCart);
   }
 
@@ -99,7 +99,7 @@ export class ItemsService {
   async getCartItems(
     animal: Animal,
     user: User,
-  ): Promise<{ items: Item[]; totalPoints: number }> {
+  ): Promise<{ items: Item[]; totalCoins: number }> {
     const itemCart = await this.itemCartRepository
       .createQueryBuilder('item_cart')
       .leftJoinAndSelect('item_cart.user', 'user')
@@ -119,7 +119,7 @@ export class ItemsService {
       items.find((item) => item.id === Number(itemId)),
     );
 
-    return { items: sortedItems, totalPoints: itemCart.totalPoints };
+    return { items: sortedItems, totalCoins: itemCart.totalCoins };
   }
 
   // 장바구니 전체 아이템 구매
@@ -136,25 +136,25 @@ export class ItemsService {
       throw new ItemBadRequestException('No items selected.');
     }
 
-    let pointsField: string;
+    let coinsField: string;
     switch (animal) {
       case Animal.BEAR:
-        pointsField = 'bearPoints';
+        coinsField = 'bearCoins';
         break;
       case Animal.CAT:
-        pointsField = 'catPoints';
+        coinsField = 'catCoins';
         break;
       case Animal.DOG:
-        pointsField = 'dogPoints';
+        coinsField = 'dogCoins';
         break;
       case Animal.FOX:
-        pointsField = 'foxPoints';
+        coinsField = 'foxCoins';
         break;
     }
-    if (user[pointsField] < itemCart.totalPoints) {
-      throw new ItemBadRequestException('포인트가 부족합니다.');
+    if (user[coinsField] < itemCart.totalCoins) {
+      throw new ItemBadRequestException('코인이 부족합니다.');
     }
-    user[pointsField] -= itemCart.totalPoints;
+    user[coinsField] -= itemCart.totalCoins;
     const itemsArray = await this.itemRepository
       .createQueryBuilder('item')
       .whereInIds(itemCart.items)
@@ -168,10 +168,10 @@ export class ItemsService {
       await this.itemRepository.save(item);
     }
     itemCart.items = [];
-    itemCart.totalPoints = 0;
+    itemCart.totalCoins = 0;
     await this.itemCartRepository.save(itemCart);
 
-    return user[pointsField];
+    return user[coinsField];
   }
 
   // 장바구니 아이템 취소
@@ -188,7 +188,7 @@ export class ItemsService {
     }
 
     itemCart.items = itemCart.items.filter((itemId) => Number(itemId) !== id);
-    itemCart.totalPoints -= item.price; // 총 포인트에 해당 아이템 가격 빼기
+    itemCart.totalCoins -= item.price; // 총 포인트에 해당 아이템 가격 빼기
     await this.itemCartRepository.save(itemCart);
   }
 
@@ -205,7 +205,7 @@ export class ItemsService {
     }
 
     itemCart.items = [];
-    itemCart.totalPoints = 0;
+    itemCart.totalCoins = 0;
     await this.itemCartRepository.save(itemCart);
   }
 

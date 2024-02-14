@@ -360,28 +360,34 @@ export class AuthenticationService {
     return await bcrypt.compare(userInputPassword, hashedPassword);
   }
 
-  // access token 생성, 쿠키 반환
-  async getCookieWithAccessToken(user: User) {
+  async getAccessToken(user: User) {
     const payload: TokenPayload = {
       id: user.id,
       authorities: user.authorities,
     };
-    const token = await this.jwtService.signAsync(payload);
-    return `accessToken=${token}; SameSite=None; Secure; Max-Age=${process.env.JWT_EXPIRATION_TIME}; Path=/`; // JWT 토큰을 쿠키 형태로 반환
+    return await this.jwtService.signAsync(payload);
   }
 
-  // refresh token 생성, 쿠키 반환
-  async getCookieWithRefreshToken(user: User) {
+  async getRefreshToken(user: User) {
     const payload: TokenPayload = { id: user.id };
     const token = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
     });
+    await this.usersService.setCurrentRefreshToken(token, user.id); // 유저 객체에 refresh token 저장
+    return token;
+  }
 
-    // 유저 객체에 refresh token 저장
-    await this.usersService.setCurrentRefreshToken(token, user.id);
+  // access token 생성, 쿠키 반환
+  async getCookieWithAccessToken(user: User) {
+    const token = await this.getAccessToken(user);
+    return `accessToken=${token}; HttpOnly; SameSite=None; Secure; Max-Age=${process.env.JWT_EXPIRATION_TIME}; Path=/`; // JWT 토큰을 쿠키 형태로 반환
+  }
 
-    return `refreshToken=${token}; SameSite=None; Secure; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}; Path=/`;
+  // refresh token 생성, 쿠키 반환
+  async getCookieWithRefreshToken(user: User) {
+    const token = await this.getRefreshToken(user);
+    return `refreshToken=${token}; HttpOnly; SameSite=None; Secure; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}; Path=/`;
   }
 
   async refreshTokenMatches(refreshToken: string, refreshUserId: string) {
