@@ -360,6 +360,7 @@ export class AuthenticationService {
     return await bcrypt.compare(userInputPassword, hashedPassword);
   }
 
+  // access token 생성
   async getAccessToken(user: User) {
     const payload: TokenPayload = {
       id: user.id,
@@ -368,6 +369,7 @@ export class AuthenticationService {
     return await this.jwtService.signAsync(payload);
   }
 
+  // refresh token 생성
   async getRefreshToken(user: User) {
     const payload: TokenPayload = { id: user.id };
     const token = await this.jwtService.signAsync(payload, {
