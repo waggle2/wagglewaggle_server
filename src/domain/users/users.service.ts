@@ -297,4 +297,26 @@ export class UsersService {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(refreshToken, salt);
   }
+
+  // 코인 조절(임시)
+  async addCoins(user: User, animal: Animal, coins: number) {
+    let coinsField: string;
+    switch (animal) {
+      case Animal.BEAR:
+        coinsField = 'bearCoins';
+        break;
+      case Animal.CAT:
+        coinsField = 'catCoins';
+        break;
+      case Animal.DOG:
+        coinsField = 'dogCoins';
+        break;
+      case Animal.FOX:
+        coinsField = 'foxCoins';
+        break;
+    }
+    user[coinsField] += coins;
+    await this.userRepository.save(user);
+    return user[coinsField];
+  }
 }

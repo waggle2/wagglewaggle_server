@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Param,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import RequestWithUser from '../authentication/interfaces/request-with-user.inte
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { HttpResponse } from '@/@types/http-response';
+import { Animal } from '@/@types/enum/animal.enum';
 
 @Controller('users')
 @ApiTags('users')
@@ -355,5 +357,45 @@ export class UsersController {
     const { user } = request;
     await this.usersService.remove(user.id, exitReasonDto);
     return HttpResponse.success('회원 탈퇴가 완료되었습니다.');
+  }
+
+  // 임시
+  @Patch('/coins')
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '코인 조절(임시)' })
+  @ApiResponse({
+    status: 200,
+    description:
+      '코인 수정 완료 (해당 동물(곰, 여우, 개, 고양이), 추가할 코인)',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '코인이 수정되었습니다.',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            totalCoins: { type: 'number', example: 50 },
+          },
+        },
+      },
+    },
+  })
+  async updateCoins(
+    @Req() request: RequestWithUser,
+    @Query('animal') animal: Animal,
+    @Query('coins') coins: string,
+  ) {
+    const userCoins = await this.usersService.addCoins(
+      request.user,
+      animal,
+      +coins,
+    );
+    return HttpResponse.success('코인이 수정되었습니다.', {
+      totalCoins: userCoins,
+    });
   }
 }
