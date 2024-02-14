@@ -78,13 +78,21 @@ export class AuthenticationController {
   })
   async emailLogin(@Body() loginDto: LoginDto, @Res() response: Response) {
     const user = await this.authenticationService.emailLogin(loginDto);
-    const accessCookie =
-      await this.authenticationService.getCookieWithAccessToken(user);
-    const refreshCookie =
-      await this.authenticationService.getCookieWithRefreshToken(user);
+    const accessToken = await this.authenticationService.getAccessToken(user);
+    const refreshToken = await this.authenticationService.getRefreshToken(user);
+    const accessCookie = `accessToken=${accessToken}; HttpOnly; SameSite=None; Secure; Max-Age=${process.env.JWT_EXPIRATION_TIME}; Path=/`;
+    const refreshCookie = `refreshToken=${refreshToken}; HttpOnly; SameSite=None; Secure; Max-Age=${process.env.JWT_REFRESH_EXPIRATION_TIME}; Path=/`;
+    // const accessCookie =
+    //   await this.authenticationService.getCookieWithAccessToken(user);
+    // const refreshCookie =
+    //   await this.authenticationService.getCookieWithRefreshToken(user);
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     user.credential.password = undefined;
-    response.json({ code: 200, message: '로그인 되었습니다.' });
+    response.json({
+      code: 200,
+      message: '로그인 되었습니다.',
+      data: { accessToken, refreshToken },
+    });
   }
 
   @HttpCode(200)
