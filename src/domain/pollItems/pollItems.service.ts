@@ -36,19 +36,13 @@ export class PollItemsService {
       throw new AlreadyVoteException('이미 투표한 항목입니다');
     }
 
-    // 복수 투표 여부 체크
-    const canChooseMultiple = poll.allowMultipleChoices;
+    // 이미 투표한 항목이 있다면 409
+    const pollItems = poll.pollItems;
+    pollItems.forEach((pi) => {
+      if (pi.userIds.includes(user.id))
+        throw new AlreadyVoteException('한 항목에만 투표할 수 있습니다');
+    });
 
-    // 복수 투표 아닌 경우, 이미 투표한 항목이 있다면 409
-    if (!canChooseMultiple) {
-      const pollItems = poll.pollItems;
-      pollItems.forEach((pi) => {
-        if (pi.userIds.includes(user.id))
-          throw new AlreadyVoteException('한 항목에만 투표할 수 있습니다');
-      });
-    }
-
-    // 투표
     pollItem.userIds.push(user.id);
 
     return await this.pollItemsRepository.save(pollItem);

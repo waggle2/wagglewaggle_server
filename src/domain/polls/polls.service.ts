@@ -32,15 +32,16 @@ export class PollsService {
     if (post.poll)
       throw new PollConflictException('이미 투표 항목이 존재하는 게시글입니다');
 
-    const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =
-      createPollDto;
+    const { title, pollItemDtos, endedAt } = createPollDto;
+
+    // 마감 기한 이틀 뒤를 디폴트로
+    const twoDaysLater = new Date();
+    twoDaysLater.setDate(twoDaysLater.getDate() + 2);
 
     const poll = this.pollsRepository.create({
       title,
       post: { id: postId },
-      isAnonymous,
-      allowMultipleChoices,
-      endedAt,
+      endedAt: endedAt ? endedAt : twoDaysLater,
     });
 
     poll.pollItems = await Promise.all(
@@ -57,6 +58,7 @@ export class PollsService {
       .createQueryBuilder('poll')
       .leftJoinAndSelect('poll.post', 'post')
       .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('poll.pollItems', 'pollItems')
       .where('poll.id = :id', { id })
       .getOne();
 
@@ -73,22 +75,21 @@ export class PollsService {
     if (existingPoll.post.author.id !== user.id)
       throw new PollAuthorDifferentException('잘못된 접근입니다');
 
-    const { title, pollItemDtos, isAnonymous, allowMultipleChoices, endedAt } =
-      updatePollDto;
+    const { title, pollItemDtos, endedAt } = updatePollDto;
 
-    const pollItems = await Promise.all(
-      pollItemDtos.map(({ id: pollItemId, content }) =>
-        this.pollItemsService.update(pollItemId, { content }),
-      ),
-    );
+    if (pollItemDtos && pollItemDtos.length > 0) {
+      existingPoll.pollItems = await Promise.all(
+        pollItemDtos.map(({ id: pollItemId, content }) =>
+          this.pollItemsService.update(pollItemId, { content }),
+        ),
+      );
+    }
 
-    existingPoll.title = title;
-    existingPoll.pollItems = pollItems;
-    existingPoll.isAnonymous = isAnonymous;
-    existingPoll.allowMultipleChoices = allowMultipleChoices;
-    existingPoll.endedAt = endedAt;
+    if (title) existingPoll.title = title;
+    if (endedAt) existingPoll.endedAt = endedAt;
 
-    return await this.pollsRepository.save(existingPoll);
+    await this.pollsRepository.save(existingPoll);
+    return this.findOne(id);
   }
 
   async remove(user: User, id: number) {
