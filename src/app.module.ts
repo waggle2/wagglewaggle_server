@@ -22,7 +22,6 @@ import { HealthCheckController } from '@/domain/health-check/health-check.contro
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickersModule } from '@/domain/stickers/stickers.module';
 import { SearchModule } from '@/domain/search/search.module';
-import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -65,7 +64,6 @@ import { NotificationModule } from './notification/notification.module';
     ReportsModule,
     StickersModule,
     SearchModule,
-    NotificationModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
