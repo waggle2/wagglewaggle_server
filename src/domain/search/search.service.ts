@@ -71,7 +71,7 @@ export class SearchService {
                 },
               },
             },
-            preferredResponseAnimal: {
+            animalOfAuthor: {
               type: 'text',
               fields: {
                 keyword: {

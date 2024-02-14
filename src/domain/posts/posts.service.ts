@@ -91,7 +91,7 @@ export class PostsService {
 
     if (animal) {
       esQuery.query.bool.must.push({
-        match: { preferredResponseAnimal: animal.valueOf() },
+        match: { animalOfAuthor: animal.valueOf() },
       });
     }
 
