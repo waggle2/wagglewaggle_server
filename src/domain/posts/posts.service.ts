@@ -55,11 +55,12 @@ export class PostsService {
 
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
       .where('post.deleted_at IS NULL');
 
     if (animal) {
       queryBuilder.andWhere('post.animal = :animal', {
-        animal: animal.valueOf(),
+        animal,
       });
     }
 
@@ -71,7 +72,7 @@ export class PostsService {
 
     if (category) {
       queryBuilder.andWhere('post.category = :category', {
-        category: category.valueOf(),
+        category,
       });
     }
 
@@ -87,6 +88,7 @@ export class PostsService {
     queryBuilder.addOrderBy('post.updated_at', 'DESC');
 
     return await this.findPosts(queryBuilder, page, pageSize);
+
     // const esQuery = {
     //   query: {
     //     bool: {
