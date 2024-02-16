@@ -147,6 +147,7 @@ export class PostsService {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential')
       .where('post.deletedAt IS NULL')
       .andWhere('post.updatedAt > :date', { date: date48HoursAgo })
       .addSelect('post.commentNum + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용

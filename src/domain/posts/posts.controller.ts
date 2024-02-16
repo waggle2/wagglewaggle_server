@@ -106,9 +106,13 @@ export class PostsController {
   async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
       await this.postsService.findHotPosts(pageOptionDto);
-    return HttpResponse.success('인기 게시글 조회에 성공했습니다', posts, {
-      total: total,
-    });
+    return HttpResponse.success(
+      '인기 게시글 조회에 성공했습니다',
+      posts.map((post) => new PostEntryResponseDto(post)),
+      {
+        total: total,
+      },
+    );
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
