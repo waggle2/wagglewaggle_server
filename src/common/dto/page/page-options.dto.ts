@@ -24,4 +24,8 @@ export class PageOptionsDto {
   @IsOptional()
   @Min(1)
   readonly pageSize: number;
+
+  get skip(): number {
+    return (this.page - 1) * this.pageSize;
+  }
 }
