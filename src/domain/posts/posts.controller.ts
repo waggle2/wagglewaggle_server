@@ -24,6 +24,7 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
@@ -36,6 +37,7 @@ import {
 } from '@/domain/posts/exceptions/likes.exception';
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { PostEntryResponseDto } from '@/domain/posts/dto/post-entry-response.dto';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -46,9 +48,34 @@ export class PostsController {
     summary: '전체 게시글 조회 및 검색',
     description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
   })
-  @ApiOkResponse({
-    type: Array<PostEntity>,
-    description: '게시물 정보가 조회되었습니다',
+  @ApiResponse({
+    status: 200,
+    description: '게시글 정보가 조회되었습니다',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '게시글 정보가 조회되었습니다',
+        },
+        data: {
+          type: 'array',
+          items: {
+            $ref: getSchemaPath(PostEntryResponseDto),
+          },
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            total: {
+              type: 'number',
+              example: 7,
+            },
+          },
+        },
+      },
+    },
   })
   @ApiBadRequestResponse({
     description: 'Bad Request',
@@ -62,9 +89,13 @@ export class PostsController {
       postFindDto,
       pageOptionDto,
     );
-    return HttpResponse.success('게시글 정보가 조회되었습니다', posts, {
-      total: total,
-    });
+    return HttpResponse.success(
+      '게시글 정보가 조회되었습니다',
+      posts.map((post) => new PostEntryResponseDto(post)),
+      {
+        total: total,
+      },
+    );
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })

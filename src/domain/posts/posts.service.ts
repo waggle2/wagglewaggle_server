@@ -28,9 +28,9 @@ export class PostsService {
 
   private async findPosts(
     queryBuilder: SelectQueryBuilder<Post>,
-    page: number,
-    pageSize: number,
+    pageOptionsDto: PageOptionsDto,
   ): Promise<{ posts: Post[]; total: number }> {
+    const { page, pageSize } = pageOptionsDto;
     let posts: Post[], total: number;
 
     if (page && pageSize) {
@@ -49,14 +49,12 @@ export class PostsService {
     };
   }
 
-  async findAll(postFindDto: PostFindDto, pageOptionDto: PageOptionsDto) {
+  async findAll(postFindDto: PostFindDto, pageOptionsDto: PageOptionsDto) {
     const { text, animal, category, tag } = postFindDto;
-    const { page, pageSize } = pageOptionDto;
 
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
-      .where('post.deleted_at IS NULL');
+      .where('post.deletedAt IS NULL');
 
     if (animal) {
       queryBuilder.andWhere('post.animal = :animal', {
@@ -85,9 +83,12 @@ export class PostsService {
       );
     }
 
-    queryBuilder.addOrderBy('post.updated_at', 'DESC');
+    queryBuilder
+      .orderBy('post.updatedAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
 
-    return await this.findPosts(queryBuilder, page, pageSize);
+    return await this.findPosts(queryBuilder, pageOptionsDto);
 
     // const esQuery = {
     //   query: {
@@ -138,8 +139,7 @@ export class PostsService {
     // }
   }
 
-  async findHotPosts(pageOptionDto: PageOptionsDto) {
-    const { page, pageSize } = pageOptionDto;
+  async findHotPosts(pageOptionsDto: PageOptionsDto) {
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
@@ -147,23 +147,22 @@ export class PostsService {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
-      .where('post.deleted_at IS NULL')
-      .andWhere('post.updated_at > :date', { date: date48HoursAgo })
-      .addSelect('post.comment_num + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
+      .where('post.deletedAt IS NULL')
+      .andWhere('post.updatedAt > :date', { date: date48HoursAgo })
+      .addSelect('post.commentNum + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
       .addOrderBy('totalScore', 'DESC');
 
-    return await this.findPosts(queryBuilder, page, pageSize);
+    return await this.findPosts(queryBuilder, pageOptionsDto);
   }
 
-  async findDeletedPosts(pageOptionDto: PageOptionsDto) {
-    const { page, pageSize } = pageOptionDto;
+  async findDeletedPosts(pageOptionsDto: PageOptionsDto) {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .withDeleted()
-      .where('post.deleted_at IS NOT NULL')
-      .orderBy('post.updated_at', 'DESC');
+      .where('post.deletedAt IS NOT NULL')
+      .orderBy('post.updatedAt', 'DESC');
 
-    return await this.findPosts(queryBuilder, page, pageSize);
+    return await this.findPosts(queryBuilder, pageOptionsDto);
   }
 
   async findOne(id: number): Promise<Post> {
@@ -178,7 +177,7 @@ export class PostsService {
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
-      .where('post.deleted_at IS NULL')
+      .where('post.deletedAt IS NULL')
       .andWhere('post.id = :id', { id });
 
     const post = await queryBuilder.getOne();
@@ -241,7 +240,7 @@ export class PostsService {
     const deletedPosts = await this.postRepository
       .createQueryBuilder('post')
       .withDeleted()
-      .where('post.deleted_at IS NOT NULL')
+      .where('post.deletedAt IS NOT NULL')
       .getMany();
 
     const deletedPostsIds = deletedPosts.map((post) => post.id);
