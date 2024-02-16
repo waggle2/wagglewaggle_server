@@ -14,7 +14,7 @@ export class PostFindDto {
   @IsEnum(Tag)
   @IsOptional()
   @Expose()
-  readonly tags: Tag | Tag[];
+  readonly tag: Tag;
 
   @ApiProperty({
     description: '게시글 카테고리',

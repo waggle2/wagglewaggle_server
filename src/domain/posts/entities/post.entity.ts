@@ -40,9 +40,12 @@ export class Post {
   views: number;
 
   @Column({
-    type: 'json',
+    name: 'tag',
+    type: 'enum',
+    enum: Tag,
+    nullable: false,
   })
-  tags: Tag[];
+  tag: Tag;
 
   @Column({ type: 'json' })
   imageUrls: string[];
@@ -54,9 +57,6 @@ export class Post {
     nullable: false,
   })
   animalOfAuthor: Animal;
-
-  @Column({ name: 'preferred_response_animal', type: 'enum', enum: Animal })
-  preferredResponseAnimal: Animal;
 
   @Column({ type: 'enum', enum: Category, nullable: false })
   category: Category;
