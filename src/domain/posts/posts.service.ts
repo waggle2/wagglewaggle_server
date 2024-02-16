@@ -53,40 +53,45 @@ export class PostsService {
     const { text, animal, category, tag } = postFindDto;
     const { page, pageSize } = pageOptionDto;
 
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .where('post.deleted_at IS NULL');
+    try {
+      const queryBuilder = this.postRepository
+        .createQueryBuilder('posts')
+        .leftJoinAndSelect('posts.author', 'author')
+        .where('posts.deleted_at IS NULL');
 
-    if (animal) {
-      queryBuilder.andWhere('post.animal = :animal', {
-        animal: animal.valueOf(),
-      });
+      if (animal) {
+        queryBuilder.andWhere('posts.animal = :animal', {
+          animal,
+        });
+      }
+
+      if (tag) {
+        queryBuilder.andWhere('posts.tag = :tag', {
+          tag: tag.valueOf(),
+        });
+      }
+
+      if (category) {
+        queryBuilder.andWhere('posts.category = :category', {
+          category,
+        });
+      }
+
+      if (text) {
+        queryBuilder.andWhere(
+          '(posts.title LIKE :text OR posts.content LIKE :text)',
+          {
+            text: `%${text}%`,
+          },
+        );
+      }
+
+      queryBuilder.addOrderBy('posts.updated_at', 'DESC');
+
+      return await this.findPosts(queryBuilder, page, pageSize);
+    } catch (e) {
+      console.log(e);
     }
-
-    if (tag) {
-      queryBuilder.andWhere('post.tag = :tag', {
-        tag: tag.valueOf(),
-      });
-    }
-
-    if (category) {
-      queryBuilder.andWhere('post.category = :category', {
-        category: category.valueOf(),
-      });
-    }
-
-    if (text) {
-      queryBuilder.andWhere(
-        '(post.title LIKE :text OR post.content LIKE :text)',
-        {
-          text: `%${text}%`,
-        },
-      );
-    }
-
-    queryBuilder.addOrderBy('post.updated_at', 'DESC');
-
-    return await this.findPosts(queryBuilder, page, pageSize);
     // const esQuery = {
     //   query: {
     //     bool: {

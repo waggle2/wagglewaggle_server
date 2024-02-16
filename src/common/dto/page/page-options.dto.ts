@@ -12,7 +12,7 @@ export class PageOptionsDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  readonly page: number = 1;
+  readonly page: number;
 
   @ApiPropertyOptional({
     minimum: 1,
@@ -23,5 +23,5 @@ export class PageOptionsDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  readonly pageSize: number = 10;
+  readonly pageSize: number;
 }
