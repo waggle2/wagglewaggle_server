@@ -35,7 +35,7 @@ import {
   LikeDifferentUserException,
 } from '@/domain/posts/exceptions/likes.exception';
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
-import { PageOptionDto } from '@/common/dto/page/page-option.dto';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -48,7 +48,7 @@ export class PostsController {
   })
   @ApiOkResponse({
     type: Array<PostEntity>,
-    description: '게시물 목록을 불러오는 데 성공했습니다',
+    description: '게시물 정보가 조회되었습니다',
   })
   @ApiBadRequestResponse({
     description: 'Bad Request',
@@ -56,10 +56,15 @@ export class PostsController {
   @Get()
   async findAll(
     @Query() postFindDto: PostFindDto,
-    @Query() pageOptionDto: PageOptionDto,
+    @Query() pageOptionDto: PageOptionsDto,
   ) {
-    const posts = await this.postsService.findAll(postFindDto, pageOptionDto);
-    return HttpResponse.success('게시글 정보가 조회되었습니다', posts);
+    const { posts, total } = await this.postsService.findAll(
+      postFindDto,
+      pageOptionDto,
+    );
+    return HttpResponse.success('게시글 정보가 조회되었습니다', posts, {
+      total: total,
+    });
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
@@ -67,8 +72,12 @@ export class PostsController {
     type: Array<PostEntity>,
   })
   @Get('/hot-posts')
-  async findHotPosts(@Query() pageOptionDto: PageOptionDto) {
-    return await this.postsService.findHotPosts(pageOptionDto);
+  async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
+    const { posts, total } =
+      await this.postsService.findHotPosts(pageOptionDto);
+    return HttpResponse.success('인기 게시글 조회에 성공했습니다', posts, {
+      total: total,
+    });
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
@@ -76,8 +85,12 @@ export class PostsController {
     type: Array<PostEntity>,
   })
   @Get('/deleted-posts')
-  async findDeletedPosts(@Query() pageOptionDto: PageOptionDto) {
-    return await this.postsService.findDeletedPosts(pageOptionDto);
+  async findDeletedPosts(@Query() pageOptionDto: PageOptionsDto) {
+    const { posts, total } =
+      await this.postsService.findDeletedPosts(pageOptionDto);
+    return HttpResponse.success('삭제된 게시글 조회에 성공했습니다', posts, {
+      total: total,
+    });
   }
 
   @ApiOperation({ summary: '단일 게시글 조회' })
@@ -89,13 +102,14 @@ export class PostsController {
   })
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.postsService.findOne(+id);
+    const post = await this.postsService.findOne(+id);
+    return HttpResponse.success('게시글 정보가 조회되었습니다', post);
   }
 
   @ApiOperation({ summary: '게시글 생성' })
   @ApiCreatedResponse({
     type: PostEntity,
-    description: '게시글이 성공적으로 생성되었습니다',
+    description: '게시글 작성에 성공했습니다',
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @UseGuards(JwtAuthenticationGuard)
@@ -103,9 +117,10 @@ export class PostsController {
   async create(
     @Req() req: RequestWithUser,
     @Body() createPostDto: CreatePostDto,
-  ): Promise<PostEntity> {
+  ) {
     const { user } = req;
-    return await this.postsService.create(user, createPostDto);
+    const post = await this.postsService.create(user, createPostDto);
+    return HttpResponse.created('게시글 작성에 성공했습니다', post);
   }
 
   @ApiOperation({ summary: '게시글 수정' })
@@ -124,7 +139,8 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
   ) {
     const { user } = req;
-    return await this.postsService.update(user, +id, updatePostDto);
+    const post = await this.postsService.update(user, +id, updatePostDto);
+    return HttpResponse.success('게시글 업데이트에 성공했습니다', post);
   }
 
   @ApiOperation({ summary: '게시글 삭제' })
@@ -139,7 +155,7 @@ export class PostsController {
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
     await this.postsService.remove(user, +id);
-    return { message: '게시글이 성공적으로 삭제되었습니다' };
+    return HttpResponse.success('게시글이 성공적으로 삭제되었습니다');
   }
 
   @ApiOperation({ summary: '게시글 여러 개 삭제' })
@@ -163,7 +179,7 @@ export class PostsController {
 
     await this.postsService.removeMany(user, idsStr);
 
-    return { message: '게시글이 성공적으로 삭제되었습니다' };
+    return HttpResponse.success('게시글이 성공적으로 삭제되었습니다');
   }
 }
 

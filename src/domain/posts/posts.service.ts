@@ -4,14 +4,12 @@ import { Post } from './entities/post.entity';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Tag } from '@/@types/enum/tags.enum';
 import {
   PostAlreadyDeletedException,
   PostAuthorDifferentException,
   PostBadRequestException,
   PostNotFoundException,
 } from '@/domain/posts/exceptions/posts.exception';
-import { SearchService } from '@/domain/search/search.service';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
 import {
@@ -19,14 +17,13 @@ import {
   LikeDifferentUserException,
 } from '@/domain/posts/exceptions/likes.exception';
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
-import { PageOptionDto } from '@/common/dto/page/page-option.dto';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    private readonly searchService: SearchService,
   ) {}
 
   private async findPosts(
@@ -52,63 +49,95 @@ export class PostsService {
     };
   }
 
-  async findAll(postFindDto: PostFindDto, pageOptionDto: PageOptionDto) {
-    const { text, animal, category, tags } = postFindDto;
+  async findAll(postFindDto: PostFindDto, pageOptionDto: PageOptionsDto) {
+    const { text, animal, category, tag } = postFindDto;
     const { page, pageSize } = pageOptionDto;
 
-    const esQuery = {
-      query: {
-        bool: {
-          must: [],
-        },
-      },
-      sort: [
-        {
-          updatedAt: {
-            order: 'desc',
-          },
-        },
-      ],
-    };
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .where('post.deleted_at IS NULL');
 
-    if (page && pageSize) {
-      esQuery['from'] = (page - 1) * pageSize;
-      esQuery['size'] = pageSize;
-    }
-
-    if (text) {
-      esQuery.query.bool.must.push({
-        multi_match: {
-          query: text,
-          fields: ['title', 'content'],
-        },
+    if (animal) {
+      queryBuilder.andWhere('post.animal = :animal', {
+        animal: animal.valueOf(),
       });
     }
 
-    if (animal) {
-      esQuery.query.bool.must.push({
-        match: { animalOfAuthor: animal.valueOf() },
+    if (tag) {
+      queryBuilder.andWhere('post.tag = :tag', {
+        tag: tag.valueOf(),
       });
     }
 
     if (category) {
-      esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
-    }
-
-    if (tags && tags.length > 0) {
-      const tagsArray = Array.isArray(tags) ? tags : [tags];
-      tagsArray.forEach((tag: Tag) => {
-        esQuery.query.bool.must.push({
-          match: { tags: tag.valueOf() },
-        });
+      queryBuilder.andWhere('post.category = :category', {
+        category: category.valueOf(),
       });
     }
 
-    return await this.searchService.search(esQuery);
+    if (text) {
+      queryBuilder.andWhere(
+        '(post.title LIKE :text OR post.content LIKE :text)',
+        {
+          text: `%${text}%`,
+        },
+      );
+    }
+
+    queryBuilder.addOrderBy('post.updated_at', 'DESC');
+
+    return await this.findPosts(queryBuilder, page, pageSize);
+    // const esQuery = {
+    //   query: {
+    //     bool: {
+    //       must: [],
+    //     },
+    //   },
+    //   sort: [
+    //     {
+    //       updatedAt: {
+    //         order: 'desc',
+    //       },
+    //     },
+    //   ],
+    // };
+    //
+    // if (page && pageSize) {
+    //   esQuery['from'] = (page - 1) * pageSize;
+    //   esQuery['size'] = pageSize;
+    // }
+    //
+    // if (text) {
+    //   esQuery.query.bool.must.push({
+    //     multi_match: {
+    //       query: text,
+    //       fields: ['title', 'content'],
+    //     },
+    //   });
+    // }
+    //
+    // if (animal) {
+    //   esQuery.query.bool.must.push({
+    //     match: { animalOfAuthor: animal.valueOf() },
+    //   });
+    // }
+    //
+    // if (category) {
+    //   esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
+    // }
+    //
+    // if (tags && tags.length > 0) {
+    //   const tagsArray = Array.isArray(tags) ? tags : [tags];
+    //   tagsArray.forEach((tag: Tag) => {
+    //     esQuery.query.bool.must.push({
+    //       match: { tags: tag.valueOf() },
+    //     });
+    //   });
+    // }
   }
 
-  async findHotPosts(pageOpionDto: PageOptionDto) {
-    const { page, pageSize } = pageOpionDto;
+  async findHotPosts(pageOptionDto: PageOptionsDto) {
+    const { page, pageSize } = pageOptionDto;
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
@@ -124,7 +153,7 @@ export class PostsService {
     return await this.findPosts(queryBuilder, page, pageSize);
   }
 
-  async findDeletedPosts(pageOptionDto: PageOptionDto) {
+  async findDeletedPosts(pageOptionDto: PageOptionsDto) {
     const { page, pageSize } = pageOptionDto;
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
@@ -164,10 +193,9 @@ export class PostsService {
       views: 1,
     });
 
-    const post = await this.postRepository.save(newPost);
-    await this.searchService.indexPost(post);
+    // await this.searchService.indexPost(post);
 
-    return post;
+    return await this.postRepository.save(newPost);
   }
 
   async update(user: User, id: number, updateData: UpdatePostDto) {
@@ -177,10 +205,9 @@ export class PostsService {
       throw new PostAuthorDifferentException('게시물을 수정할 권한이 없습니다');
 
     await this.postRepository.update(id, updateData);
-    const updatedPost = await this.findOneWithoutIncrementingViews(id);
-    await this.searchService.update(id, updatedPost);
+    // await this.searchService.update(id, updatedPost);
 
-    return updatedPost;
+    return await this.findOneWithoutIncrementingViews(id);
   }
 
   async remove(user: User, id: number) {
@@ -202,7 +229,7 @@ export class PostsService {
       throw new PostAuthorDifferentException('게시물을 삭제할 권한이 없습니다');
 
     await this.postRepository.softDelete(id);
-    await this.searchService.remove(id);
+    // await this.searchService.remove(id);
   }
 
   async removeMany(user: User, ids: number[]) {
@@ -249,8 +276,7 @@ export class PostsService {
 
     if (result.affected === 0)
       throw new PostNotFoundException('삭제할 게시물이 없습니다');
-
-    await this.searchService.removeMany(ids);
+    // await this.searchService.removeMany(ids);
   }
 
   async likePost(user: User, postId: number) {

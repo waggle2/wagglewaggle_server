@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
 
-export class PageOptionDto {
+export class PageOptionsDto {
   @ApiPropertyOptional({
     minimum: 1,
     default: 1,

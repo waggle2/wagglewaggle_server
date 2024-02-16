@@ -9,7 +9,6 @@ import {
   Length,
 } from 'class-validator';
 import { Tag } from '@/@types/enum/tags.enum';
-import { Animal } from '@/@types/enum/animal.enum';
 import { Category } from '@/@types/enum/category.enum';
 
 export class CreatePostDto {
@@ -42,24 +41,13 @@ export class CreatePostDto {
   readonly isAnonymous: boolean = true;
 
   @ApiProperty({
-    example: '곰',
-    name: 'preferred_response_animal',
-    description: '희망 댭변 동물',
-    enum: Animal,
-  })
-  @IsEnum(Animal)
-  @Expose({ name: 'preferred_response_animal' })
-  readonly preferredResponseAnimal: Animal;
-
-  @ApiProperty({
-    example: '["수다수다", "조언해줘"]',
-    description: '게시글 태그 목록',
-    isArray: true,
+    example: '수다수다',
+    description: '게시글 태그',
     required: true,
     enum: Tag,
   })
-  @IsEnum(Tag, { each: true })
-  readonly tags: Tag[];
+  @IsEnum(Tag)
+  readonly tag: Tag;
 
   @ApiProperty({
     example: '연애',
