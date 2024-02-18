@@ -21,6 +21,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from '@/domain/health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickersModule } from '@/domain/stickers/stickers.module';
+import { MessagesModule } from './domain/messages/messages.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { StickersModule } from '@/domain/stickers/stickers.module';
     RedisCacheModule,
     ReportsModule,
     StickersModule,
+    MessagesModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
