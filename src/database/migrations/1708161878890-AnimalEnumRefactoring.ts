@@ -3,6 +3,11 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
+      ALTER TABLE users
+            CHANGE COLUMN profile_anumal profile_animal,
+    `);
+
+    await queryRunner.query(`
         ALTER TABLE users
             MODIFY COLUMN primary_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
             MODIFY COLUMN second_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
@@ -93,6 +98,11 @@ export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+        ALTER TABLE users
+            CHANGE COLUMN profile_animal profile_anumal,
+    `);
+
     await queryRunner.query(`
         ALTER TABLE users
             MODIFY COLUMN primary_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
