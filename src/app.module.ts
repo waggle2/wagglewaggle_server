@@ -20,6 +20,8 @@ import { HealthCheckController } from '@/domain/health-check/health-check.contro
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickersModule } from '@/domain/stickers/stickers.module';
 import { DatabaseModule } from '@/database/database.module';
+import { MessagesModule } from './domain/messages/messages.module';
+
 
 @Module({
   imports: [
@@ -57,6 +59,7 @@ import { DatabaseModule } from '@/database/database.module';
     RedisCacheModule,
     ReportsModule,
     StickersModule,
+    MessagesModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],

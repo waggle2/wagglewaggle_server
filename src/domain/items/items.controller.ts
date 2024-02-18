@@ -33,7 +33,7 @@ export class ItemsController {
   @ApiResponse({
     status: 200,
     description:
-      '동물별 아이템 조회, 유저 해당 동물 포인트, 아이템 보유 여부(isOwned)',
+      '동물별 아이템 조회, 유저 해당 동물 코인, 아이템 보유 여부(isOwned)',
     schema: {
       type: 'object',
       properties: {
@@ -64,7 +64,7 @@ export class ItemsController {
                 },
               },
             },
-            points: { type: 'number', example: 200 },
+            coins: { type: 'number', example: 200 },
           },
         },
       },
@@ -123,7 +123,7 @@ export class ItemsController {
   @ApiOperation({ summary: '장바구니 조회' })
   @ApiResponse({
     status: 200,
-    description: '장바구니 조회, 선택한 아이템 총 포인트',
+    description: '장바구니 조회, 선택한 아이템 총 코인',
     schema: {
       type: 'object',
       properties: {
@@ -153,7 +153,7 @@ export class ItemsController {
                 },
               },
             },
-            totalPoints: { type: 'number', example: 200 },
+            totalCoins: { type: 'number', example: 200 },
           },
         },
       },
@@ -176,7 +176,7 @@ export class ItemsController {
   @ApiOperation({ summary: '장바구니 전체 아이템 구매' })
   @ApiResponse({
     status: 200,
-    description: '아이템 구매가 완료, 남은 해당 동물 포인트',
+    description: '아이템 구매 완료, 남은 해당 동물 코인',
     schema: {
       type: 'object',
       properties: {
@@ -188,7 +188,7 @@ export class ItemsController {
         data: {
           type: 'object',
           properties: {
-            points: {
+            coins: {
               type: 'number',
               example: 200,
             },
@@ -203,7 +203,7 @@ export class ItemsController {
   })
   @ApiResponse({
     status: 400,
-    description: '포인트가 부족합니다.',
+    description: '코인이 부족합니다.',
   })
   @ApiResponse({
     status: 404,
@@ -213,12 +213,12 @@ export class ItemsController {
     @Query('animal') animal: Animal,
     @Req() req: RequestWithUser,
   ) {
-    const remainingPoints = await this.itemsService.purchaseAllCartItems(
+    const remainingCoins = await this.itemsService.purchaseAllCartItems(
       animal,
       req.user,
     );
     return HttpResponse.success('아이템 구매가 완료되었습니다.', {
-      points: remainingPoints,
+      coins: remainingCoins,
     });
   }
 
