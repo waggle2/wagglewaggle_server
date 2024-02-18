@@ -1,14 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
   Query,
-  UseGuards,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -24,7 +25,6 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
-  getSchemaPath,
 } from '@nestjs/swagger';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
@@ -38,6 +38,9 @@ import {
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PostEntryResponseDto } from '@/domain/posts/dto/post-entry-response.dto';
+import { PageDto } from '@/common/dto/page/page.dto';
+import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
+import { SuccessResponse } from '@/common/decorators/success-response.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -48,35 +51,14 @@ export class PostsController {
     summary: '전체 게시글 조회 및 검색',
     description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
   })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 정보가 조회되었습니다',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: {
-          type: 'string',
-          example: '게시글 정보가 조회되었습니다',
-        },
-        data: {
-          type: 'array',
-          items: {
-            $ref: getSchemaPath(PostEntryResponseDto),
-          },
-        },
-        meta: {
-          type: 'object',
-          properties: {
-            total: {
-              type: 'number',
-              example: 7,
-            },
-          },
-        },
-      },
+  @SuccessResponse(HttpStatus.OK, [
+    {
+      model: PageDto,
+      exampleDescription: '예시',
+      exampleTitle: '예시',
+      generic: PostEntryResponseDto,
     },
-  })
+  ])
   @ApiBadRequestResponse({
     description: 'Bad Request',
   })
@@ -90,47 +72,95 @@ export class PostsController {
       pageOptionDto,
     );
     return HttpResponse.success(
-      '게시글 정보가 조회되었습니다',
-      posts.map((post) => new PostEntryResponseDto(post)),
-      {
-        total: total,
-      },
+      '게시글 조회에 성공했습니다',
+      new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      ),
+    );
+  }
+
+  @ApiOperation({
+    summary: '내가 작성한 글 조회',
+    description: '내가 작성한 글을 조회합니다',
+  })
+  @SuccessResponse(HttpStatus.OK, [
+    {
+      model: PageDto,
+      exampleDescription: '예시',
+      exampleTitle: '예시',
+      generic: PostEntryResponseDto,
+    },
+  ])
+  @UseGuards(JwtAuthenticationGuard)
+  @Get('self')
+  async findByUserId(
+    @Req() req: RequestWithUser,
+    @Query() pageOptionDto: PageOptionsDto,
+  ) {
+    const { user } = req;
+    const { posts, total } = await this.postsService.findByUserId(
+      user,
+      pageOptionDto,
+    );
+    return HttpResponse.success(
+      '내가 작성한 글 조회에 성공했습니다',
+      new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      ),
     );
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
-  @ApiOkResponse({
-    type: Array<PostEntity>,
-  })
+  @SuccessResponse(HttpStatus.OK, [
+    {
+      model: PageDto,
+      exampleDescription: '예시',
+      exampleTitle: '예시',
+      generic: PostEntryResponseDto,
+    },
+  ])
   @Get('/hot-posts')
   async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
       await this.postsService.findHotPosts(pageOptionDto);
     return HttpResponse.success(
       '인기 게시글 조회에 성공했습니다',
-      posts.map((post) => new PostEntryResponseDto(post)),
-      {
-        total: total,
-      },
+      new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      ),
     );
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
-  @ApiOkResponse({
-    type: Array<PostEntity>,
-  })
+  @SuccessResponse(HttpStatus.OK, [
+    {
+      model: PageDto,
+      exampleDescription: '예시',
+      exampleTitle: '예시',
+      generic: PostEntryResponseDto,
+    },
+  ])
   @Get('/deleted-posts')
   async findDeletedPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
       await this.postsService.findDeletedPosts(pageOptionDto);
-    return HttpResponse.success('삭제된 게시글 조회에 성공했습니다', posts, {
-      total: total,
-    });
+    return HttpResponse.success(
+      '삭제된 게시글 조회에 성공했습니다',
+      new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      ),
+    );
   }
 
   @ApiOperation({ summary: '단일 게시글 조회' })
-  @ApiOkResponse({
-    type: Post,
+  @ApiResponse({
+    status: 200,
+    description: '요청 성공시',
+    type: PostEntity,
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
@@ -160,7 +190,8 @@ export class PostsController {
 
   @ApiOperation({ summary: '게시글 수정' })
   @ApiOkResponse({
-    type: Post,
+    type: PostEntity,
+    description: '게시글이 수정되었습니다',
   })
   @ApiBadRequestResponse()
   @ApiNotFoundResponse({
@@ -175,12 +206,19 @@ export class PostsController {
   ) {
     const { user } = req;
     const post = await this.postsService.update(user, +id, updatePostDto);
-    return HttpResponse.success('게시글 업데이트에 성공했습니다', post);
+    return HttpResponse.success('게시글이 수정되었습니다', post);
   }
 
   @ApiOperation({ summary: '게시글 삭제' })
   @ApiOkResponse({
-    type: String,
+    description: '게시글이 삭제되었습니다',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '게시글이 삭제되었습니다' },
+      },
+    },
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
@@ -190,15 +228,23 @@ export class PostsController {
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
     await this.postsService.remove(user, +id);
-    return HttpResponse.success('게시글이 성공적으로 삭제되었습니다');
+    return HttpResponse.success('게시글이 삭제되었습니다');
   }
 
   @ApiOperation({ summary: '게시글 여러 개 삭제' })
   @ApiOkResponse({
-    type: String,
+    description: '게시글이 삭제되었습니다',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '게시글이 삭제되었습니다' },
+      },
+    },
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
+    description: '게시글이 존재하지 않습니다',
   })
   @ApiQuery({
     description: '삭제할 게시글 아이디 리스트',
@@ -214,7 +260,7 @@ export class PostsController {
 
     await this.postsService.removeMany(user, idsStr);
 
-    return HttpResponse.success('게시글이 성공적으로 삭제되었습니다');
+    return HttpResponse.success('게시글이 삭제되었습니다');
   }
 }
 
@@ -271,11 +317,11 @@ export class LikesController {
     },
   })
   @ApiForbiddenResponse({
-    type: LikeDifferentUserException,
+    type: () => LikeDifferentUserException,
     description: '잘못된 접근입니다',
   })
   @ApiNotFoundResponse({
-    type: PostNotFoundException,
+    type: () => PostNotFoundException,
     description: '존재하지 않는 게시글입니다',
   })
   @UseGuards(JwtAuthenticationGuard)

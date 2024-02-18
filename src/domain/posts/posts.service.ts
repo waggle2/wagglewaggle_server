@@ -54,7 +54,10 @@ export class PostsService {
 
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .where('post.deletedAt IS NULL');
+      .where('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
 
     if (animal) {
       queryBuilder.andWhere('post.animal = :animal', {
@@ -82,11 +85,6 @@ export class PostsService {
         },
       );
     }
-
-    queryBuilder
-      .orderBy('post.updatedAt', 'DESC')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential');
 
     return await this.findPosts(queryBuilder, pageOptionsDto);
 
@@ -139,6 +137,19 @@ export class PostsService {
     // }
   }
 
+  async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
+    const userId = user.id;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential')
+      .where('author.id = :userId', { userId })
+      .andWhere('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC');
+
+    return await this.findPosts(queryBuilder, pageOptionsDto);
+  }
+
   async findHotPosts(pageOptionsDto: PageOptionsDto) {
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
@@ -161,7 +172,9 @@ export class PostsService {
       .createQueryBuilder('post')
       .withDeleted()
       .where('post.deletedAt IS NOT NULL')
-      .orderBy('post.updatedAt', 'DESC');
+      .orderBy('post.updatedAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
 
     return await this.findPosts(queryBuilder, pageOptionsDto);
   }
