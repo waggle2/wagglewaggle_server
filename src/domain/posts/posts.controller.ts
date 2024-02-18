@@ -112,6 +112,38 @@ export class PostsController {
     );
   }
 
+  @ApiOperation({
+    summary: '내가 댓글 단 글 조회',
+    description: '내가 댓글 단 글을 조회합니다',
+  })
+  @SuccessResponse(HttpStatus.OK, [
+    {
+      model: PageDto,
+      exampleDescription: '예시',
+      exampleTitle: '예시',
+      generic: PostEntryResponseDto,
+    },
+  ])
+  @UseGuards(JwtAuthenticationGuard)
+  @Get('self/comments')
+  async findByComments(
+    @Req() req: RequestWithUser,
+    @Query() pageOptionDto: PageOptionsDto,
+  ) {
+    const { user } = req;
+    const { posts, total } = await this.postsService.findByComments(
+      user,
+      pageOptionDto,
+    );
+    return HttpResponse.success(
+      '내가 댓글 단 글 조회에 성공했습니다',
+      new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      ),
+    );
+  }
+
   @ApiOperation({ summary: '인기 게시글 조회' })
   @SuccessResponse(HttpStatus.OK, [
     {

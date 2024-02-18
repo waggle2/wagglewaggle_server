@@ -48,8 +48,6 @@ export const SuccessResponse = (
         SuccessCommonResponseDto<any>
       >(SuccessCommonResponseDto);
 
-      console.log(commonResponseInstance);
-
       const DtoModel = response.model;
 
       // dto 객체를 만든다. 제네릭은 옵셔널 한 값이라 없으면 없는대로 만든다.
