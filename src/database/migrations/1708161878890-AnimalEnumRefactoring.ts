@@ -3,6 +3,11 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
+      ALTER TABLE users
+            CHANGE COLUMN profile_anumal profile_animal ENUM('고양이', '개', '곰', '여우')
+    `);
+
+    await queryRunner.query(`
         ALTER TABLE users
             MODIFY COLUMN primary_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
             MODIFY COLUMN second_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
@@ -95,9 +100,14 @@ export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
         ALTER TABLE users
+            CHANGE COLUMN profile_animal profile_anumal ENUM('고냥이', '댕댕이', '곰돌이', '폭스')
+    `);
+
+    await queryRunner.query(`
+        ALTER TABLE users
             MODIFY COLUMN primary_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
             MODIFY COLUMN second_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우'),
-            MODIFY COLUMN profile_animal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우')
+            MODIFY COLUMN profile_anumal ENUM('고냥이', '댕댕이', '곰돌이', '폭스', '고양이', '개', '곰', '여우')
     `);
 
     await queryRunner.query(`
@@ -129,13 +139,13 @@ export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
                     WHEN second_animal = '폭스' THEN '여우'
                     ELSE second_animal
                     END,
-            profile_animal =
+            profile_anumal =
                 CASE
-                    WHEN profile_animal = '고냥이' THEN '고양이'
-                    WHEN profile_animal = '댕댕이' THEN '개'
-                    WHEN profile_animal = '곰돌이' THEN '곰'
-                    WHEN profile_animal = '폭스' THEN '여우'
-                    ELSE profile_animal
+                    WHEN profile_anumal = '고냥이' THEN '고양이'
+                    WHEN profile_anumal = '댕댕이' THEN '개'
+                    WHEN profile_anumal = '곰돌이' THEN '곰'
+                    WHEN profile_anumal = '폭스' THEN '여우'
+                    ELSE profile_anumal
                     END
     `);
 
@@ -169,7 +179,7 @@ export class AnimalEnumRefactoring1708161878890 implements MigrationInterface {
         ALTER TABLE users
             MODIFY COLUMN primary_animal ENUM('고양이', '개', '곰', '여우'),
             MODIFY COLUMN second_animal ENUM('고양이', '개', '곰', '여우'),
-            MODIFY COLUMN profile_animal ENUM('고양이', '개', '곰', '여우')
+            MODIFY COLUMN profile_anumal ENUM('고양이', '개', '곰', '여우')
     `);
 
     await queryRunner.query(`
