@@ -15,6 +15,7 @@ import { Credential } from './credential.entity';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ItemCart } from '@/domain/items/entities/item-cart.entity';
 import { ProfileItems } from './profile-items.entity';
+import { MessageRoom } from '@/domain/messages/entities/message-room.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -75,8 +76,8 @@ export class User {
   @OneToMany('Comment', 'author')
   comments: Comment[];
 
-  // @OneToMany(() => Message, (message) => message.user)
-  // messages: Message[];
+  @OneToMany('MessageRoom', 'user')
+  messageRooms: MessageRoom[];
 
   @OneToMany('ProfileItems', 'user', {
     cascade: true,
