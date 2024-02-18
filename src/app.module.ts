@@ -22,7 +22,6 @@ import { StickersModule } from '@/domain/stickers/stickers.module';
 import { DatabaseModule } from '@/database/database.module';
 import { MessagesModule } from './domain/messages/messages.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({

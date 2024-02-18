@@ -20,6 +20,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Comment } from '@/domain/comments/entities/comment.entity';
@@ -30,6 +31,12 @@ import {
 } from '@/domain/comments/exceptions/comments.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
+import { HttpResponse } from '@/@types/http-response';
+import { CommentResponseDto } from '@/domain/comments/dto/comment-response.dto';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { PageDto } from '@/common/dto/page/page.dto';
+import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
+import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
 
 @Controller('comments')
 @ApiTags('comments')
@@ -38,8 +45,8 @@ export class CommentsController {
 
   @ApiOperation({ summary: '댓글 생성' })
   @ApiCreatedResponse({
-    type: Comment,
-    description: '댓글 생성 성공',
+    description: '댓글이 작성되었습니다',
+    type: CommentResponseDto,
   })
   @ApiBadRequestResponse()
   @ApiNotFoundResponse({
@@ -54,13 +61,28 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
   ) {
     const { user } = req;
-    return await this.commentsService.create(user, +postId, createCommentDto);
+    const comment = await this.commentsService.create(
+      user,
+      +postId,
+      createCommentDto,
+    );
+
+    return HttpResponse.created(
+      '댓글이 작성되었습니다',
+      new CommentResponseDto(comment),
+    );
   }
 
   @ApiOperation({ summary: '대댓글 생성' })
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    description: '대댓글이 작성되었습니다',
+    type: CommentResponseDto,
+  })
   @ApiBadRequestResponse()
-  @ApiNotFoundResponse()
+  @ApiNotFoundResponse({
+    type: CommentNotFoundException,
+    description: '존재하지 않는 댓글입니다',
+  })
   @UseGuards(JwtAuthenticationGuard)
   @Post('/reply/:commentId')
   async addReply(
@@ -69,10 +91,15 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
   ) {
     const { user } = req;
-    return await this.commentsService.addReply(
+    const reply = await this.commentsService.addReply(
       user,
       +commentId,
       createCommentDto,
+    );
+
+    return HttpResponse.created(
+      '대댓글이 작성되었습니다',
+      new CommentResponseDto(reply),
     );
   }
 
@@ -83,36 +110,51 @@ export class CommentsController {
   @ApiNotFoundResponse({
     type: PostNotFoundException,
   })
-  @ApiQuery({
-    name: 'postId',
-    description:
-      '쿼리 파라미터로 게시글 아이디를 넘겨 해당하는 댓글 목록을 조회합니다',
-  })
   @Get()
-  async findAll(@Query('postId') postId: number) {
-    if (postId) return await this.commentsService.findCommentsByPostId(postId);
-    return await this.commentsService.findAll();
+  async findAll(
+    @Query() commentFindDto: CommentFindDto,
+    @Query() pageOptionsDto: PageOptionsDto,
+  ) {
+    const { comments, total } = await this.commentsService.findAll(
+      commentFindDto,
+      pageOptionsDto,
+    );
+    const { data, meta } = new PageDto(
+      comments.map((comment) => new CommentResponseDto(comment)),
+      new PageMetaDto(pageOptionsDto, total),
+    );
+
+    return HttpResponse.success('댓글 조회에 성공했습니다', data, meta);
   }
 
   @ApiOperation({ summary: '단일 댓글 조회' })
   @ApiOkResponse({
-    type: Comment,
+    type: CommentResponseDto,
+    description: '댓글이 조회되었습니다',
   })
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
+    description: '존재하지 않는 댓글입니다',
   })
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.commentsService.findOne(+id);
+    const comment = await this.commentsService.findOne(+id);
+
+    return HttpResponse.success(
+      '댓글이 조회되었습니다',
+      new CommentResponseDto(comment),
+    );
   }
 
   @ApiOperation({ summary: '댓글 수정' })
   @ApiOkResponse({
-    type: Comment,
+    type: CommentResponseDto,
+    description: '댓글이 수정되었습니다',
   })
   @ApiBadRequestResponse()
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
+    description: '존재하지 않는 댓글입니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
@@ -122,33 +164,60 @@ export class CommentsController {
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
     const { user } = req;
-    return await this.commentsService.update(user, +id, updateCommentDto);
+    const comment = await this.commentsService.update(
+      user,
+      +id,
+      updateCommentDto,
+    );
+
+    return HttpResponse.success(
+      '댓글이 수정되었습니다',
+      new CommentResponseDto(comment),
+    );
   }
 
   @ApiOperation({ summary: '댓글 삭제' })
-  @ApiOkResponse({
-    type: String,
+  @ApiResponse({
+    status: 200,
+    description: '댓글이 삭제되었습니다',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '댓글이 삭제되었습니다' },
+      },
+    },
   })
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
+    description: '존재하지 않는 댓글입니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
     await this.commentsService.remove(user, +id);
-    return { message: '댓글이 성공적으로 삭제되었습니다' };
+    return HttpResponse.success('댓글이 삭제되었습니다');
   }
 
   @ApiOperation({ summary: '댓글 여러 개 삭제' })
-  @ApiOkResponse({
-    type: String,
+  @ApiResponse({
+    status: 200,
+    description: '댓글이 삭제되었습니다',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '댓글이 삭제되었습니다' },
+      },
+    },
   })
   @ApiBadRequestResponse({
     type: CommentBadRequestException,
   })
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
+    description: '존재하지 않는 댓글입니다',
   })
   @ApiQuery({
     description: '삭제할 댓글 아이디 리스트',
@@ -164,6 +233,6 @@ export class CommentsController {
 
     await this.commentsService.removeMany(user, idsStr);
 
-    return { message: '댓글이 성공적으로 삭제되었습니다' };
+    return HttpResponse.success('댓글이 삭제되었습니다');
   }
 }
