@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Patch,
   Post,
@@ -40,7 +39,6 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PostEntryResponseDto } from '@/domain/posts/dto/post-entry-response.dto';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
-import { SuccessResponse } from '@/common/decorators/success-response.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -51,14 +49,14 @@ export class PostsController {
     summary: '전체 게시글 조회 및 검색',
     description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
   })
-  @SuccessResponse(HttpStatus.OK, [
-    {
-      model: PageDto,
-      exampleDescription: '예시',
-      exampleTitle: '예시',
-      generic: PostEntryResponseDto,
-    },
-  ])
+  // @SuccessResponse(HttpStatus.OK, [
+  //   {
+  //     model: PageDto,
+  //     exampleDescription: '예시',
+  //     exampleTitle: '예시',
+  //     generic: PostEntryResponseDto,
+  //   },
+  // ])
   @ApiBadRequestResponse({
     description: 'Bad Request',
   })
@@ -71,27 +69,26 @@ export class PostsController {
       postFindDto,
       pageOptionDto,
     );
-    return HttpResponse.success(
-      '게시글 조회에 성공했습니다',
-      new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      ),
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
     );
+
+    return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
   }
 
   @ApiOperation({
     summary: '내가 작성한 글 조회',
     description: '내가 작성한 글을 조회합니다',
   })
-  @SuccessResponse(HttpStatus.OK, [
-    {
-      model: PageDto,
-      exampleDescription: '예시',
-      exampleTitle: '예시',
-      generic: PostEntryResponseDto,
-    },
-  ])
+  // @SuccessResponse(HttpStatus.OK, [
+  //   {
+  //     model: PageDto,
+  //     exampleDescription: '예시',
+  //     exampleTitle: '예시',
+  //     generic: PostEntryResponseDto,
+  //   },
+  // ])
   @UseGuards(JwtAuthenticationGuard)
   @Get('self')
   async findByUserId(
@@ -103,12 +100,15 @@ export class PostsController {
       user,
       pageOptionDto,
     );
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
+    );
+
     return HttpResponse.success(
       '내가 작성한 글 조회에 성공했습니다',
-      new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      ),
+      data,
+      meta,
     );
   }
 
@@ -116,14 +116,14 @@ export class PostsController {
     summary: '내가 댓글 단 글 조회',
     description: '내가 댓글 단 글을 조회합니다',
   })
-  @SuccessResponse(HttpStatus.OK, [
-    {
-      model: PageDto,
-      exampleDescription: '예시',
-      exampleTitle: '예시',
-      generic: PostEntryResponseDto,
-    },
-  ])
+  // @SuccessResponse(HttpStatus.OK, [
+  //   {
+  //     model: PageDto,
+  //     exampleDescription: '예시',
+  //     exampleTitle: '예시',
+  //     generic: PostEntryResponseDto,
+  //   },
+  // ])
   @UseGuards(JwtAuthenticationGuard)
   @Get('self/comments')
   async findByComments(
@@ -135,56 +135,60 @@ export class PostsController {
       user,
       pageOptionDto,
     );
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
+    );
+
     return HttpResponse.success(
       '내가 댓글 단 글 조회에 성공했습니다',
-      new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      ),
+      data,
+      meta,
     );
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
-  @SuccessResponse(HttpStatus.OK, [
-    {
-      model: PageDto,
-      exampleDescription: '예시',
-      exampleTitle: '예시',
-      generic: PostEntryResponseDto,
-    },
-  ])
+  // @SuccessResponse(HttpStatus.OK, [
+  //   {
+  //     model: PageDto,
+  //     exampleDescription: '예시',
+  //     exampleTitle: '예시',
+  //     generic: PostEntryResponseDto,
+  //   },
+  // ])
   @Get('/hot-posts')
   async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
       await this.postsService.findHotPosts(pageOptionDto);
-    return HttpResponse.success(
-      '인기 게시글 조회에 성공했습니다',
-      new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      ),
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
     );
+    return HttpResponse.success('인기 게시글 조회에 성공했습니다', data, meta);
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
-  @SuccessResponse(HttpStatus.OK, [
-    {
-      model: PageDto,
-      exampleDescription: '예시',
-      exampleTitle: '예시',
-      generic: PostEntryResponseDto,
-    },
-  ])
+  // @SuccessResponse(HttpStatus.OK, [
+  //   {
+  //     model: PageDto,
+  //     exampleDescription: '예시',
+  //     exampleTitle: '예시',
+  //     generic: PostEntryResponseDto,
+  //   },
+  // ])
   @Get('/deleted-posts')
   async findDeletedPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
       await this.postsService.findDeletedPosts(pageOptionDto);
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
+    );
+
     return HttpResponse.success(
       '삭제된 게시글 조회에 성공했습니다',
-      new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      ),
+      data,
+      meta,
     );
   }
 
