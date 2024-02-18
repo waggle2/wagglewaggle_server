@@ -19,9 +19,8 @@ import { Category } from '@/@types/enum/category.enum';
 import { User } from '@/domain/users/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { CommentResponseDto } from '@/domain/comments/dto/comment-response.dto';
 import { PollResponseDto } from '@/domain/polls/dto/poll-response.dto';
-import { UserResponseDto } from '@/domain/users/dto/user-response.dto';
+import { UserProfileDto } from '@/domain/users/dto/user-profile.dto';
 
 @Entity('posts')
 @Index(['category', 'updatedAt'])
@@ -124,13 +123,6 @@ export class Post {
   @Column({ type: 'simple-array', nullable: true })
   likes: string[];
 
-  @ApiProperty({
-    type: () => CommentResponseDto,
-    isArray: true,
-    description: '게시글에 달린 댓글 목록',
-  })
-  @Expose()
-  @Type(() => CommentResponseDto)
   @OneToMany('Comment', 'post', {
     cascade: true,
     lazy: true,
@@ -150,11 +142,11 @@ export class Post {
   poll: Poll;
 
   @ApiProperty({
-    type: () => UserResponseDto,
+    type: () => UserProfileDto,
     description: '게시글 작성자',
   })
   @Expose()
-  @Type(() => UserResponseDto)
+  @Type(() => UserProfileDto)
   @ManyToOne('User', 'posts', {
     onDelete: 'CASCADE',
     nullable: false,

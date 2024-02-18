@@ -3,7 +3,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PostsService } from '../posts/posts.service';
 import { Post } from '@/domain/posts/entities/post.entity';
 import {
@@ -14,6 +14,8 @@ import {
 } from '@/domain/comments/exceptions/comments.exception';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
 
 @Injectable()
 export class CommentsService {
@@ -25,38 +27,53 @@ export class CommentsService {
     private readonly postService: PostsService,
   ) {}
 
-  async findAll(): Promise<Comment[]> {
-    return this.commentRepository
-      .createQueryBuilder('comment')
-      .leftJoin('comment.post', 'post')
-      .addSelect('post.id', 'postId')
-      .where('comment.deleted_at IS NULL')
-      .orderBy('comment.created_at', 'ASC')
-      .getRawMany();
-  }
-
-  async findCommentsByPostId(postId: number): Promise<Comment[]> {
-    await this.postService.findOneWithoutIncrementingViews(postId);
+  private createQueryBuilderWithJoins(): SelectQueryBuilder<Comment> {
     return this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.author', 'author')
-      .leftJoin('comment.post', 'post')
+      .leftJoinAndSelect('author.credential', 'credential')
+      .leftJoinAndSelect('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
+      .leftJoinAndSelect('replies.author', 'reply_author')
+      .leftJoinAndSelect('reply_author.credential', 'reply_credential')
       .leftJoinAndSelect('comment.stickers', 'stickers')
-      .where('comment.deleted_at IS NULL')
-      .andWhere('post.id = :postId', { postId })
-      .orderBy('comment.created_at', 'ASC')
-      .getMany();
+      .where('comment.deletedAt IS NULL');
+  }
+
+  async findAll(
+    commentFindDto: CommentFindDto,
+    pageOptionsDto: PageOptionsDto,
+  ) {
+    const { postId } = commentFindDto;
+    const { page, pageSize } = pageOptionsDto;
+    const queryBuilder = this.createQueryBuilderWithJoins();
+
+    queryBuilder.orderBy('comment.createdAt', 'ASC');
+
+    if (postId) {
+      queryBuilder.andWhere('post.id = :postId', { postId });
+    }
+
+    let comments: Comment[], total: number;
+
+    if (page && pageSize) {
+      [comments, total] = await queryBuilder
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      [comments, total] = await queryBuilder.getManyAndCount();
+    }
+
+    return {
+      comments,
+      total,
+    };
   }
 
   async findOne(id: number): Promise<Comment> {
-    const comment = await this.commentRepository
-      .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndSelect('comment.post', 'post')
-      .leftJoinAndSelect('comment.replies', 'replies')
-      .leftJoinAndSelect('comment.stickers', 'stickers')
-      .where('comment.deleted_at IS NULL')
+    const queryBuilder = this.createQueryBuilderWithJoins();
+    const comment = await queryBuilder
       .andWhere('comment.id = :id', { id })
       .getOne();
 
@@ -74,7 +91,7 @@ export class CommentsService {
     const post = await this.postService.findOneWithoutIncrementingViews(postId);
     const newComment = this.commentRepository.create({
       ...createCommentDto,
-      author: { id: user.id },
+      author: user,
       post: { id: post.id },
     });
 
@@ -92,7 +109,7 @@ export class CommentsService {
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
-      author: { id: user.id },
+      author: user,
       parent: { id: parent.id },
     });
 
