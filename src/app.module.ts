@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeormConfig } from '@/lib/config/typeorm.config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PostsModule } from './domain/posts/posts.module';
 import { CommentsModule } from './domain/comments/comments.module';
@@ -21,25 +19,23 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from '@/domain/health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickersModule } from '@/domain/stickers/stickers.module';
+import { DatabaseModule } from '@/database/database.module';
 import { MessagesModule } from './domain/messages/messages.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
-      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
         // 설정 값 유효성 검사
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION_TIME: Joi.string().required(),
       }),
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: TypeormConfig,
-    }),
+    DatabaseModule.forRoot({ isTest: false }),
     RedisModule.forRootAsync({
       useFactory: () => ({
         type: 'single',

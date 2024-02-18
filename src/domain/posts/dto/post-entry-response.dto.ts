@@ -35,16 +35,12 @@ export class PostEntryResponseDto {
   @Expose()
   views: number;
 
-  @ApiProperty({ description: '태그', type: Tag })
+  @ApiProperty({ description: '태그', enum: Tag })
   @IsEnum(Tag)
   @Expose()
   tag: Tag;
 
-  @ApiProperty({ description: '이미지 URL 배열', type: [String] })
-  @Expose()
-  imageUrls: string[];
-
-  @ApiProperty({ description: '게시자의 동물', enum: Animal })
+  @ApiProperty({ description: '작성 당시 유저의 동물', enum: Animal })
   @IsEnum(Animal)
   @Expose()
   animalOfAuthor: Animal;
@@ -67,17 +63,9 @@ export class PostEntryResponseDto {
   @Expose()
   likes: string[];
 
-  @ApiProperty({ description: '게시물 작성일', type: Date })
+  @ApiProperty({ description: '게시물 작성일자', type: Date })
   @Expose()
   createdAt: Date;
-
-  @ApiProperty({ description: '게시물 수정일', type: Date })
-  @Expose()
-  updatedAt: Date;
-
-  @ApiProperty({ description: '게시물 삭제일', type: Date, required: false })
-  @Expose()
-  deletedAt?: Date;
 
   constructor(post: Post) {
     this.id = post.id;
@@ -87,13 +75,10 @@ export class PostEntryResponseDto {
     this.commentNum = post.commentNum;
     this.views = post.views;
     this.tag = post.tag;
-    this.imageUrls = post.imageUrls;
-    this.animalOfAuthor = post.author.profileAnimal; // Assuming author's profileAnimal represents the animal of the author
+    this.animalOfAuthor = post.animalOfAuthor;
     this.category = post.category;
     this.likes = post.likes;
     this.createdAt = post.createdAt;
-    this.updatedAt = post.updatedAt;
-    this.deletedAt = post.deletedAt;
-    this.nicknameOfAuthor = post.author.credential.nickname; // Assuming the author's nickname is available
+    this.nicknameOfAuthor = post.author.credential.nickname;
   }
 }

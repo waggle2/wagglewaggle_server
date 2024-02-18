@@ -18,12 +18,15 @@ import {
 } from '@/domain/posts/exceptions/likes.exception';
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { Comment } from '@/domain/comments/entities/comment.entity';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    @InjectRepository(Comment)
+    private readonly commentsRepository: Repository<Comment>,
   ) {}
 
   private async findPosts(
@@ -54,7 +57,10 @@ export class PostsService {
 
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
-      .where('post.deletedAt IS NULL');
+      .where('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
 
     if (animal) {
       queryBuilder.andWhere('post.animal = :animal', {
@@ -82,11 +88,6 @@ export class PostsService {
         },
       );
     }
-
-    queryBuilder
-      .orderBy('post.updatedAt', 'DESC')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential');
 
     return await this.findPosts(queryBuilder, pageOptionsDto);
 
@@ -139,6 +140,48 @@ export class PostsService {
     // }
   }
 
+  async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
+    const userId = user.id;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential')
+      .where('author.id = :userId', { userId })
+      .andWhere('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC');
+
+    return await this.findPosts(queryBuilder, pageOptionsDto);
+  }
+
+  async findByComments(user: User, pageOptionsDto: PageOptionsDto) {
+    const userId = user.id;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.comments', 'comment')
+      .leftJoin('comment.author', 'commenter')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential')
+      .andWhere('commenter.id = :userId', { userId });
+
+    const { page, pageSize } = pageOptionsDto;
+    let posts: Post[], total: number;
+
+    if (page && pageSize) {
+      [posts, total] = await queryBuilder
+        .distinct(true)
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      [posts, total] = await queryBuilder.distinct(true).getManyAndCount();
+    }
+
+    return {
+      posts,
+      total,
+    };
+  }
+
   async findHotPosts(pageOptionsDto: PageOptionsDto) {
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
@@ -161,7 +204,9 @@ export class PostsService {
       .createQueryBuilder('post')
       .withDeleted()
       .where('post.deletedAt IS NOT NULL')
-      .orderBy('post.updatedAt', 'DESC');
+      .orderBy('post.updatedAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
 
     return await this.findPosts(queryBuilder, pageOptionsDto);
   }

@@ -3,4 +3,5 @@ export enum Tag {
   ADVISE = '조언해줘',
   CHOOSE = '골라줘',
   CHITCHAT = '수다수다',
+  TIP = '꿀팁공유',
 }

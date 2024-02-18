@@ -52,7 +52,7 @@ export class User {
   @Column({ name: 'second_animal', type: 'enum', enum: Animal, nullable: true })
   secondAnimal: Animal;
 
-  @Column({ name: 'profile_anumal', type: 'enum', enum: Animal })
+  @Column({ name: 'profile_animal', type: 'enum', enum: Animal })
   profileAnimal: Animal;
 
   @Column({ default: 0 })
