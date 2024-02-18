@@ -5,7 +5,6 @@ import {
   HttpCode,
   Patch,
   Post,
-  Query,
   Req,
   Res,
   UseGuards,
@@ -90,6 +89,16 @@ export class AuthenticationController {
   @HttpCode(200)
   @Post('/login/kakao')
   @ApiOperation({ summary: '카카오 로그인' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        authorizationCode: {
+          type: 'string',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '로그인 되었습니다.',
@@ -136,7 +145,7 @@ export class AuthenticationController {
     description: 'Kakao API not available',
   })
   async kakaoLogin(
-    @Query('authorizationCode') authorizationCode: string,
+    @Body('authorizationCode') authorizationCode: string,
     @Res() response: Response,
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
@@ -155,6 +164,19 @@ export class AuthenticationController {
   @HttpCode(200)
   @Post('/login/naver')
   @ApiOperation({ summary: '네이버 로그인' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        authorizationCode: {
+          type: 'string',
+        },
+        state: {
+          type: 'string',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '로그인 되었습니다.',
@@ -201,8 +223,8 @@ export class AuthenticationController {
     description: 'Naver API not available',
   })
   async naverLogin(
-    @Query('authorizationCode') authorizationCode: string,
-    @Query('state') state: string,
+    @Body('authorizationCode') authorizationCode: string,
+    @Body('state') state: string,
     @Res() response: Response,
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
@@ -221,6 +243,16 @@ export class AuthenticationController {
   @HttpCode(200)
   @Post('/login/google')
   @ApiOperation({ summary: '구글 로그인' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        authorizationCode: {
+          type: 'string',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: '로그인 되었습니다.',
@@ -267,7 +299,7 @@ export class AuthenticationController {
     description: 'Google API not available',
   })
   async googleLogin(
-    @Query('authorizationCode') authorizationCode: string,
+    @Body('authorizationCode') authorizationCode: string,
     @Res() response: Response,
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
