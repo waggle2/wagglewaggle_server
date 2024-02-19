@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -44,6 +45,7 @@ import { PaginationSuccessResponse } from '@/common/decorators/pagination-succes
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -74,24 +76,30 @@ export class PostsController {
   ) {
     const accessToken = req.cookies.accessToken;
     const secret = this.configService.get('JWT_SECRET');
-    const userId = (
-      await this.jwtService.verifyAsync(accessToken, {
-        secret,
-      })
-    ).id;
 
-    const { posts, total } = await this.postsService.findAll(
-      postFindDto,
-      pageOptionDto,
-      userId,
-    );
+    try {
+      const userId = (
+        await this.jwtService.verifyAsync(accessToken, {
+          secret,
+        })
+      ).id;
 
-    const { data, meta } = new PageDto(
-      posts.map((post) => new PostEntryResponseDto(post)),
-      new PageMetaDto(pageOptionDto, total),
-    );
+      const { posts, total } = await this.postsService.findAll(
+        postFindDto,
+        pageOptionDto,
+        userId,
+      );
 
-    return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
+      const { data, meta } = new PageDto(
+        posts.map((post) => new PostEntryResponseDto(post)),
+        new PageMetaDto(pageOptionDto, total),
+      );
+
+      return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
+    } catch (error) {
+      if (error instanceof UnauthorizedException)
+        throw new UserUnauthorizedException('Access token expired.');
+    }
   }
 
   @ApiOperation({
