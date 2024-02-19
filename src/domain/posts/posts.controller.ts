@@ -41,11 +41,18 @@ import { PostEntryResponseDto } from '@/domain/posts/dto/post-entry-response.dto
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
+import { Request } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('posts')
 @ApiTags('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @ApiOperation({
     summary: '전체 게시글 조회 및 검색',
@@ -61,13 +68,24 @@ export class PostsController {
   })
   @Get()
   async findAll(
+    @Req() req: Request,
     @Query() postFindDto: PostFindDto,
     @Query() pageOptionDto: PageOptionsDto,
   ) {
+    const accessToken = req.cookies.accessToken;
+    const secret = this.configService.get('JWT_SECRET');
+    const userId = (
+      await this.jwtService.verifyAsync(accessToken, {
+        secret,
+      })
+    ).id;
+
     const { posts, total } = await this.postsService.findAll(
       postFindDto,
       pageOptionDto,
+      userId,
     );
+
     const { data, meta } = new PageDto(
       posts.map((post) => new PostEntryResponseDto(post)),
       new PageMetaDto(pageOptionDto, total),

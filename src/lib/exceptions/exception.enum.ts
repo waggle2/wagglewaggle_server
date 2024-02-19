@@ -73,3 +73,7 @@ export enum LikeExceptionEnum {
   // 409
   ALREADY_LIKE = '6090',
 }
+
+export enum SearchHistoryExceptionEnum {
+  DIFFERENT_USER = '7030',
+}
