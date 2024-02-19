@@ -29,6 +29,7 @@ export enum CommentExceptionEnum {
 export enum PollExceptionEnum {
   // 403
   AUTHOR_DIFFERENT_USER = '2030',
+  DUPLICATE_VOTE = '2031',
 
   // 404
   POLL_NOT_FOUND = '2040',

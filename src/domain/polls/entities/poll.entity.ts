@@ -19,21 +19,6 @@ export class Poll {
   @Column({ nullable: false })
   title: string;
 
-  /**
-   * 추후 투표 종료 기능이 추가되면 사용
-   */
-  // @Column({
-  //   name: 'is_end',
-  //   default: false,
-  // })
-  // isEnd: boolean; // 투표가 종료되었는지 여부
-
-  /**
-   * 추후 복수 선택 기능이 추가되면 사용
-   */
-  // @Column({ name: 'allow_multiple_choices', default: false })
-  // allowMultipleChoices: boolean;
-
   @Column({ name: 'ended_at' })
   endedAt: Date;
 

@@ -6,14 +6,19 @@ import { Repository } from 'typeorm';
 import { User } from '@/domain/users/entities/user.entity';
 import {
   AlreadyVoteException,
+  DuplicateVoteForbiddenException,
   PollAuthorDifferentException,
+  PollNotFoundException,
 } from '@/domain/polls/exceptions/polls.exception';
+import { Poll } from '@/domain/polls/entities/poll.entity';
 
 @Injectable()
 export class PollItemsService {
   constructor(
     @InjectRepository(PollItem)
     private readonly pollItemsRepository: Repository<PollItem>,
+    @InjectRepository(Poll)
+    private readonly pollsRepository: Repository<Poll>,
   ) {}
 
   async create(createPollItemDto: CreatePollItemDto) {
@@ -36,16 +41,24 @@ export class PollItemsService {
       throw new AlreadyVoteException('이미 투표한 항목입니다');
     }
 
-    // 이미 투표한 항목이 있다면 409
+    // 이미 투표한 항목이 있다면 403
     const pollItems = poll.pollItems;
     pollItems.forEach((pi) => {
       if (pi.userIds.includes(user.id))
-        throw new AlreadyVoteException('한 항목에만 투표할 수 있습니다');
+        throw new DuplicateVoteForbiddenException(
+          '한 항목에만 투표할 수 있습니다',
+        );
     });
 
     pollItem.userIds.push(user.id);
+    await this.pollItemsRepository.save(pollItem);
 
-    return await this.pollItemsRepository.save(pollItem);
+    const votedPoll = await this.pollsRepository.findOneBy({
+      id: pollItem.poll.id,
+    });
+    if (!votedPoll) throw new PollNotFoundException('잘못된 접근입니다');
+
+    return votedPoll;
   }
 
   async findOne(id: number) {
