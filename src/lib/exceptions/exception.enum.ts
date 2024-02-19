@@ -77,3 +77,8 @@ export enum LikeExceptionEnum {
 export enum SearchHistoryExceptionEnum {
   DIFFERENT_USER = '7030',
 }
+
+export enum FeedbackExceptionEnum {
+  NOT_ADMIN_NO_PERMISSION = '8030',
+  FEEDBACK_NOT_FOUND = '8040',
+}

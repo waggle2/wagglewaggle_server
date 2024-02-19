@@ -22,6 +22,7 @@ import { StickersModule } from '@/domain/stickers/stickers.module';
 import { DatabaseModule } from '@/database/database.module';
 import { MessagesModule } from './domain/messages/messages.module';
 import { SearchHistoriesModule } from '@/domain/search-histories/search-histories.module';
+import { FeedbacksModule } from '@/domain/feedbacks/feedbacks.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { SearchHistoriesModule } from '@/domain/search-histories/search-historie
     StickersModule,
     MessagesModule,
     SearchHistoriesModule,
+    FeedbacksModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
