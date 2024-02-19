@@ -76,30 +76,31 @@ export class PostsController {
   ) {
     const accessToken = req.cookies.accessToken;
     const secret = this.configService.get('JWT_SECRET');
+    let userId: string;
 
     try {
-      const userId = (
+      userId = (
         await this.jwtService.verifyAsync(accessToken, {
           secret,
         })
       ).id;
-
-      const { posts, total } = await this.postsService.findAll(
-        postFindDto,
-        pageOptionDto,
-        userId,
-      );
-
-      const { data, meta } = new PageDto(
-        posts.map((post) => new PostEntryResponseDto(post)),
-        new PageMetaDto(pageOptionDto, total),
-      );
-
-      return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
     } catch (error) {
       if (error instanceof UnauthorizedException)
         throw new UserUnauthorizedException('Access token expired.');
     }
+
+    const { posts, total } = await this.postsService.findAll(
+      postFindDto,
+      pageOptionDto,
+      userId,
+    );
+
+    const { data, meta } = new PageDto(
+      posts.map((post) => new PostEntryResponseDto(post)),
+      new PageMetaDto(pageOptionDto, total),
+    );
+
+    return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
   }
 
   @ApiOperation({
