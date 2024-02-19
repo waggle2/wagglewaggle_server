@@ -2,7 +2,15 @@ import { Controller, Get, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { SearchHistoriesService } from './search-histories.service';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SearchHistory } from '@/domain/search-histories/entities/search-history.entity';
+import { HttpResponse } from '@/@types/http-response';
+import { SearchHistoryDifferentUserException } from '@/domain/search-histories/exceptions/search-histories.exception';
 
 @Controller('search-histories')
 @ApiTags('search-histories')
@@ -12,25 +20,68 @@ export class SearchHistoriesController {
   ) {}
 
   @ApiOperation({ summary: '현재 사용자의 검색 히스토리 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '검색 히스토리 조회 성공',
+    type: SearchHistory,
+    isArray: true,
+  })
   @UseGuards(JwtAuthenticationGuard)
   @Get()
-  findByCurrentUser(@Req() req: RequestWithUser) {
+  async findByCurrentUser(@Req() req: RequestWithUser) {
     const { user } = req;
-    return this.searchHistoriesService.findByCurrentUser(user);
+    const searchHistory =
+      await this.searchHistoriesService.findByCurrentUser(user);
+    return HttpResponse.success('검색 히스토리 조회 성공', searchHistory);
   }
 
   @ApiOperation({ summary: '현재 사용자의 검색 히스토리 삭제' })
+  @ApiResponse({
+    status: 200,
+    description: '검색 히스토리 삭제 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '검색 히스토리 삭제 성공',
+        },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    type: SearchHistoryDifferentUserException,
+    description: '다른 사용자의 검색 히스토리는 삭제할 수 없습니다',
+  })
+  @UseGuards(JwtAuthenticationGuard)
   @Delete(':id')
-  remove(@Req() req: RequestWithUser, @Param('id') id: string) {
+  async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
-    return this.searchHistoriesService.remove(user, +id);
+    await this.searchHistoriesService.remove(user, +id);
+    return HttpResponse.success('검색 히스토리 삭제 성공');
   }
 
   @ApiOperation({ summary: '현재 사용자의 검색 히스토리 전체 삭제' })
+  @ApiResponse({
+    status: 200,
+    description: '검색 히스토리 삭제 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '검색 히스토리 삭제 성공',
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthenticationGuard)
   @Delete()
-  removeAllByCurrentUser(@Req() req: RequestWithUser) {
+  async removeAllByCurrentUser(@Req() req: RequestWithUser) {
     const { user } = req;
-    return this.searchHistoriesService.removeAllByCurrentUser(user);
+    await this.searchHistoriesService.removeAllByCurrentUser(user);
+    return HttpResponse.success('검색 히스토리 삭제 성공');
   }
 }
