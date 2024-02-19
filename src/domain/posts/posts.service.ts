@@ -18,15 +18,14 @@ import {
 } from '@/domain/posts/exceptions/likes.exception';
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
-import { Comment } from '@/domain/comments/entities/comment.entity';
+import { SearchHistoriesService } from '@/domain/search-histories/search-histories.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
-    @InjectRepository(Comment)
-    private readonly commentsRepository: Repository<Comment>,
+    private readonly searchHistoriesService: SearchHistoriesService,
   ) {}
 
   private async findPosts(
@@ -50,94 +49,6 @@ export class PostsService {
       posts,
       total,
     };
-  }
-
-  async findAll(postFindDto: PostFindDto, pageOptionsDto: PageOptionsDto) {
-    const { text, animal, category, tag } = postFindDto;
-
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .where('post.deletedAt IS NULL')
-      .orderBy('post.createdAt', 'DESC')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential');
-
-    if (animal) {
-      queryBuilder.andWhere('post.animal = :animal', {
-        animal,
-      });
-    }
-
-    if (tag) {
-      queryBuilder.andWhere('post.tag = :tag', {
-        tag: tag.valueOf(),
-      });
-    }
-
-    if (category) {
-      queryBuilder.andWhere('post.category = :category', {
-        category,
-      });
-    }
-
-    if (text) {
-      queryBuilder.andWhere(
-        '(post.title LIKE :text OR post.content LIKE :text)',
-        {
-          text: `%${text}%`,
-        },
-      );
-    }
-
-    return await this.findPosts(queryBuilder, pageOptionsDto);
-
-    // const esQuery = {
-    //   query: {
-    //     bool: {
-    //       must: [],
-    //     },
-    //   },
-    //   sort: [
-    //     {
-    //       updatedAt: {
-    //         order: 'desc',
-    //       },
-    //     },
-    //   ],
-    // };
-    //
-    // if (page && pageSize) {
-    //   esQuery['from'] = (page - 1) * pageSize;
-    //   esQuery['size'] = pageSize;
-    // }
-    //
-    // if (text) {
-    //   esQuery.query.bool.must.push({
-    //     multi_match: {
-    //       query: text,
-    //       fields: ['title', 'content'],
-    //     },
-    //   });
-    // }
-    //
-    // if (animal) {
-    //   esQuery.query.bool.must.push({
-    //     match: { animalOfAuthor: animal.valueOf() },
-    //   });
-    // }
-    //
-    // if (category) {
-    //   esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
-    // }
-    //
-    // if (tags && tags.length > 0) {
-    //   const tagsArray = Array.isArray(tags) ? tags : [tags];
-    //   tagsArray.forEach((tag: Tag) => {
-    //     esQuery.query.bool.must.push({
-    //       match: { tags: tag.valueOf() },
-    //     });
-    //   });
-    // }
   }
 
   async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
@@ -197,6 +108,102 @@ export class PostsService {
       .addOrderBy('totalScore', 'DESC');
 
     return await this.findPosts(queryBuilder, pageOptionsDto);
+  }
+
+  async findAll(
+    postFindDto: PostFindDto,
+    pageOptionsDto: PageOptionsDto,
+    userId?: string,
+  ) {
+    const { text, animal, category, tag } = postFindDto;
+
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .where('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential');
+
+    if (animal) {
+      queryBuilder.andWhere('post.animal = :animal', {
+        animal,
+      });
+    }
+
+    if (tag) {
+      queryBuilder.andWhere('post.tag = :tag', {
+        tag: tag.valueOf(),
+      });
+    }
+
+    if (category) {
+      queryBuilder.andWhere('post.category = :category', {
+        category,
+      });
+    }
+
+    if (text) {
+      await this.searchHistoriesService.create({
+        userId,
+        keyword: text,
+      });
+      queryBuilder.andWhere(
+        '(post.title LIKE :text OR post.content LIKE :text)',
+        {
+          text: `%${text}%`,
+        },
+      );
+    }
+
+    return await this.findPosts(queryBuilder, pageOptionsDto);
+
+    // const esQuery = {
+    //   query: {
+    //     bool: {
+    //       must: [],
+    //     },
+    //   },
+    //   sort: [
+    //     {
+    //       updatedAt: {
+    //         order: 'desc',
+    //       },
+    //     },
+    //   ],
+    // };
+    //
+    // if (page && pageSize) {
+    //   esQuery['from'] = (page - 1) * pageSize;
+    //   esQuery['size'] = pageSize;
+    // }
+    //
+    // if (text) {
+    //   esQuery.query.bool.must.push({
+    //     multi_match: {
+    //       query: text,
+    //       fields: ['title', 'content'],
+    //     },
+    //   });
+    // }
+    //
+    // if (animal) {
+    //   esQuery.query.bool.must.push({
+    //     match: { animalOfAuthor: animal.valueOf() },
+    //   });
+    // }
+    //
+    // if (category) {
+    //   esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
+    // }
+    //
+    // if (tags && tags.length > 0) {
+    //   const tagsArray = Array.isArray(tags) ? tags : [tags];
+    //   tagsArray.forEach((tag: Tag) => {
+    //     esQuery.query.bool.must.push({
+    //       match: { tags: tag.valueOf() },
+    //     });
+    //   });
+    // }
   }
 
   async findDeletedPosts(pageOptionsDto: PageOptionsDto) {

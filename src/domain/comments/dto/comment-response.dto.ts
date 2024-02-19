@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { Sticker } from '@/domain/stickers/entities/sticker.entity';
-import { UserProfileDto } from '@/domain/users/dto/user-profile.dto';
 import { Comment } from '@/domain/comments/entities/comment.entity';
+import { User } from '@/domain/users/entities/user.entity';
 
 export class CommentResponseDto {
   @ApiProperty({ description: '댓글 ID', type: Number })
@@ -44,12 +44,12 @@ export class CommentResponseDto {
   stickers: Sticker[];
 
   @ApiProperty({
-    type: () => UserProfileDto,
+    type: () => User,
     description: '댓글 작성자 프로필',
   })
-  @Type(() => UserProfileDto)
+  @Type(() => User)
   @Expose()
-  readonly author: UserProfileDto;
+  readonly author: User;
 
   @ApiProperty({ type: Date, description: '댓글 작성일자' })
   @Expose()
@@ -73,7 +73,7 @@ export class CommentResponseDto {
       ? comment.replies.map((reply) => new CommentResponseDto(reply))
       : [];
     this.stickers = comment.stickers;
-    this.author = new UserProfileDto(comment.author);
+    this.author = comment.author;
     this.createdAt = comment.createdAt;
     this.updatedAt = comment.updatedAt;
     this.deletedAt = comment.deletedAt;
