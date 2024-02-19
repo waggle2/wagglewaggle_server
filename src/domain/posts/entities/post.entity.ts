@@ -20,7 +20,6 @@ import { User } from '@/domain/users/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { PollResponseDto } from '@/domain/polls/dto/poll-response.dto';
-import { UserProfileDto } from '@/domain/users/dto/user-profile.dto';
 
 @Entity('posts')
 @Index(['category', 'updatedAt'])
@@ -142,11 +141,11 @@ export class Post {
   poll: Poll;
 
   @ApiProperty({
-    type: () => UserProfileDto,
+    type: () => User,
     description: '게시글 작성자',
   })
   @Expose()
-  @Type(() => UserProfileDto)
+  @Type(() => User)
   @ManyToOne('User', 'posts', {
     onDelete: 'CASCADE',
     nullable: false,

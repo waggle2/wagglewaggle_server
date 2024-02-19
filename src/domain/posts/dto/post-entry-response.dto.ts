@@ -5,6 +5,7 @@ import { Category } from '@/@types/enum/category.enum';
 import { Animal } from '@/@types/enum/animal.enum';
 import { Tag } from '@/@types/enum/tags.enum';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { User } from '@/domain/users/entities/user.entity';
 
 @ApiExtraModels()
 export class PostEntryResponseDto {
@@ -54,10 +55,9 @@ export class PostEntryResponseDto {
   @Expose()
   animalOfAuthor: Animal;
 
-  @ApiProperty({ description: '게시물 작성자 닉네임', type: String })
-  @IsString()
+  @ApiProperty({ description: '작성자', type: User })
   @Expose()
-  nicknameOfAuthor: string;
+  author: User;
 
   @ApiProperty({ description: '카테고리', enum: Category })
   @IsEnum(Category)
@@ -89,6 +89,6 @@ export class PostEntryResponseDto {
     this.category = post.category;
     this.likes = post.likes;
     this.createdAt = post.createdAt;
-    this.nicknameOfAuthor = post.author.credential.nickname;
+    this.author = post.author;
   }
 }
