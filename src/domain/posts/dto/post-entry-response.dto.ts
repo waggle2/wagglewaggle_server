@@ -1,11 +1,12 @@
 import { IsBoolean, IsEnum, IsNumber, IsString } from 'class-validator';
 import { Expose } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 import { Category } from '@/@types/enum/category.enum';
 import { Animal } from '@/@types/enum/animal.enum';
 import { Tag } from '@/@types/enum/tags.enum';
 import { Post } from '@/domain/posts/entities/post.entity';
 
+@ApiExtraModels()
 export class PostEntryResponseDto {
   @ApiProperty({ description: '게시물 ID', type: Number })
   @IsNumber()
@@ -34,6 +35,14 @@ export class PostEntryResponseDto {
   @ApiProperty({ description: '조회수', type: Number })
   @Expose()
   views: number;
+
+  @ApiProperty({
+    description: '게시글 이미지 링크들',
+    type: String,
+    isArray: true,
+  })
+  @Expose()
+  imageUrls: string[];
 
   @ApiProperty({ description: '태그', enum: Tag })
   @IsEnum(Tag)
@@ -74,6 +83,7 @@ export class PostEntryResponseDto {
     this.isAnonymous = post.isAnonymous;
     this.commentNum = post.commentNum;
     this.views = post.views;
+    this.imageUrls = post.imageUrls;
     this.tag = post.tag;
     this.animalOfAuthor = post.animalOfAuthor;
     this.category = post.category;

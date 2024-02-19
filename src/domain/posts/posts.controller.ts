@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -39,6 +40,7 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PostEntryResponseDto } from '@/domain/posts/dto/post-entry-response.dto';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
+import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -49,14 +51,11 @@ export class PostsController {
     summary: '전체 게시글 조회 및 검색',
     description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
   })
-  // @SuccessResponse(HttpStatus.OK, [
-  //   {
-  //     model: PageDto,
-  //     exampleDescription: '예시',
-  //     exampleTitle: '예시',
-  //     generic: PostEntryResponseDto,
-  //   },
-  // ])
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '게시글 조회에 성공했습니다',
+    generic: PostEntryResponseDto,
+  })
   @ApiBadRequestResponse({
     description: 'Bad Request',
   })
@@ -81,14 +80,11 @@ export class PostsController {
     summary: '내가 작성한 글 조회',
     description: '내가 작성한 글을 조회합니다',
   })
-  // @SuccessResponse(HttpStatus.OK, [
-  //   {
-  //     model: PageDto,
-  //     exampleDescription: '예시',
-  //     exampleTitle: '예시',
-  //     generic: PostEntryResponseDto,
-  //   },
-  // ])
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '내가 작성한 글 조회에 성공했습니다',
+    generic: PostEntryResponseDto,
+  })
   @UseGuards(JwtAuthenticationGuard)
   @Get('self')
   async findByUserId(
@@ -116,14 +112,11 @@ export class PostsController {
     summary: '내가 댓글 단 글 조회',
     description: '내가 댓글 단 글을 조회합니다',
   })
-  // @SuccessResponse(HttpStatus.OK, [
-  //   {
-  //     model: PageDto,
-  //     exampleDescription: '예시',
-  //     exampleTitle: '예시',
-  //     generic: PostEntryResponseDto,
-  //   },
-  // ])
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '내가 댓글 단 글 조회에 성공했습니다',
+    generic: PostEntryResponseDto,
+  })
   @UseGuards(JwtAuthenticationGuard)
   @Get('self/comments')
   async findByComments(
@@ -148,14 +141,11 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: '인기 게시글 조회' })
-  // @SuccessResponse(HttpStatus.OK, [
-  //   {
-  //     model: PageDto,
-  //     exampleDescription: '예시',
-  //     exampleTitle: '예시',
-  //     generic: PostEntryResponseDto,
-  //   },
-  // ])
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '인기 게시글 조회에 성공했습니다',
+    generic: PostEntryResponseDto,
+  })
   @Get('/hot-posts')
   async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =
@@ -168,14 +158,11 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: '삭제된 게시글 조회' })
-  // @SuccessResponse(HttpStatus.OK, [
-  //   {
-  //     model: PageDto,
-  //     exampleDescription: '예시',
-  //     exampleTitle: '예시',
-  //     generic: PostEntryResponseDto,
-  //   },
-  // ])
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '삭제된 게시글 조회에 성공했습니다',
+    generic: PostEntryResponseDto,
+  })
   @Get('/deleted-posts')
   async findDeletedPosts(@Query() pageOptionDto: PageOptionsDto) {
     const { posts, total } =

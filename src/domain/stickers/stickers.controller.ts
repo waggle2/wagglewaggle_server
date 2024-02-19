@@ -17,13 +17,15 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Sticker } from '@/domain/stickers/entities/sticker.entity';
 import { CommentNotFoundException } from '@/domain/comments/exceptions/comments.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
 import { StickerNotFoundException } from '@/domain/stickers/exceptions/stickers.exception';
+import { HttpResponse } from '@/@types/http-response';
+import { StickerResponseDto } from '@/domain/stickers/dto/sticker-response.dto';
 
 @ApiTags('stickers')
 @Controller('stickers')
@@ -32,11 +34,13 @@ export class StickersController {
 
   @ApiOperation({ summary: '스티커 생성' })
   @ApiCreatedResponse({
-    type: Sticker,
+    description: '스티커가 성공적으로 생성되었습니다.',
+    type: StickerResponseDto,
   })
   @ApiBadRequestResponse()
   @ApiNotFoundResponse({
     type: CommentNotFoundException,
+    description: '댓글을 찾을 수 없습니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Post(':commentId')
@@ -46,19 +50,30 @@ export class StickersController {
     @Body() createStickerDto: CreateStickerDto,
   ) {
     const { user } = req;
-    return await this.stickerService.create(user, commentId, createStickerDto);
+    const sticker = await this.stickerService.create(
+      user,
+      commentId,
+      createStickerDto,
+    );
+
+    return HttpResponse.created(
+      '스티커가 성공적으로 생성되었습니다.',
+      new StickerResponseDto(sticker),
+    );
   }
 
   @ApiOperation({
     summary: '스티커 수정',
-    description: '다른 동물의 스티커를 선택하고 싶을 때 사용합니다',
+    description: '다른 동물 스티커를 선택하고 싶을 때 사용합니다',
   })
   @ApiOkResponse({
-    type: Sticker,
+    type: StickerResponseDto,
+    description: '스티커가 성공적으로 수정되었습니다.',
   })
   @ApiBadRequestResponse()
   @ApiNotFoundResponse({
     type: StickerNotFoundException,
+    description: '스티커를 찾을 수 없습니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
@@ -68,12 +83,31 @@ export class StickersController {
     @Body() updateStickerDto: UpdateStickerDto,
   ) {
     const { user } = req;
-    return await this.stickerService.update(user, +id, updateStickerDto);
+    const sticker = await this.stickerService.update(
+      user,
+      +id,
+      updateStickerDto,
+    );
+
+    return HttpResponse.success(
+      '스티커가 성공적으로 수정되었습니다.',
+      new StickerResponseDto(sticker),
+    );
   }
 
   @ApiOperation({ summary: '스티커 삭제' })
-  @ApiOkResponse({
-    type: Sticker,
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '스티커가 성공적으로 삭제되었습니다.',
+        },
+      },
+    },
   })
   @ApiNotFoundResponse({
     type: StickerNotFoundException,
@@ -83,6 +117,6 @@ export class StickersController {
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
     await this.stickerService.remove(user, +id);
-    return { message: '스티커가 성공적으로 삭제되었습니다.' };
+    return HttpResponse.success('스티커가 성공적으로 삭제되었습니다.');
   }
 }

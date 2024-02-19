@@ -15,22 +15,27 @@ import { UpdatePollDto } from './dto/update-poll.dto';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
-  ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Poll } from '@/domain/polls/entities/poll.entity';
 import {
   AlreadyVoteException,
+  DuplicateVoteForbiddenException,
+  PollAuthorDifferentException,
   PollConflictException,
   PollNotFoundException,
 } from '@/domain/polls/exceptions/polls.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
 import { PollItemsService } from '@/domain/pollItems/pollItems.service';
-import { PollItem } from '@/domain/pollItems/entities/pollItem.entity';
+import { HttpResponse } from '@/@types/http-response';
+import { PollResponseDto } from '@/domain/polls/dto/poll-response.dto';
+import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 
 @Controller('polls')
 @ApiTags('polls')
@@ -41,8 +46,18 @@ export class PollsController {
   ) {}
 
   @ApiOperation({ summary: '투표 생성' })
-  @ApiCreatedResponse({
-    type: Poll,
+  @ApiResponse({
+    status: 201,
+    description: '투표 생성 성공',
+    type: PollResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    type: PollAuthorDifferentException,
+    description: '해당 게시물의 작성자가 아닌 경우입니다',
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+    description: '존재하지 않는 게시물입니다',
   })
   @ApiConflictResponse({
     type: PollConflictException,
@@ -56,15 +71,27 @@ export class PollsController {
     @Body() createPollDto: CreatePollDto,
   ) {
     const { user } = req;
-    return await this.pollsService.create(user, +postId, createPollDto);
+    const poll = await this.pollsService.create(user, +postId, createPollDto);
+
+    return HttpResponse.created('투표 생성 성공', new PollResponseDto(poll));
   }
 
   @ApiOperation({ summary: '투표' })
   @ApiOkResponse({
-    type: PollItem,
+    type: PollResponseDto,
+    description: '투표 성공',
+  })
+  @ApiForbiddenResponse({
+    type: DuplicateVoteForbiddenException,
+    description: '한 항목에만 투표할 수 있습니다',
+  })
+  @ApiNotFoundResponse({
+    type: PollNotFoundException,
+    description: '투표 요청 중에 투표가 삭제된 경우',
   })
   @ApiConflictResponse({
     type: AlreadyVoteException,
+    description: '이미 투표한 항목입니다',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Post('/poll-items/:pollItemId')
@@ -73,19 +100,26 @@ export class PollsController {
     @Param('pollItemId') pollItemId: string,
   ) {
     const { user } = req;
-    return await this.pollItemsService.vote(user, +pollItemId);
+    const poll = await this.pollItemsService.vote(user, +pollItemId);
+
+    return HttpResponse.success('투표 성공', poll);
   }
 
   @ApiOperation({ summary: '투표 수정' })
   @ApiOkResponse({
-    type: Poll,
+    type: PollResponseDto,
+    description: '투표 수정 성공',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request',
+  })
+  @ApiForbiddenResponse({
+    type: PollAuthorDifferentException,
+    description: '투표 작성자와 다른 유저인 경우',
   })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
     description: '해당 투표가 존재하지 않습니다',
-  })
-  @ApiBadRequestResponse({
-    description: 'Bad Request',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Patch(':id')
@@ -95,11 +129,27 @@ export class PollsController {
     @Body() updatePollDto: UpdatePollDto,
   ) {
     const { user } = req;
-    return await this.pollsService.update(user, +id, updatePollDto);
+    const poll = await this.pollsService.update(user, +id, updatePollDto);
+
+    return HttpResponse.success('투표 수정 성공', poll);
   }
 
   @ApiOperation({ summary: '투표 항목 여러 개 삭제' })
-  @ApiOkResponse({ type: String, description: '성공적으로 삭제되었습니다' })
+  @ApiResponse({
+    status: 200,
+    description: '삭제 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '성공적으로 삭제되었습니다' },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    type: PollAuthorDifferentException,
+    description: '투표 작성자와 다른 유저인 경우',
+  })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
     description: '해당 투표가 존재하지 않습니다',
@@ -115,11 +165,25 @@ export class PollsController {
 
     await this.pollItemsService.removeMultiple(user, idsNum);
 
-    return { message: '성공적으로 삭제되었습니다.' };
+    return HttpResponse.success('성공적으로 삭제되었습니다.');
   }
 
   @ApiOperation({ summary: '투표 삭제' })
-  @ApiOkResponse({ type: String, description: '성공적으로 삭제되었습니다' })
+  @ApiResponse({
+    status: 200,
+    description: '삭제 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '성공적으로 삭제되었습니다' },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    type: PollAuthorDifferentException,
+    description: '투표 작성자와 다른 유저인 경우',
+  })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
     description: '해당 투표가 존재하지 않습니다',
@@ -129,6 +193,6 @@ export class PollsController {
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     const { user } = req;
     await this.pollsService.remove(user, +id);
-    return { message: '성공적으로 삭제되었습니다.' };
+    return HttpResponse.success('성공적으로 삭제되었습니다.');
   }
 }

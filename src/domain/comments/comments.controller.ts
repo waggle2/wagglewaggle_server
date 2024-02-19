@@ -23,7 +23,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Comment } from '@/domain/comments/entities/comment.entity';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import {
   CommentBadRequestException,
@@ -105,7 +104,8 @@ export class CommentsController {
 
   @ApiOperation({ summary: '전체 댓글 조회 및 게시글별 댓글 조회' })
   @ApiOkResponse({
-    type: Array<Comment>,
+    type: CommentResponseDto,
+    isArray: true,
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,

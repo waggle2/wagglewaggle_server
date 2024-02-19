@@ -15,5 +15,6 @@ import { PollItemsModule } from '../pollItems/pollItems.module';
   ],
   controllers: [PollsController],
   providers: [PollsService],
+  exports: [PollsService],
 })
 export class PollsModule {}

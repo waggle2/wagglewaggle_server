@@ -29,3 +29,9 @@ export class AlreadyVoteException extends BaseException {
     super(PollExceptionEnum.ALREADY_VOTE, HttpStatus.CONFLICT, message);
   }
 }
+
+export class DuplicateVoteForbiddenException extends BaseException {
+  constructor(message: string) {
+    super(PollExceptionEnum.DUPLICATE_VOTE, HttpStatus.FORBIDDEN, message);
+  }
+}

@@ -8,6 +8,7 @@ import { Report } from '@/domain/reports/entities/report.entity';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
 import { UserReportForbiddenException } from '@/lib/exceptions/domain/authentication.exception';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 @Injectable()
 export class ReportsService {
@@ -59,12 +60,25 @@ export class ReportsService {
     return await this.reportsRepository.save(commentReport);
   }
 
-  async findAll(user: User) {
+  async findAll(user: User, pageOptionsDto: PageOptionsDto) {
+    const { page, pageSize } = pageOptionsDto;
     if (!this.isAdmin(user))
       throw new UserReportForbiddenException('접근 권한이 없습니다');
 
     const queryBuilder = await this.findReports();
-    return queryBuilder.getMany();
+    let reports: Report[], total: number;
+
+    if (page && pageSize) {
+      [reports, total] = await queryBuilder
+        .skip(pageSize * (page - 1))
+        .take(pageSize)
+        .getManyAndCount();
+    } else {
+      reports = await queryBuilder.getMany();
+      total = reports.length;
+    }
+
+    return { reports, total };
   }
 
   async findOne(user: User, id: number) {
