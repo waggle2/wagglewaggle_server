@@ -155,7 +155,7 @@ export class AuthenticationController {
         null,
       );
     if (!user) {
-      response.json({ code: 302, message: message, data: userData });
+      return response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     response.json({ code: 200, message: '로그인 되었습니다.' });
@@ -234,7 +234,7 @@ export class AuthenticationController {
         state,
       );
     if (!user) {
-      response.json({ code: 302, message: message, data: userData });
+      return response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     response.json({ code: 200, message: '로그인 되었습니다.' });
@@ -309,7 +309,7 @@ export class AuthenticationController {
         null,
       );
     if (!user) {
-      response.json({ code: 302, message: message, data: userData });
+      return response.json({ code: 302, message: message, data: userData });
     }
     response.setHeader('Set-Cookie', [accessCookie, refreshCookie]);
     response.json({ code: 200, message: '로그인 되었습니다.' });
