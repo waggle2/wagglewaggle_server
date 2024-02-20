@@ -16,6 +16,8 @@ import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
+import { NotificationService } from '@/notification/notification.service';
+import { NotificationType } from '@/@types/enum/notification-type.enum';
 
 @Injectable()
 export class CommentsService {
@@ -25,6 +27,7 @@ export class CommentsService {
     @InjectRepository(Post)
     private readonly postsRepository: Repository<Post>,
     private readonly postService: PostsService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private createQueryBuilderWithJoins(): SelectQueryBuilder<Comment> {
@@ -96,8 +99,27 @@ export class CommentsService {
     });
 
     await this.updatePostCommentNum(post, 1);
+    const savedComment = await this.commentRepository.save(newComment);
 
-    return await this.commentRepository.save(newComment);
+    // 게시글 작성자에게 알림 전송
+    const postAuthor = post.author;
+    const notification = await this.notificationService.createNotification(
+      postAuthor.id,
+      {
+        type: NotificationType.COMMENT,
+        message: `${user.credential.nickname}님이 게시글에 댓글을 남겼습니다`,
+      },
+    );
+
+    if (postAuthor.isSubscribed) {
+      await this.notificationService.sendNotificationToUser(postAuthor.id, {
+        type: notification.type,
+        message: notification.message,
+        subscriberNickname: postAuthor.credential.nickname,
+      });
+    }
+
+    return savedComment;
   }
 
   async addReply(
