@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateNotificationDto } from '@/notification/dto/create-notification.dto';
 import { SendNotificationDto } from '@/notification/dto/send-notification.dto';
 import { Notification } from '@/notification/entities/notification.entity';
+import { User } from '@/domain/users/entities/user.entity';
 
 @Injectable()
 export class NotificationService {
@@ -13,6 +14,8 @@ export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   private getUserSubject(userId: string) {
@@ -23,6 +26,7 @@ export class NotificationService {
   }
 
   async getNotificationForUser(userId: string) {
+    await this.userRepository.update(userId, { isSubscribed: true });
     return this.getUserSubject(userId).asObservable();
   }
 
