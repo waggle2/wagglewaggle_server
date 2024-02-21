@@ -5,6 +5,7 @@ import {
   IsDate,
   IsOptional,
   IsString,
+  Length,
   ValidateNested,
 } from 'class-validator';
 import { CreatePollItemDto } from '@/domain/pollItems/dto/create-pollItem.dto';
@@ -12,10 +13,11 @@ import { CreatePollItemDto } from '@/domain/pollItems/dto/create-pollItem.dto';
 export class CreatePollDto {
   @ApiProperty({
     example: '점메추',
-    description: '투표 제목',
+    description: '투표 제목, 1~50글자',
     required: true,
   })
   @IsString()
+  @Length(1, 50, { message: '투표 제목은 1글자 이상 50글자 이하여야 합니다.' })
   readonly title: string;
 
   @ApiProperty({
