@@ -18,7 +18,7 @@ export class PollItem {
 
   @ApiProperty({ description: '투표 항목 내용', type: String })
   @Expose()
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   content: string;
 
   @ManyToOne('Poll', 'pollItems', { onDelete: 'CASCADE' })

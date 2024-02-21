@@ -16,7 +16,7 @@ export class Poll {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   title: string;
 
   @Column({ name: 'ended_at' })

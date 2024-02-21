@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { User } from '@/domain/users/entities/user.entity';
 import { ReportReason } from '@/@types/enum/report-reason.enum';
-import { Length } from 'class-validator';
 
 @Entity({ name: 'reports' })
 export class Report {
@@ -28,8 +27,7 @@ export class Report {
   @Column({ name: 'comment_id', nullable: true })
   commentId: number;
 
-  @Column()
-  @Length(1, 150, { message: '1~150자 사이의 내용을 입력해주세요' })
+  @Column({ type: 'varchar', length: 300, nullable: false })
   content: string;
 
   @Column({

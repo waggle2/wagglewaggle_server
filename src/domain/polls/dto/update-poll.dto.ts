@@ -23,7 +23,7 @@ export class UpdatePollDto {
     name: 'poll_item_dtos',
     example:
       '[{ "id": 1, "content": "치킨" }, { "id": 2, "content": "피자" }, { "id": 3, "content": "제육볶음" }]',
-    description: '투표 항목 DTO',
+    description: '투표 항목 DTO, content는 1~50글자',
     required: true,
   })
   @IsArray()

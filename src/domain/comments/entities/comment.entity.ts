@@ -19,7 +19,7 @@ export class Comment {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   content: string;
 
   @Column({ name: 'is_anonymous', default: true })

@@ -27,14 +27,14 @@ export class Feedback {
     description: '피드백 제목',
     type: String,
   })
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   title: string;
 
   @ApiProperty({
     description: '피드백 내용',
     type: String,
   })
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', length: 300, nullable: false })
   content: string;
 
   @ApiProperty({

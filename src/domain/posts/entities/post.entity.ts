@@ -37,7 +37,7 @@ export class Post {
     type: String,
   })
   @Expose()
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   title: string;
 
   @ApiProperty({
@@ -45,7 +45,7 @@ export class Post {
     type: String,
   })
   @Expose()
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   content: string;
 
   @ApiProperty({
