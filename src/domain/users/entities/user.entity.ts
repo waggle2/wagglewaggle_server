@@ -70,6 +70,9 @@ export class User {
   @Column({ name: 'current_refresh_token', nullable: true })
   currentRefreshToken: string;
 
+  @Column({ name: 'is_subscribed', default: false })
+  isSubscribed: boolean;
+
   @OneToMany('Post', 'author')
   posts: Post[];
 
