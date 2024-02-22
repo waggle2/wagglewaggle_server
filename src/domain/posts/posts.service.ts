@@ -125,7 +125,7 @@ export class PostsService {
       .leftJoinAndSelect('author.credential', 'credential');
 
     if (animal) {
-      queryBuilder.andWhere('post.animal = :animal', {
+      queryBuilder.andWhere('post.animal_of_author = :animal', {
         animal,
       });
     }
