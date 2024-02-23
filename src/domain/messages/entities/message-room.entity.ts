@@ -1,5 +1,6 @@
 import { User } from '@/domain/users/entities/user.entity';
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -28,6 +29,9 @@ export class MessageRoom {
     cascade: true,
   })
   messages: Message[];
+
+  @Column({ type: 'simple-array', nullable: true })
+  leaveRoom: string[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

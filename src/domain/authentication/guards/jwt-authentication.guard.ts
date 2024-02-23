@@ -1,4 +1,4 @@
-import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
 import {
   ExecutionContext,
   Injectable,

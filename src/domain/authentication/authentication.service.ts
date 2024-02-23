@@ -14,11 +14,11 @@ import { Credential } from '../users/entities/credential.entity';
 import {
   SocialLoginForbiddenException,
   UserUnauthorizedException,
-} from '@/lib/exceptions/domain/authentication.exception';
+} from '@/domain/authentication/exceptions/authentication.exception';
 import {
   UserBadRequestException,
   UserNotFoundException,
-} from '@/lib/exceptions/domain/users.exception';
+} from '@/domain/users/exceptions/users.exception';
 import { LoginDto } from '@/domain/authentication/dto/login.dto';
 
 @Injectable()

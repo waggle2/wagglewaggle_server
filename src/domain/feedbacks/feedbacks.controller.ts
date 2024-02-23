@@ -30,7 +30,7 @@ import {
   FeedbackNotFoundException,
   NotAdminNoPermissionException,
 } from '@/domain/feedbacks/exceptions/feedbacks.exception';
-import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
 
 @Controller('feedbacks')
 @ApiTags('feedbacks')
