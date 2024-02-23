@@ -2,7 +2,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -19,13 +21,14 @@ export class SearchHistory {
     description: '검색 키워드',
     type: String,
   })
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   keyword: string;
 
   @ApiProperty({
     description: '유저 아이디',
     type: String,
   })
+  @Index()
   @Column({ name: 'user_id', nullable: false })
   userId: string;
 
@@ -35,4 +38,12 @@ export class SearchHistory {
   })
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @ApiProperty({
+    description: '검색 최신일자',
+    type: Date,
+  })
+  @Index()
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
