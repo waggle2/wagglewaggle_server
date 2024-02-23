@@ -36,7 +36,9 @@ export class FeedbacksService {
     });
     await this.feedbackRepository.save(feedback);
 
-    await this.sendFeedbackToDiscord(feedback);
+    if (this.configService.get('NODE_ENV') === 'production') {
+      await this.sendFeedbackToDiscord(feedback);
+    }
 
     return feedback;
   }
