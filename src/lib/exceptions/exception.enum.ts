@@ -58,20 +58,26 @@ export enum AuthExceptionEnum {
 
 export enum UserExceptionEnum {
   USER_BAD_REQUEST = '5000',
-  USER_NOT_FOUND = '5001',
+  USER_NOT_FOUND = '5010',
 }
 
 export enum ItemExceptionEnum {
   ITEM_BAD_REQUEST = '6000',
-  ITEM_NOT_FOUND = '6001',
+  ITEM_NOT_FOUND = '6010',
 }
 
 export enum LikeExceptionEnum {
   // 403
-  DIFFERENT_USER = '6030',
+  DIFFERENT_USER = '7030',
 
   // 409
-  ALREADY_LIKE = '6090',
+  ALREADY_LIKE = '7090',
+}
+
+export enum MessageExceptionEnum {
+  MESSAGE_BAD_REQUEST = '8000',
+  MESSAGE_NOT_FOUND = '8010',
+  MESSAGEROOM_NOT_FOUND = '8011',
 }
 
 export enum SearchHistoryExceptionEnum {
