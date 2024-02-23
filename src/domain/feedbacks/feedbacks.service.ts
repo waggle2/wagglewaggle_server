@@ -10,12 +10,17 @@ import {
   NotAdminNoPermissionException,
 } from '@/domain/feedbacks/exceptions/feedbacks.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class FeedbacksService {
   constructor(
     @InjectRepository(Feedback)
     private readonly feedbackRepository: Repository<Feedback>,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {}
 
   private isAdmin(user: User): boolean {
@@ -30,29 +35,65 @@ export class FeedbacksService {
       userId: user.id,
     });
     await this.feedbackRepository.save(feedback);
+
+    if (this.configService.get('NODE_ENV') === 'production') {
+      await this.sendFeedbackToDiscord(feedback);
+    }
+
     return feedback;
+  }
+
+  private async sendFeedbackToDiscord(feedback: Feedback) {
+    const discordWebhookUrl = this.configService.get('DISCORD_WEBHOOK_URL');
+    const response$ = this.httpService.post(discordWebhookUrl, {
+      embeds: this.formatFeedbackMessage(feedback),
+    });
+    await lastValueFrom(response$);
+  }
+
+  private formatFeedbackMessage(feedback: Feedback) {
+    return [
+      {
+        title: `#${feedback.id} ${feedback.title}`,
+        description: feedback.content,
+        timestamp: feedback.createdAt.toISOString(),
+        color: 0xffa500,
+        fields: [
+          {
+            name: 'Issue ID',
+            value: `#${feedback.id}`,
+            inline: true,
+          },
+          {
+            name: 'Timestamp',
+            value: feedback.createdAt.toISOString(),
+            inline: true,
+          },
+          { name: 'Email', value: feedback.email, inline: true },
+        ],
+      },
+    ];
   }
 
   async findAll(user: User, pageOptionsDto: PageOptionsDto) {
     if (!this.isAdmin(user))
       throw new NotAdminNoPermissionException('관리자만 조회할 수 있습니다');
+
     const { page, pageSize } = pageOptionsDto;
     const queryBuilder = this.feedbackRepository
       .createQueryBuilder('feedback')
       .orderBy('feedback.createdAt', 'DESC');
 
-    let feedbacks: Feedback[], total: number;
+    const feedbacks =
+      page && pageSize
+        ? await queryBuilder
+            .skip((page - 1) * pageSize)
+            .take(pageSize)
+            .getMany()
+        : await queryBuilder.getMany();
 
-    if (page && pageSize) {
-      feedbacks = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getMany();
-      total = await queryBuilder.getCount();
-    } else {
-      feedbacks = await queryBuilder.getMany();
-      total = feedbacks.length;
-    }
+    const total =
+      page && pageSize ? await queryBuilder.getCount() : feedbacks.length;
 
     return { feedbacks, total };
   }
