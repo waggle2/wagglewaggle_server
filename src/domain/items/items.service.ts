@@ -11,7 +11,7 @@ import { ItemCart } from './entities/item-cart.entity';
 import {
   ItemBadRequestException,
   ItemNotFoundException,
-} from '@/lib/exceptions/domain/items.exception';
+} from '@/domain/items/exceptions/items.exception';
 import { ProfileItems } from '../users/entities/profile-items.entity';
 import ItemWithOwnership from './interfaces/item-with-ownership.interface';
 

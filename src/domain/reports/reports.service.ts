@@ -7,7 +7,7 @@ import { CommentsService } from '@/domain/comments/comments.service';
 import { Report } from '@/domain/reports/entities/report.entity';
 import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
-import { UserReportForbiddenException } from '@/lib/exceptions/domain/authentication.exception';
+import { UserReportForbiddenException } from '@/domain/authentication/exceptions/authentication.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 @Injectable()

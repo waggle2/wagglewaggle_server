@@ -602,7 +602,7 @@ export class ItemsController {
   })
   async create(@Body() createItemDto: CreateItemDto) {
     const item = await this.itemsService.create(createItemDto);
-    return HttpResponse.success('아이템이 생성되었습니다.', item);
+    return HttpResponse.created('아이템이 생성되었습니다.', item);
   }
 
   @Get('/admins')

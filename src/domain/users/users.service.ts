@@ -15,9 +15,9 @@ import { ExitReason } from './entities/exit-reason.entity';
 import {
   UserBadRequestException,
   UserNotFoundException,
-} from '@/lib/exceptions/domain/users.exception';
+} from '@/domain/users/exceptions/users.exception';
 import * as bcrypt from 'bcrypt';
-import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
 import { Animal } from '@/@types/enum/animal.enum';

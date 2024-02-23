@@ -45,7 +45,7 @@ import { PaginationSuccessResponse } from '@/common/decorators/pagination-succes
 import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserUnauthorizedException } from '@/lib/exceptions/domain/authentication.exception';
+import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
 
 @Controller('posts')
 @ApiTags('posts')
