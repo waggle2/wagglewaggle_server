@@ -1,6 +1,6 @@
 import { BaseException } from '@/lib/exceptions/base.exception';
 import { HttpStatus } from '@nestjs/common';
-import { ItemExceptionEnum } from '../../../lib/exceptions/exception.enum';
+import { ItemExceptionEnum } from '@/lib/exceptions/exception.enum';
 
 export class ItemNotFoundException extends BaseException {
   constructor(message: string) {
