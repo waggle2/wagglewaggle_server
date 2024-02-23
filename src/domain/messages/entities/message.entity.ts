@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -20,20 +21,21 @@ export class Message {
   messageRoom: MessageRoom;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'first_user_id' })
+  @JoinColumn({ name: 'sender_id' })
   sender: User;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'second_user_id' })
+  @JoinColumn({ name: 'receiver_id' })
   receiver: User;
 
-  @Column()
+  @Column({ type: 'text', nullable: false })
   content: string;
 
   @Column({ name: 'is_read', default: false })
   isRead: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
+  @Index()
   createdAt: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
