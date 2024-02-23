@@ -10,12 +10,17 @@ import {
   NotAdminNoPermissionException,
 } from '@/domain/feedbacks/exceptions/feedbacks.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class FeedbacksService {
   constructor(
     @InjectRepository(Feedback)
     private readonly feedbackRepository: Repository<Feedback>,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {}
 
   private isAdmin(user: User): boolean {
@@ -30,7 +35,42 @@ export class FeedbacksService {
       userId: user.id,
     });
     await this.feedbackRepository.save(feedback);
+
+    await this.sendFeedbackToDiscord(feedback);
+
     return feedback;
+  }
+
+  private async sendFeedbackToDiscord(feedback: Feedback) {
+    const discordWebhookUrl = this.configService.get('DISCORD_WEBHOOK_URL');
+    const response$ = this.httpService.post(discordWebhookUrl, {
+      embeds: this.formatFeedbackMessage(feedback),
+    });
+    await lastValueFrom(response$);
+  }
+
+  private formatFeedbackMessage(feedback: Feedback) {
+    return [
+      {
+        title: `#${feedback.id} ${feedback.title}`,
+        description: feedback.content,
+        timestamp: feedback.createdAt.toISOString(),
+        color: 0xffa500,
+        fields: [
+          {
+            name: 'Issue ID',
+            value: `#${feedback.id}`,
+            inline: true,
+          },
+          {
+            name: 'Timestamp',
+            value: feedback.createdAt.toISOString(),
+            inline: true,
+          },
+          { name: 'Email', value: feedback.email, inline: true },
+        ],
+      },
+    ];
   }
 
   async findAll(user: User, pageOptionsDto: PageOptionsDto) {
