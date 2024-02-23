@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/domain/users/entities/user.entity';
 import { SearchHistoryDifferentUserException } from '@/domain/search-histories/exceptions/search-histories.exception';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 @Injectable()
 export class SearchHistoriesService {
@@ -14,16 +15,31 @@ export class SearchHistoriesService {
   ) {}
 
   async create(createSearchHistoryDto: CreateSearchHistoryDto) {
-    return await this.searchHistoryRepository.save(createSearchHistoryDto);
+    const history = await this.searchHistoryRepository.findOneBy({
+      keyword: createSearchHistoryDto.keyword,
+      userId: createSearchHistoryDto.userId,
+    });
+
+    if (history) {
+      await this.searchHistoryRepository.update(history.id, {
+        updatedAt: new Date(),
+      });
+      return;
+    }
+
+    await this.searchHistoryRepository.save(createSearchHistoryDto);
   }
 
-  async findByCurrentUser(user: User) {
+  async findByCurrentUser(user: User, pageOptionsDto: PageOptionsDto) {
+    const { page, pageSize } = pageOptionsDto;
+
     return await this.searchHistoryRepository
       .createQueryBuilder('search_histories')
       .where('search_histories.user_id = :userId', { userId: user.id })
-      .orderBy('search_histories.created_at', 'DESC')
-      .limit(10)
-      .getMany();
+      .orderBy('search_histories.updatedAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
   }
 
   async remove(user: User, id: number) {
