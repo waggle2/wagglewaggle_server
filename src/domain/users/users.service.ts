@@ -319,4 +319,10 @@ export class UsersService {
     await this.userRepository.save(user);
     return user[coinsField];
   }
+
+  // 보유중인 아이템 제거(임시)
+  async removeUserItems(user: User) {
+    user.items = [];
+    this.userRepository.save(user);
+  }
 }

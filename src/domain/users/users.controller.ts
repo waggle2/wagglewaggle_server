@@ -398,4 +398,27 @@ export class UsersController {
       totalCoins: userCoins,
     });
   }
+
+  // 임시
+  @Delete('/items')
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '보유중인 아이템 제거(임시)' })
+  @ApiResponse({
+    status: 200,
+    description: '보유중인 아이템 전체 삭제',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '보유중인 아이템이 모두 삭제되었습니다.',
+        },
+      },
+    },
+  })
+  async removeUserItems(@Req() req: RequestWithUser) {
+    await this.usersService.removeUserItems(req.user);
+    return HttpResponse.success('보유중인 아이템이 모두 삭제되었습니다.');
+  }
 }
