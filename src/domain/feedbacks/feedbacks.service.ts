@@ -76,23 +76,22 @@ export class FeedbacksService {
   async findAll(user: User, pageOptionsDto: PageOptionsDto) {
     if (!this.isAdmin(user))
       throw new NotAdminNoPermissionException('관리자만 조회할 수 있습니다');
+
     const { page, pageSize } = pageOptionsDto;
     const queryBuilder = this.feedbackRepository
       .createQueryBuilder('feedback')
       .orderBy('feedback.createdAt', 'DESC');
 
-    let feedbacks: Feedback[], total: number;
+    const feedbacks =
+      page && pageSize
+        ? await queryBuilder
+            .skip((page - 1) * pageSize)
+            .take(pageSize)
+            .getMany()
+        : await queryBuilder.getMany();
 
-    if (page && pageSize) {
-      feedbacks = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getMany();
-      total = await queryBuilder.getCount();
-    } else {
-      feedbacks = await queryBuilder.getMany();
-      total = feedbacks.length;
-    }
+    const total =
+      page && pageSize ? await queryBuilder.getCount() : feedbacks.length;
 
     return { feedbacks, total };
   }
