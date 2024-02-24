@@ -8,6 +8,7 @@ import { Message } from './entities/message.entity';
 import { UsersService } from '../users/users.service';
 import {
   MessageBadRequestException,
+  MessageNotFoundException,
   MessageRoomNotFoundException,
 } from './exceptions/message.exception';
 
@@ -238,7 +239,7 @@ export class MessagesService {
     user: User,
   ): Promise<void> {
     const promises = [];
-    if (messageRoom && messageRoom.messages) {
+    if (messageRoom.messages) {
       messageRoom.messages.forEach(async (message) => {
         if (
           message &&
@@ -252,9 +253,7 @@ export class MessagesService {
         }
       });
     } else {
-      throw new MessageRoomNotFoundException(
-        '채팅방이나 채팅방의 메세지를 찾을 수 없습니다.',
-      );
+      throw new MessageNotFoundException('채팅방의 메세지를 찾을 수 없습니다.');
     }
 
     await Promise.all(promises);

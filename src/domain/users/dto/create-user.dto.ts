@@ -75,8 +75,8 @@ export class CreateUserDto {
   readonly gender: Gender;
 
   @ApiProperty({
-    example: '곰',
-    description: '동물 자아(곰, 여우, 개, 고양이)',
+    example: '곰돌이',
+    description: '동물 자아(곰돌이, 폭스, 댕댕이, 고냥이)',
     required: true,
     enum: Animal,
   })
