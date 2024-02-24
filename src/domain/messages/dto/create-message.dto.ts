@@ -3,7 +3,7 @@ import { IsString } from 'class-validator';
 
 export class CreateMessageDto {
   @ApiProperty({
-    example: 'kj2kjb3jk234jb3k',
+    example: '77e88f4b-5ff5-47f9-9b3b-b1757c491cbb',
     description: '쪽지 받을 유저 id',
     required: true,
   })
