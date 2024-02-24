@@ -15,9 +15,10 @@ export class SearchHistoriesService {
   ) {}
 
   async create(createSearchHistoryDto: CreateSearchHistoryDto) {
+    const { userId, keyword } = createSearchHistoryDto;
     const history = await this.searchHistoryRepository.findOneBy({
-      keyword: createSearchHistoryDto.keyword,
-      userId: createSearchHistoryDto.userId,
+      keyword,
+      userId,
     });
 
     if (history) {

@@ -21,7 +21,7 @@ export class SearchHistory {
     description: '검색 키워드',
     type: String,
   })
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false })
   keyword: string;
 
   @ApiProperty({

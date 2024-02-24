@@ -143,10 +143,12 @@ export class PostsService {
     }
 
     if (text) {
-      await this.searchHistoriesService.create({
-        userId,
-        keyword: text,
-      });
+      if (userId) {
+        await this.searchHistoriesService.create({
+          userId,
+          keyword: text,
+        });
+      }
       queryBuilder.andWhere(
         '(post.title LIKE :text OR post.content LIKE :text)',
         {
