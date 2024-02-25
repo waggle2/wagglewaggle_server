@@ -158,7 +158,11 @@ export class MessagesService {
     rooms.forEach((room) => {
       const messagesLength = room.messages.length;
       if (messagesLength > 0) {
-        room['lastMessage'] = room.messages[messagesLength - 1].content;
+        const lastMessage = room.messages[messagesLength - 1];
+        room['lastMessage'] = {
+          content: lastMessage.content,
+          createdAt: lastMessage.createdAt,
+        };
       } else {
         room['lastMessage'] = null;
       }
