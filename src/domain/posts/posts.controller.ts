@@ -9,7 +9,6 @@ import {
   Post,
   Query,
   Req,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -56,6 +55,19 @@ export class PostsController {
     private readonly configService: ConfigService,
   ) {}
 
+  private async getUserIdFromToken(req: Request) {
+    const accessToken = req.cookies.accessToken;
+    const secret = this.configService.get('JWT_SECRET');
+    try {
+      const decoded = await this.jwtService.verifyAsync(accessToken, {
+        secret,
+      });
+      return decoded.id;
+    } catch (error) {
+      throw new UserUnauthorizedException('Access token expired.');
+    }
+  }
+
   @ApiOperation({
     summary: '전체 게시글 조회 및 검색',
     description: '쿼리 파라미터를 통해 게시물을 조회 또는 검색합니다',
@@ -74,32 +86,16 @@ export class PostsController {
     @Query() postFindDto: PostFindDto,
     @Query() pageOptionDto: PageOptionsDto,
   ) {
-    const accessToken = req.cookies.accessToken;
-    const secret = this.configService.get('JWT_SECRET');
-    let userId: string;
-
-    try {
-      userId = (
-        await this.jwtService.verifyAsync(accessToken, {
-          secret,
-        })
-      ).id;
-    } catch (error) {
-      if (error instanceof UnauthorizedException)
-        throw new UserUnauthorizedException('Access token expired.');
-    }
-
-    const { posts, total } = await this.postsService.findAll(
+    const userId = await this.getUserIdFromToken(req);
+    const [posts, total] = await this.postsService.findAll(
       postFindDto,
       pageOptionDto,
       userId,
     );
-
     const { data, meta } = new PageDto(
       posts.map((post) => new PostEntryResponseDto(post)),
       new PageMetaDto(pageOptionDto, total),
     );
-
     return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
   }
 
@@ -119,7 +115,7 @@ export class PostsController {
     @Query() pageOptionDto: PageOptionsDto,
   ) {
     const { user } = req;
-    const { posts, total } = await this.postsService.findByUserId(
+    const [posts, total] = await this.postsService.findByUserId(
       user,
       pageOptionDto,
     );
@@ -175,8 +171,7 @@ export class PostsController {
   })
   @Get('/hot-posts')
   async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
-    const { posts, total } =
-      await this.postsService.findHotPosts(pageOptionDto);
+    const [posts, total] = await this.postsService.findHotPosts(pageOptionDto);
     const { data, meta } = new PageDto(
       posts.map((post) => new PostEntryResponseDto(post)),
       new PageMetaDto(pageOptionDto, total),
@@ -192,7 +187,7 @@ export class PostsController {
   })
   @Get('/deleted-posts')
   async findDeletedPosts(@Query() pageOptionDto: PageOptionsDto) {
-    const { posts, total } =
+    const [posts, total] =
       await this.postsService.findDeletedPosts(pageOptionDto);
     const { data, meta } = new PageDto(
       posts.map((post) => new PostEntryResponseDto(post)),
