@@ -121,26 +121,8 @@ export class MessagesService {
       .withDeleted()
       .leftJoinAndSelect('messageRoom.messages', 'messages')
       .leftJoinAndSelect('messages.sender', 'sender')
-      .leftJoinAndSelect('sender.credential', 'sender_credential')
-      .leftJoinAndSelect('sender.profileItems', 'sender_profileItems')
-      .leftJoinAndSelect('sender_profileItems.emoji', 'sender_emoji')
-      .leftJoinAndSelect('sender_profileItems.wallpaper', 'sender_wallpaper')
-      .leftJoinAndSelect('sender_profileItems.background', 'sender_background')
-      .leftJoinAndSelect('sender_profileItems.frame', 'sender_frame')
       .withDeleted()
       .leftJoinAndSelect('messages.receiver', 'receiver')
-      .leftJoinAndSelect('receiver.credential', 'receiver_credential')
-      .leftJoinAndSelect('receiver.profileItems', 'receiver_profileItems')
-      .leftJoinAndSelect('receiver_profileItems.emoji', 'receiver_emoji')
-      .leftJoinAndSelect(
-        'receiver_profileItems.wallpaper',
-        'receiver_wallpaper',
-      )
-      .leftJoinAndSelect(
-        'receiver_profileItems.background',
-        'receiver_background',
-      )
-      .leftJoinAndSelect('receiver_profileItems.frame', 'receiver_frame')
       .withDeleted();
   }
 
