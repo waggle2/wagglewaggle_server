@@ -1,9 +1,8 @@
 import { SelectQueryBuilder } from 'typeorm';
-import { Post } from '@/domain/posts/entities/post.entity';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 
 export const applyPaging = async (
-  queryBuilder: SelectQueryBuilder<Post>,
+  queryBuilder: SelectQueryBuilder<any>,
   pageOptionsDto: PageOptionsDto,
 ) => {
   const { page, pageSize } = pageOptionsDto;
