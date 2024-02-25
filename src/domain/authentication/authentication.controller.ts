@@ -315,7 +315,6 @@ export class AuthenticationController {
     response.json({ code: 200, message: '로그인 되었습니다.' });
   }
 
-  @HttpCode(200)
   @Get('/logout')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '로그아웃' })

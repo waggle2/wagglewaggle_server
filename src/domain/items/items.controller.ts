@@ -9,7 +9,6 @@ import {
   Query,
   Req,
   UseGuards,
-  HttpCode,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -83,7 +82,6 @@ export class ItemsController {
     return HttpResponse.success('동물별 아이템이 조회되었습니다.', items);
   }
 
-  @HttpCode(200)
   @Patch('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니에 아이템 추가' })
