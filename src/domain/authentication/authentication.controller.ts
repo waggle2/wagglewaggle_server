@@ -316,7 +316,7 @@ export class AuthenticationController {
   }
 
   @HttpCode(200)
-  @Post('/logout')
+  @Get('/logout')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '로그아웃' })
   @ApiResponse({

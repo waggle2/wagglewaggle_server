@@ -84,7 +84,7 @@ export class ItemsController {
   }
 
   @HttpCode(200)
-  @Post('/cart/:id')
+  @Patch('/cart/:id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '장바구니에 아이템 추가' })
   @ApiResponse({
