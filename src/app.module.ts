@@ -15,7 +15,6 @@ import { AuthenticationModule } from './domain/authentication/authentication.mod
 import * as Joi from 'joi';
 import { RedisCacheModule } from './domain/redis-cache/redis-cache.module';
 import { mailerConfigFactory } from '@/lib/config/mailer.config';
-import { RedisModule } from '@nestjs-modules/ioredis';
 import { HealthCheckController } from '@/domain/health-check/health-check.controller';
 import { ReportsModule } from '@/domain/reports/reports.module';
 import { StickersModule } from '@/domain/stickers/stickers.module';
@@ -38,12 +37,7 @@ import { NotificationModule } from './notification/notification.module';
       }),
     }),
     DatabaseModule.forRoot({ isTest: false }),
-    RedisModule.forRootAsync({
-      useFactory: () => ({
-        type: 'single',
-        url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
-      }),
-    }),
+    RedisCacheModule.forRootAsync(),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: mailerConfigFactory,

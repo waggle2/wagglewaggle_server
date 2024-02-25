@@ -76,6 +76,14 @@ export class PostEntryResponseDto {
   @Expose()
   createdAt: Date;
 
+  @ApiProperty({ description: '게시물 수정일자', type: Date })
+  @Expose()
+  updatedAt: Date;
+
+  @ApiProperty({ description: '게시물 삭제일자', type: Date })
+  @Expose()
+  deletedAt: Date;
+
   constructor(post: Post) {
     this.id = post.id;
     this.title = post.title;
@@ -89,6 +97,8 @@ export class PostEntryResponseDto {
     this.category = post.category;
     this.likes = post.likes;
     this.createdAt = post.createdAt;
+    this.updatedAt = post.updatedAt;
+    this.deletedAt = post.deletedAt;
     this.author = post.author;
   }
 }

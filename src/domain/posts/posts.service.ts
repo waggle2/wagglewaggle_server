@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
@@ -19,6 +19,7 @@ import {
 import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { SearchHistoriesService } from '@/domain/search-histories/search-histories.service';
+import { applyPaging } from '@/common/utils/applyPaging';
 
 @Injectable()
 export class PostsService {
@@ -28,50 +29,81 @@ export class PostsService {
     private readonly searchHistoriesService: SearchHistoriesService,
   ) {}
 
-  private async findPosts(
-    queryBuilder: SelectQueryBuilder<Post>,
-    pageOptionsDto: PageOptionsDto,
-  ): Promise<{ posts: Post[]; total: number }> {
-    const { page, pageSize } = pageOptionsDto;
-    let posts: Post[], total: number;
-
-    if (page && pageSize) {
-      [posts, total] = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      // 페이지 관련 파라미터가 없는 경우, 페이징을 적용하지 않음
-      [posts, total] = await queryBuilder.getManyAndCount();
-    }
-
-    return {
-      posts,
-      total,
-    };
-  }
-
-  async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
-    const userId = user.id;
+  private createBaseQueryBuilder(options?: {
+    withDeleted: boolean;
+  }): SelectQueryBuilder<Post> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('author.credential', 'credential')
-      .where('author.id = :userId', { userId })
-      .andWhere('post.deletedAt IS NULL')
+      .leftJoinAndSelect('author.profileItems', 'author_profileItems')
+      .leftJoinAndSelect('author_profileItems.emoji', 'author_emoji')
+      .leftJoinAndSelect('author_profileItems.wallpaper', 'author_wallpaper')
+      .leftJoinAndSelect('author_profileItems.background', 'author_background')
+      .leftJoinAndSelect('author_profileItems.frame', 'author_frame');
+
+    if (options?.withDeleted) {
+      queryBuilder.withDeleted();
+    } else {
+      queryBuilder.where('post.deletedAt IS NULL');
+    }
+
+    return queryBuilder;
+  }
+
+  private async addConditionalsToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<Post>,
+    postFindDto: PostFindDto,
+    userId?: string,
+  ) {
+    const { text, animal, category, tag } = postFindDto;
+
+    if (animal)
+      queryBuilder.andWhere('post.animalOfAuthor = :animal', { animal });
+    if (tag) queryBuilder.andWhere('post.tag = :tag', { tag: tag.valueOf() });
+    if (category)
+      queryBuilder.andWhere('post.category = :category', { category });
+    if (text) {
+      queryBuilder.andWhere(
+        '(post.title LIKE :text OR post.content LIKE :text)',
+        { text: `%${text}%` },
+      );
+      if (userId) {
+        await this.searchHistoriesService.create({
+          userId,
+          keyword: text,
+        });
+      }
+    }
+  }
+
+  private async ensurePostOwnership(user: User, postId: number) {
+    const post = await this.findOneWithoutIncrementingViews(postId);
+    const isAuthor = user.id === post.author.id;
+    const isAdmin = user.authorities.some(
+      (authority) => authority.authorityName === AuthorityName.ADMIN,
+    );
+
+    if (!isAuthor && !isAdmin) {
+      throw new PostAuthorDifferentException('게시물을 수정할 권한이 없습니다');
+    }
+
+    return post;
+  }
+
+  async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
+    const queryBuilder = this.createBaseQueryBuilder()
+      .where('author.id = :userId', { userId: user.id })
       .orderBy('post.createdAt', 'DESC');
 
-    return await this.findPosts(queryBuilder, pageOptionsDto);
+    return await applyPaging(queryBuilder, pageOptionsDto);
   }
 
   async findByComments(user: User, pageOptionsDto: PageOptionsDto) {
     const userId = user.id;
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
+    const queryBuilder = this.createBaseQueryBuilder()
       .leftJoin('post.comments', 'comment')
       .leftJoin('comment.author', 'commenter')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential')
       .andWhere('commenter.id = :userId', { userId });
 
     const { page, pageSize } = pageOptionsDto;
@@ -98,16 +130,12 @@ export class PostsService {
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
 
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential')
-      .where('post.deletedAt IS NULL')
+    const queryBuilder = this.createBaseQueryBuilder()
       .andWhere('post.updatedAt > :date', { date: date48HoursAgo })
       .addSelect('post.commentNum + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
       .addOrderBy('totalScore', 'DESC');
 
-    return await this.findPosts(queryBuilder, pageOptionsDto);
+    return await applyPaging(queryBuilder, pageOptionsDto);
   }
 
   async findAll(
@@ -115,49 +143,12 @@ export class PostsService {
     pageOptionsDto: PageOptionsDto,
     userId?: string,
   ) {
-    const { text, animal, category, tag } = postFindDto;
-
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .where('post.deletedAt IS NULL')
-      .orderBy('post.createdAt', 'DESC')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential');
-
-    if (animal) {
-      queryBuilder.andWhere('post.animal_of_author = :animal', {
-        animal,
-      });
-    }
-
-    if (tag) {
-      queryBuilder.andWhere('post.tag = :tag', {
-        tag: tag.valueOf(),
-      });
-    }
-
-    if (category) {
-      queryBuilder.andWhere('post.category = :category', {
-        category,
-      });
-    }
-
-    if (text) {
-      if (userId) {
-        await this.searchHistoriesService.create({
-          userId,
-          keyword: text,
-        });
-      }
-      queryBuilder.andWhere(
-        '(post.title LIKE :text OR post.content LIKE :text)',
-        {
-          text: `%${text}%`,
-        },
-      );
-    }
-
-    return await this.findPosts(queryBuilder, pageOptionsDto);
+    const queryBuilder = this.createBaseQueryBuilder().orderBy(
+      'post.createdAt',
+      'DESC',
+    );
+    await this.addConditionalsToQueryBuilder(queryBuilder, postFindDto, userId);
+    return await applyPaging(queryBuilder, pageOptionsDto);
 
     // const esQuery = {
     //   query: {
@@ -209,15 +200,10 @@ export class PostsService {
   }
 
   async findDeletedPosts(pageOptionsDto: PageOptionsDto) {
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .withDeleted()
-      .where('post.deletedAt IS NOT NULL')
-      .orderBy('post.updatedAt', 'DESC')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential');
-
-    return await this.findPosts(queryBuilder, pageOptionsDto);
+    const queryBuilder = this.createBaseQueryBuilder({
+      withDeleted: true,
+    }).orderBy('post.updatedAt', 'DESC');
+    return await applyPaging(queryBuilder, pageOptionsDto);
   }
 
   async findOne(id: number): Promise<Post> {
@@ -227,13 +213,9 @@ export class PostsService {
   }
 
   async findOneWithoutIncrementingViews(id: number) {
-    const queryBuilder = this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('author.credential', 'credential')
+    const queryBuilder = this.createBaseQueryBuilder()
       .leftJoinAndSelect('post.poll', 'poll')
       .leftJoinAndSelect('poll.pollItems', 'pollItems')
-      .where('post.deletedAt IS NULL')
       .andWhere('post.id = :id', { id });
 
     const post = await queryBuilder.getOne();
@@ -256,35 +238,14 @@ export class PostsService {
   }
 
   async update(user: User, id: number, updateData: UpdatePostDto) {
-    const post = await this.findOneWithoutIncrementingViews(id);
-
-    if (user.id !== post.author.id)
-      throw new PostAuthorDifferentException('게시물을 수정할 권한이 없습니다');
-
+    await this.ensurePostOwnership(user, id);
     await this.postRepository.update(id, updateData);
     // await this.searchService.update(id, updatedPost);
-
     return await this.findOneWithoutIncrementingViews(id);
   }
 
   async remove(user: User, id: number) {
-    const existingPost = await this.findOneWithoutIncrementingViews(id);
-
-    if (!existingPost) {
-      throw new NotFoundException(`존재하지 않는 게시물입니다`);
-    }
-
-    const userAuthorities = user.authorities.map(
-      (authority) => authority.authorityName,
-    );
-
-    const isAuthorOrAdmin =
-      user.id === existingPost.author.id ||
-      userAuthorities.includes(AuthorityName.ADMIN);
-
-    if (!isAuthorOrAdmin)
-      throw new PostAuthorDifferentException('게시물을 삭제할 권한이 없습니다');
-
+    await this.ensurePostOwnership(user, id);
     await this.postRepository.softDelete(id);
     // await this.searchService.remove(id);
   }
