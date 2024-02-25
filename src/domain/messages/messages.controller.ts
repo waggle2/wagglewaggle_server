@@ -327,8 +327,8 @@ export class MessagesController {
                   type: 'object',
                   properties: {
                     id: { type: 'number', example: 33 },
-                    sender: { type: 'object', properties: {} },
-                    receiver: { type: 'object', properties: {} },
+                    sender: { type: 'string', example: '발신자 id' },
+                    receiver: { type: 'string', example: '수신자 id' },
                     content: { type: 'string', example: '안녕하세요' },
                     isRead: { type: 'boolean', example: false },
                     createdAt: {
@@ -338,7 +338,16 @@ export class MessagesController {
                   },
                 },
               },
-              lastMessage: { type: 'string', example: '안녕하세요' },
+              lastMessage: {
+                type: 'object',
+                properties: {
+                  content: { type: 'string', example: '안녕하세요' },
+                  createdAt: {
+                    type: 'string',
+                    example: '2024-02-23T16:18:23.621Z',
+                  },
+                },
+              },
               unreadMessageCount: { type: 'number', example: 2 },
             },
           },
@@ -496,8 +505,8 @@ export class MessagesController {
                 type: 'object',
                 properties: {
                   id: { type: 'number', example: 33 },
-                  sender: { type: 'object', properties: {} },
-                  receiver: { type: 'object', properties: {} },
+                  sender: { type: 'string', example: '발신자 id' },
+                  receiver: { type: 'string', example: '수신자 id' },
                   content: { type: 'string', example: '안녕하세요' },
                   isRead: { type: 'boolean', example: false },
                   createdAt: {

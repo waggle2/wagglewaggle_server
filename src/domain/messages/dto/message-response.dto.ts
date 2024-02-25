@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { MessageRoom } from '../entities/message-room.entity';
-import { UserProfileDto } from '@/domain/users/dto/user-profile.dto';
 import { Message } from '../entities/message.entity';
 
 export class MessageResponseDto {
@@ -13,13 +12,13 @@ export class MessageResponseDto {
   @Expose()
   readonly messageRoom: MessageRoom;
 
-  @ApiProperty({ type: UserProfileDto, description: '발신자' })
+  @ApiProperty({ type: String, description: '발신자' })
   @Expose()
-  readonly sender: UserProfileDto;
+  readonly sender: string;
 
-  @ApiProperty({ type: UserProfileDto, description: '수신자' })
+  @ApiProperty({ type: String, description: '수신자' })
   @Expose()
-  readonly receiver: UserProfileDto;
+  readonly receiver: string;
 
   @ApiProperty({ type: String, description: '메세지 내용' })
   @Expose()
@@ -36,8 +35,8 @@ export class MessageResponseDto {
   constructor(message: Message) {
     this.id = message.id;
     this.messageRoom = message.messageRoom;
-    this.sender = new UserProfileDto(message.sender);
-    this.receiver = new UserProfileDto(message.receiver);
+    this.sender = message.sender.id;
+    this.receiver = message.receiver.id;
     this.content = message.content;
     this.isRead = message.isRead;
     this.createdAt = message.createdAt;

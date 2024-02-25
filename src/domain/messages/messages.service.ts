@@ -87,9 +87,9 @@ export class MessagesService {
     return messageRoom;
   }
 
-  // 채팅방 리스트 조회
-  async getRooms(user: User): Promise<MessageRoom[]> {
-    const rooms = await this.messageRoomRepository
+  // 공통 함수: 채팅방 쿼리 빌더 생성
+  private async createMessageRoomQueryBuilder() {
+    return this.messageRoomRepository
       .createQueryBuilder('messageRoom')
       .leftJoinAndSelect('messageRoom.firstUser', 'firstUser')
       .leftJoinAndSelect('firstUser.credential', 'firstUser_credential')
@@ -104,6 +104,7 @@ export class MessagesService {
         'firstUser_background',
       )
       .leftJoinAndSelect('firstUser_profileItems.frame', 'firstUser_frame')
+      .withDeleted()
       .leftJoinAndSelect('messageRoom.secondUser', 'secondUser')
       .leftJoinAndSelect('secondUser.credential', 'secondUser_credential')
       .leftJoinAndSelect('secondUser.profileItems', 'secondUser_profileItems')
@@ -117,27 +118,18 @@ export class MessagesService {
         'secondUser_background',
       )
       .leftJoinAndSelect('secondUser_profileItems.frame', 'secondUser_frame')
+      .withDeleted()
       .leftJoinAndSelect('messageRoom.messages', 'messages')
       .leftJoinAndSelect('messages.sender', 'sender')
+      .withDeleted()
       .leftJoinAndSelect('messages.receiver', 'receiver')
-      .leftJoinAndSelect('sender.credential', 'sender_credential')
-      .leftJoinAndSelect('sender.profileItems', 'sender_profileItems')
-      .leftJoinAndSelect('sender_profileItems.emoji', 'sender_emoji')
-      .leftJoinAndSelect('sender_profileItems.wallpaper', 'sender_wallpaper')
-      .leftJoinAndSelect('sender_profileItems.background', 'sender_background')
-      .leftJoinAndSelect('sender_profileItems.frame', 'sender_frame')
-      .leftJoinAndSelect('receiver.credential', 'receiver_credential')
-      .leftJoinAndSelect('receiver.profileItems', 'receiver_profileItems')
-      .leftJoinAndSelect('receiver_profileItems.emoji', 'receiver_emoji')
-      .leftJoinAndSelect(
-        'receiver_profileItems.wallpaper',
-        'receiver_wallpaper',
-      )
-      .leftJoinAndSelect(
-        'receiver_profileItems.background',
-        'receiver_background',
-      )
-      .leftJoinAndSelect('receiver_profileItems.frame', 'receiver_frame')
+      .withDeleted();
+  }
+
+  // 채팅방 리스트 조회
+  async getRooms(user: User): Promise<MessageRoom[]> {
+    const queryBuilder = await this.createMessageRoomQueryBuilder();
+    const rooms = await queryBuilder
       .where('firstUser.id = :userId OR secondUser.id = :userId', {
         userId: user.id,
       })
@@ -148,7 +140,11 @@ export class MessagesService {
     rooms.forEach((room) => {
       const messagesLength = room.messages.length;
       if (messagesLength > 0) {
-        room['lastMessage'] = room.messages[messagesLength - 1].content;
+        const lastMessage = room.messages[messagesLength - 1];
+        room['lastMessage'] = {
+          content: lastMessage.content,
+          createdAt: lastMessage.createdAt,
+        };
       } else {
         room['lastMessage'] = null;
       }
@@ -168,58 +164,12 @@ export class MessagesService {
 
   // 채팅방 조회
   async getRoom(id: number, user: User): Promise<MessageRoom> {
-    const messageRoom = await this.messageRoomRepository
-      .createQueryBuilder('messageRoom')
-      .leftJoinAndSelect('messageRoom.firstUser', 'firstUser')
-      .leftJoinAndSelect('firstUser.credential', 'firstUser_credential')
-      .leftJoinAndSelect('firstUser.profileItems', 'firstUser_profileItems')
-      .leftJoinAndSelect('firstUser_profileItems.emoji', 'firstUser_emoji')
-      .leftJoinAndSelect(
-        'firstUser_profileItems.wallpaper',
-        'firstUser_wallpaper',
-      )
-      .leftJoinAndSelect(
-        'firstUser_profileItems.background',
-        'firstUser_background',
-      )
-      .leftJoinAndSelect('firstUser_profileItems.frame', 'firstUser_frame')
-      .leftJoinAndSelect('messageRoom.secondUser', 'secondUser')
-      .leftJoinAndSelect('secondUser.credential', 'secondUser_credential')
-      .leftJoinAndSelect('secondUser.profileItems', 'secondUser_profileItems')
-      .leftJoinAndSelect('secondUser_profileItems.emoji', 'secondUser_emoji')
-      .leftJoinAndSelect(
-        'secondUser_profileItems.wallpaper',
-        'secondUser_wallpaper',
-      )
-      .leftJoinAndSelect(
-        'secondUser_profileItems.background',
-        'secondUser_background',
-      )
-      .leftJoinAndSelect('secondUser_profileItems.frame', 'secondUser_frame')
-      .leftJoinAndSelect('messageRoom.messages', 'messages')
-      .leftJoinAndSelect('messages.sender', 'sender')
-      .leftJoinAndSelect('messages.receiver', 'receiver')
-      .leftJoinAndSelect('sender.credential', 'sender_credential')
-      .leftJoinAndSelect('sender.profileItems', 'sender_profileItems')
-      .leftJoinAndSelect('sender_profileItems.emoji', 'sender_emoji')
-      .leftJoinAndSelect('sender_profileItems.wallpaper', 'sender_wallpaper')
-      .leftJoinAndSelect('sender_profileItems.background', 'sender_background')
-      .leftJoinAndSelect('sender_profileItems.frame', 'sender_frame')
-      .leftJoinAndSelect('receiver.credential', 'receiver_credential')
-      .leftJoinAndSelect('receiver.profileItems', 'receiver_profileItems')
-      .leftJoinAndSelect('receiver_profileItems.emoji', 'receiver_emoji')
-      .leftJoinAndSelect(
-        'receiver_profileItems.wallpaper',
-        'receiver_wallpaper',
-      )
-      .leftJoinAndSelect(
-        'receiver_profileItems.background',
-        'receiver_background',
-      )
-      .leftJoinAndSelect('receiver_profileItems.frame', 'receiver_frame')
+    const queryBuilder = await this.createMessageRoomQueryBuilder();
+    const messageRoom = await queryBuilder
       .where('messageRoom.id = :id', { id })
       .orderBy('messages.createdAt', 'ASC')
       .getOne();
+
     if (!messageRoom) {
       throw new MessageRoomNotFoundException('채팅방을 찾을 수 없습니다.');
     }
