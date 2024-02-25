@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -64,7 +65,8 @@ export class PostsController {
       });
       return decoded.id;
     } catch (error) {
-      throw new UserUnauthorizedException('Access token expired.');
+      if (error instanceof UnauthorizedException)
+        throw new UserUnauthorizedException('Access token expired.');
     }
   }
 
