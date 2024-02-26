@@ -18,6 +18,7 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
 import { NotificationService } from '@/notification/notification.service';
 import { NotificationType } from '@/@types/enum/notification-type.enum';
+import { SearchService } from '@/domain/search/search.service';
 
 @Injectable()
 export class CommentsService {
@@ -28,6 +29,7 @@ export class CommentsService {
     private readonly postsRepository: Repository<Post>,
     private readonly postService: PostsService,
     private readonly notificationService: NotificationService,
+    private readonly searchService: SearchService,
   ) {}
 
   private createQueryBuilderWithJoins(): SelectQueryBuilder<Comment> {
@@ -98,8 +100,9 @@ export class CommentsService {
       post: { id: post.id },
     });
 
-    await this.updatePostCommentNum(post, 1);
+    const updatedPost = await this.updatePostCommentNum(post, 1);
     const savedComment = await this.commentRepository.save(newComment);
+    await this.searchService.update(postId, updatedPost);
 
     // 게시글 작성자에게 알림 전송
     const postAuthor = post.author;
@@ -135,7 +138,8 @@ export class CommentsService {
       parent: { id: parent.id },
     });
 
-    await this.updatePostCommentNum(parent.post, 1);
+    const updatedPost = await this.updatePostCommentNum(parent.post, 1);
+    await this.searchService.update(parent.post.id, updatedPost);
 
     return await this.commentRepository.save(newComment);
   }
@@ -161,10 +165,11 @@ export class CommentsService {
     const post = existingComment.parent
       ? existingComment.parent.post
       : existingComment.post;
-    await this.updatePostCommentNum(post, -1);
+    const updatedPost = await this.updatePostCommentNum(post, -1);
+    await this.searchService.update(post.id, updatedPost);
   }
 
-  async removeMany(user: User, ids: number[]) {
+  async removeMany(ids: number[]) {
     if (!ids || ids.length === 0)
       throw new CommentBadRequestException('삭제할 댓글이 없습니다');
 
@@ -208,7 +213,8 @@ export class CommentsService {
       const post =
         await this.postService.findOneWithoutIncrementingViews(postId);
       if (post) {
-        await this.updatePostCommentNum(post, -1);
+        const updatedPost = await this.updatePostCommentNum(post, -1);
+        await this.searchService.update(postId, updatedPost);
       }
     }
   }
@@ -225,11 +231,8 @@ export class CommentsService {
     return this.findOne(id);
   }
 
-  private async updatePostCommentNum(
-    post: Post,
-    increment: number,
-  ): Promise<void> {
+  private async updatePostCommentNum(post: Post, increment: number) {
     post.commentNum += increment;
-    await this.postsRepository.save(post);
+    return await this.postsRepository.save(post);
   }
 }

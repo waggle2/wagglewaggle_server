@@ -222,7 +222,9 @@ export class PostsService {
   async findOne(id: number): Promise<Post> {
     const post = await this.findOneWithoutIncrementingViews(id);
     post.views++;
-    return await this.postRepository.save(post);
+    const viewUpdatePost = await this.postRepository.save(post);
+    await this.searchService.update(id, viewUpdatePost);
+    return viewUpdatePost;
   }
 
   async findOneWithoutIncrementingViews(id: number) {
@@ -325,7 +327,10 @@ export class PostsService {
       post.likes.push(user.id);
     }
 
-    await this.postRepository.save(post);
+    const updatedPost = await this.postRepository.save(post);
+    await this.searchService.update(postId, updatedPost);
+
+    return updatedPost;
   }
 
   async cancelLike(user: User, postId: number) {
@@ -335,6 +340,9 @@ export class PostsService {
       throw new LikeDifferentUserException('잘못된 접근입니다');
 
     post.likes = post.likes.filter((userId) => userId !== user.id);
-    await this.postRepository.save(post);
+    const updatedPost = await this.postRepository.save(post);
+    await this.searchService.update(postId, updatedPost);
+
+    return updatedPost;
   }
 }
