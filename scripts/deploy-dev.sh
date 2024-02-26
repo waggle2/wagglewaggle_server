@@ -17,7 +17,7 @@ docker tag wagglewaggle_server-app_5002:latest wagglewaggle_server-app_5002:"$IM
 
 echo "> 현재 실행중인 컨테이너 확인"
 
-#CURRENT_CONTAINER_ES=$(docker ps | grep es01)
+CURRENT_CONTAINER_ES=$(docker ps | grep es01)
 CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5001")
 CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5002")
 
