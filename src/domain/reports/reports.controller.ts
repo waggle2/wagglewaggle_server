@@ -27,6 +27,7 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { CommentNotFoundException } from '@/domain/comments/exceptions/comments.exception';
+import { MessageRoomNotFoundException } from '../messages/exceptions/message.exception';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -84,6 +85,35 @@ export class ReportsController {
     const report = await this.reportsService.reportComment(
       user,
       +commentId,
+      createReportDto,
+    );
+
+    return HttpResponse.created(
+      '신고 접수 성공',
+      new ReportResponseDto(report),
+    );
+  }
+
+  @ApiOperation({ summary: '채팅방 신고' })
+  @ApiResponse({
+    status: 201,
+    description: '신고 접수 성공',
+    type: ReportResponseDto,
+  })
+  @ApiNotFoundResponse({
+    type: MessageRoomNotFoundException,
+    description: '채팅방을 찾을 수 없습니다',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Post('/messages/:messageRoomId')
+  async reportMessageRoom(
+    @Req() req: RequestWithUser,
+    @Param('messageRoomId') messageRoomId: string,
+    @Body() createReportDto: CreateReportDto,
+  ) {
+    const report = await this.reportsService.reportMessageRoom(
+      req.user,
+      +messageRoomId,
       createReportDto,
     );
 
