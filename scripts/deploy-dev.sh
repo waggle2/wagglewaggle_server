@@ -22,12 +22,12 @@ CURRENT_CONTAINER_5001=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_se
 CURRENT_CONTAINER_5002=$(docker ps --format "{{.Names}}" | grep "wagglewaggle_server-app_5002")
 
 
-#echo "> ES가 꺼져 있으면 배포"
-#
-#if [ -z "$CURRENT_CONTAINER_ES" ]; then
-#  docker-compose -f $DOCKER_COMPOSE_FILE up -d es01 || exit 1
-#  sleep 30
-#fi
+echo "> ES가 꺼져 있으면 배포"
+
+if [ -z "$CURRENT_CONTAINER_ES" ]; then
+  docker-compose -f $DOCKER_COMPOSE_FILE up -d es01 || exit 1
+  sleep 30
+fi
 
 echo "> 5001번 포트에 대한 배포"
 
