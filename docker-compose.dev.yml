@@ -16,7 +16,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./elasticsearch/data:/var/lib/elasticsearch/data
     networks:
       - wagglewaggle_network
 

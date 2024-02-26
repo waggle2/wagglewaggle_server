@@ -159,7 +159,17 @@ export class SearchService {
   }
 
   async migrate() {
-    const posts = await this.postRepository.find();
+    const posts = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.credential', 'credential')
+      .leftJoinAndSelect('author.profileItems', 'author_profileItems')
+      .leftJoinAndSelect('author_profileItems.emoji', 'author_emoji')
+      .leftJoinAndSelect('author_profileItems.wallpaper', 'author_wallpaper')
+      .leftJoinAndSelect('author_profileItems.background', 'author_background')
+      .leftJoinAndSelect('author_profileItems.frame', 'author_frame')
+      .where('post.deletedAt IS NULL')
+      .getMany();
     for (const post of posts) {
       await this.indexPost(post);
     }
