@@ -17,7 +17,7 @@ export class Message {
   id: number;
 
   @ManyToOne('MessageRoom', 'messages', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'message_rooms_id' })
+  @JoinColumn({ name: 'message_room_id' })
   messageRoom: MessageRoom;
 
   @ManyToOne(() => User)

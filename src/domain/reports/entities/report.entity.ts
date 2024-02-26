@@ -27,6 +27,9 @@ export class Report {
   @Column({ name: 'comment_id', nullable: true })
   commentId: number;
 
+  @Column({ name: 'message_room_id', nullable: true })
+  messageRoomId: number;
+
   @Column({ type: 'varchar', length: 300, nullable: false })
   content: string;
 

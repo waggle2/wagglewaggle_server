@@ -8,6 +8,7 @@ import { MessageRoom } from './entities/message-room.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Message, MessageRoom]), UsersModule],
+  exports: [MessagesService],
   controllers: [MessagesController],
   providers: [MessagesService],
 })

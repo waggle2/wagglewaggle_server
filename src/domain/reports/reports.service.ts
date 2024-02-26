@@ -9,6 +9,7 @@ import { User } from '@/domain/users/entities/user.entity';
 import { AuthorityName } from '@/@types/enum/user.enum';
 import { UserReportForbiddenException } from '@/domain/authentication/exceptions/authentication.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { MessagesService } from '../messages/messages.service';
 
 @Injectable()
 export class ReportsService {
@@ -17,6 +18,7 @@ export class ReportsService {
     private readonly reportsRepository: Repository<Report>,
     private readonly postsService: PostsService,
     private readonly commentsService: CommentsService,
+    private readonly messagesService: MessagesService,
   ) {}
 
   private isAdmin(user: User): boolean {
@@ -58,6 +60,20 @@ export class ReportsService {
       commentId,
     });
     return await this.reportsRepository.save(commentReport);
+  }
+
+  async reportMessageRoom(
+    user: User,
+    messageRoomId: number,
+    createReportDto: CreateReportDto,
+  ) {
+    await this.messagesService.getRoom(messageRoomId, user);
+    const messageRoomReport = this.reportsRepository.create({
+      ...createReportDto,
+      reporter: { id: user.id },
+      messageRoomId,
+    });
+    return await this.reportsRepository.save(messageRoomReport);
   }
 
   async findAll(user: User, pageOptionsDto: PageOptionsDto) {
