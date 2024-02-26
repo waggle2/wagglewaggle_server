@@ -22,7 +22,10 @@ export class StickersService {
   ) {}
 
   private async findStickerById(id: number): Promise<Sticker> {
-    const sticker = await this.stickersRepository.findOneBy({ id });
+    const sticker = await this.stickersRepository.findOne({
+      where: { id },
+      relations: ['comment'],
+    });
     if (!sticker) {
       throw new StickerNotFoundException(`해당 스티커가 존재하지 않습니다`);
     }
@@ -70,15 +73,15 @@ export class StickersService {
     return await this.stickersRepository.save(sticker);
   }
 
-  async findOne(id: number) {
-    return await this.findStickerById(id);
-  }
-
   async update(user: User, id: number, updateStickerDto: UpdateStickerDto) {
-    const sticker = await this.findStickerById(id);
-    await this.handleStickerUserPermission(user, sticker);
-    await this.stickersRepository.update(id, updateStickerDto);
-    return this.findOne(id);
+    try {
+      const sticker = await this.findStickerById(id);
+      await this.handleStickerUserPermission(user, sticker);
+      await this.stickersRepository.update(id, updateStickerDto);
+      return await this.findStickerById(id);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async remove(user: User, id: number) {

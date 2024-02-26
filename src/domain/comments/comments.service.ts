@@ -78,8 +78,8 @@ export class CommentsService {
     const { page, pageSize } = pageOptionsDto;
     if (page && pageSize) {
       return queryBuilder
-        .skip(pageOptionsDto.page * pageOptionsDto.pageSize)
-        .take(pageOptionsDto.pageSize)
+        .skip((page - 1) * pageSize)
+        .take(pageSize)
         .getManyAndCount();
     } else {
       return queryBuilder.getManyAndCount();
