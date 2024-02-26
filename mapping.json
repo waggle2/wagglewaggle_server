@@ -62,7 +62,7 @@
           }
         }
       },
-      "tags": {
+      "tag": {
         "type": "text",
         "fields": {
           "keyword": {
@@ -71,7 +71,7 @@
           }
         }
       },
-      "updatedAt": {
+      "createdAt": {
         "type": "date"
       }
     }

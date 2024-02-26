@@ -1,24 +1,24 @@
 version: '3'
 services:
-#  es01:
-#    image: elasticsearch:8.12.0
-#    container_name: es01
-#    environment:
-#      - node.name=es01
-#      - cluster.name=es-docker-cluster
-#      - bootstrap.memory_lock=true
-#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-#      - xpack.security.enabled=false
-#      - "discovery.type=single-node"
-#      - "ES_VM_MAX_MAP_COUNT=262144"
-#    ulimits:
-#      memlock:
-#        soft: -1
-#        hard: -1
-#    volumes:
-#      - data01:/usr/share/elasticsearch/data
-#    networks:
-#      - wagglewaggle_network
+  es01:
+    image: elasticsearch:8.12.0
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+      - "ES_VM_MAX_MAP_COUNT=262144"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - wagglewaggle_network
 
   app_5001:
     build:
@@ -39,9 +39,6 @@ services:
       NODE_ENV: production
     networks:
       - wagglewaggle_network
-
-#volumes:
-#  data01: {}
 
 networks:
   wagglewaggle_network:

@@ -20,6 +20,7 @@ import { PostFindDto } from '@/domain/posts/dto/post-find.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { SearchHistoriesService } from '@/domain/search-histories/search-histories.service';
 import { applyPaging } from '@/common/utils/applyPaging';
+import { SearchService } from '@/domain/search/search.service';
 
 @Injectable()
 export class PostsService {
@@ -27,6 +28,7 @@ export class PostsService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly searchHistoriesService: SearchHistoriesService,
+    private readonly searchService: SearchService,
   ) {}
 
   private createBaseQueryBuilder(options?: {
@@ -51,31 +53,31 @@ export class PostsService {
     return queryBuilder;
   }
 
-  private async addConditionalsToQueryBuilder(
-    queryBuilder: SelectQueryBuilder<Post>,
-    postFindDto: PostFindDto,
-    userId?: string,
-  ) {
-    const { text, animal, category, tag } = postFindDto;
-
-    if (animal)
-      queryBuilder.andWhere('post.animalOfAuthor = :animal', { animal });
-    if (tag) queryBuilder.andWhere('post.tag = :tag', { tag: tag.valueOf() });
-    if (category)
-      queryBuilder.andWhere('post.category = :category', { category });
-    if (text) {
-      queryBuilder.andWhere(
-        '(post.title LIKE :text OR post.content LIKE :text)',
-        { text: `%${text}%` },
-      );
-      if (userId) {
-        await this.searchHistoriesService.create({
-          userId,
-          keyword: text,
-        });
-      }
-    }
-  }
+  // private async addConditionalsToQueryBuilder(
+  //   queryBuilder: SelectQueryBuilder<Post>,
+  //   postFindDto: PostFindDto,
+  //   userId?: string,
+  // ) {
+  //   const { text, animal, category, tag } = postFindDto;
+  //
+  //   if (animal)
+  //     queryBuilder.andWhere('post.animalOfAuthor = :animal', { animal });
+  //   if (tag) queryBuilder.andWhere('post.tag = :tag', { tag: tag.valueOf() });
+  //   if (category)
+  //     queryBuilder.andWhere('post.category = :category', { category });
+  //   if (text) {
+  //     queryBuilder.andWhere(
+  //       '(post.title LIKE :text OR post.content LIKE :text)',
+  //       { text: `%${text}%` },
+  //     );
+  //     if (userId) {
+  //       await this.searchHistoriesService.create({
+  //         userId,
+  //         keyword: text,
+  //       });
+  //     }
+  //   }
+  // }
 
   private async ensurePostOwnership(user: User, postId: number) {
     const post = await this.findOneWithoutIncrementingViews(postId);
@@ -143,60 +145,71 @@ export class PostsService {
     pageOptionsDto: PageOptionsDto,
     userId?: string,
   ) {
-    const queryBuilder = this.createBaseQueryBuilder().orderBy(
-      'post.createdAt',
-      'DESC',
-    );
-    await this.addConditionalsToQueryBuilder(queryBuilder, postFindDto, userId);
-    return await applyPaging(queryBuilder, pageOptionsDto);
+    // const queryBuilder = this.createBaseQueryBuilder().orderBy(
+    //   'post.createdAt',
+    //   'DESC',
+    // );
+    // await this.addConditionalsToQueryBuilder(queryBuilder, postFindDto, userId);
+    // return await applyPaging(queryBuilder, pageOptionsDto);
 
-    // const esQuery = {
-    //   query: {
-    //     bool: {
-    //       must: [],
-    //     },
-    //   },
-    //   sort: [
-    //     {
-    //       updatedAt: {
-    //         order: 'desc',
-    //       },
-    //     },
-    //   ],
-    // };
-    //
-    // if (page && pageSize) {
-    //   esQuery['from'] = (page - 1) * pageSize;
-    //   esQuery['size'] = pageSize;
-    // }
-    //
-    // if (text) {
-    //   esQuery.query.bool.must.push({
-    //     multi_match: {
-    //       query: text,
-    //       fields: ['title', 'content'],
-    //     },
-    //   });
-    // }
-    //
-    // if (animal) {
-    //   esQuery.query.bool.must.push({
-    //     match: { animalOfAuthor: animal.valueOf() },
-    //   });
-    // }
-    //
-    // if (category) {
-    //   esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
-    // }
-    //
-    // if (tags && tags.length > 0) {
-    //   const tagsArray = Array.isArray(tags) ? tags : [tags];
-    //   tagsArray.forEach((tag: Tag) => {
-    //     esQuery.query.bool.must.push({
-    //       match: { tags: tag.valueOf() },
-    //     });
-    //   });
-    // }
+    const esQuery = {
+      query: {
+        bool: {
+          must: [],
+        },
+      },
+      sort: [
+        {
+          createdAt: {
+            order: 'desc',
+          },
+        },
+      ],
+    };
+
+    const { text, animal, category, tag } = postFindDto;
+    const { page, pageSize } = pageOptionsDto;
+
+    if (page && pageSize) {
+      esQuery['from'] = (page - 1) * pageSize;
+      esQuery['size'] = pageSize;
+    }
+
+    if (text) {
+      esQuery.query.bool.must.push({
+        multi_match: {
+          query: text,
+          fields: ['title', 'content'],
+        },
+      });
+      if (userId) {
+        await this.searchHistoriesService.create({
+          userId,
+          keyword: text,
+        });
+      }
+    }
+
+    if (animal) {
+      esQuery.query.bool.must.push({
+        match: { animalOfAuthor: animal.valueOf() },
+      });
+    }
+
+    if (category) {
+      esQuery.query.bool.must.push({ match: { category: category.valueOf() } });
+    }
+
+    if (tag) {
+      esQuery.query.bool.must.push({ match: { tags: tag.valueOf() } });
+    }
+
+    const { total, data } = await this.searchService.search(esQuery);
+
+    return {
+      posts: data,
+      total: total['value'],
+    };
   }
 
   async findDeletedPosts(pageOptionsDto: PageOptionsDto) {
@@ -232,22 +245,25 @@ export class PostsService {
       views: 1,
     });
 
-    // await this.searchService.indexPost(post);
+    const savedPost = await this.postRepository.save(newPost);
+    await this.searchService.indexPost(savedPost);
 
-    return await this.postRepository.save(newPost);
+    return savedPost;
   }
 
   async update(user: User, id: number, updateData: UpdatePostDto) {
     await this.ensurePostOwnership(user, id);
     await this.postRepository.update(id, updateData);
-    // await this.searchService.update(id, updatedPost);
-    return await this.findOneWithoutIncrementingViews(id);
+    const updatedPost = await this.findOneWithoutIncrementingViews(id);
+    await this.searchService.update(id, updatedPost);
+
+    return updatedPost;
   }
 
   async remove(user: User, id: number) {
     await this.ensurePostOwnership(user, id);
     await this.postRepository.softDelete(id);
-    // await this.searchService.remove(id);
+    await this.searchService.remove(id);
   }
 
   async removeMany(user: User, ids: number[]) {
@@ -294,7 +310,7 @@ export class PostsService {
 
     if (result.affected === 0)
       throw new PostNotFoundException('삭제할 게시물이 없습니다');
-    // await this.searchService.removeMany(ids);
+    await this.searchService.removeMany(ids);
   }
 
   async likePost(user: User, postId: number) {

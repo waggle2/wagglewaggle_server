@@ -89,14 +89,14 @@ export class PostsController {
     @Query() pageOptionDto: PageOptionsDto,
   ) {
     const userId = await this.getUserIdFromToken(req);
-    const [posts, total] = await this.postsService.findAll(
+    const { posts, total } = await this.postsService.findAll(
       postFindDto,
       pageOptionDto,
       userId,
     );
     const { data, meta } = new PageDto(
-      posts.map((post) => new PostEntryResponseDto(post)),
-      new PageMetaDto(pageOptionDto, total),
+      posts.map((post) => new PostEntryResponseDto(post as PostEntity)),
+      new PageMetaDto(pageOptionDto, total as number),
     );
     return HttpResponse.success('게시글 조회에 성공했습니다', data, meta);
   }
