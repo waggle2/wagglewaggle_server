@@ -227,11 +227,9 @@ export class CommentsController {
   })
   @UseGuards(JwtAuthenticationGuard)
   @Delete()
-  async removeMany(@Req() req: RequestWithUser, @Query('ids') ids: number[]) {
-    const { user } = req;
+  async removeMany(@Query('ids') ids: number[]) {
     const idsStr = ids.map((id) => +id);
-
-    await this.commentsService.removeMany(user, idsStr);
+    await this.commentsService.removeMany(idsStr);
 
     return HttpResponse.success('댓글이 삭제되었습니다');
   }

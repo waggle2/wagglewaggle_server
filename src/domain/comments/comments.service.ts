@@ -18,6 +18,7 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
 import { NotificationService } from '@/notification/notification.service';
 import { NotificationType } from '@/@types/enum/notification-type.enum';
+import { SearchService } from '@/domain/search/search.service';
 
 @Injectable()
 export class CommentsService {
@@ -28,19 +29,61 @@ export class CommentsService {
     private readonly postsRepository: Repository<Post>,
     private readonly postService: PostsService,
     private readonly notificationService: NotificationService,
+    private readonly searchService: SearchService,
   ) {}
 
   private createQueryBuilderWithJoins(): SelectQueryBuilder<Comment> {
     return this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.author', 'author')
+      .leftJoinAndSelect('comment.parent', 'parent')
       .leftJoinAndSelect('author.credential', 'credential')
+      .leftJoinAndSelect('author.profileItems', 'author_profileItems')
+      .leftJoinAndSelect('author_profileItems.emoji', 'author_emoji')
+      .leftJoinAndSelect('author_profileItems.wallpaper', 'author_wallpaper')
+      .leftJoinAndSelect('author_profileItems.background', 'author_background')
+      .leftJoinAndSelect('author_profileItems.frame', 'author_frame')
       .leftJoinAndSelect('comment.post', 'post')
       .leftJoinAndSelect('comment.replies', 'replies')
       .leftJoinAndSelect('replies.author', 'reply_author')
+      .leftJoinAndSelect(
+        'reply_author.profileItems',
+        'reply_author_profileItems',
+      )
+      .leftJoinAndSelect(
+        'reply_author_profileItems.emoji',
+        'reply_author_emoji',
+      )
+      .leftJoinAndSelect(
+        'reply_author_profileItems.wallpaper',
+        'reply_author_wallpaper',
+      )
+      .leftJoinAndSelect(
+        'reply_author_profileItems.background',
+        'reply_author_background',
+      )
+      .leftJoinAndSelect(
+        'reply_author_profileItems.frame',
+        'reply_author_frame',
+      )
       .leftJoinAndSelect('reply_author.credential', 'reply_credential')
       .leftJoinAndSelect('comment.stickers', 'stickers')
       .where('comment.deletedAt IS NULL');
+  }
+
+  async paginate(
+    queryBuilder: SelectQueryBuilder<Comment>,
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<[Comment[], number]> {
+    const { page, pageSize } = pageOptionsDto;
+    if (page && pageSize) {
+      return queryBuilder
+        .skip(pageOptionsDto.page * pageOptionsDto.pageSize)
+        .take(pageOptionsDto.pageSize)
+        .getManyAndCount();
+    } else {
+      return queryBuilder.getManyAndCount();
+    }
   }
 
   async findAll(
@@ -48,25 +91,16 @@ export class CommentsService {
     pageOptionsDto: PageOptionsDto,
   ) {
     const { postId } = commentFindDto;
-    const { page, pageSize } = pageOptionsDto;
-    const queryBuilder = this.createQueryBuilderWithJoins();
-
-    queryBuilder.orderBy('comment.createdAt', 'ASC');
+    const queryBuilder = this.createQueryBuilderWithJoins().orderBy(
+      'comment.createdAt',
+      'ASC',
+    );
 
     if (postId) {
       queryBuilder.andWhere('post.id = :postId', { postId });
     }
 
-    let comments: Comment[], total: number;
-
-    if (page && pageSize) {
-      [comments, total] = await queryBuilder
-        .skip((page - 1) * pageSize)
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      [comments, total] = await queryBuilder.getManyAndCount();
-    }
+    const [comments, total] = await this.paginate(queryBuilder, pageOptionsDto);
 
     return {
       comments,
@@ -97,27 +131,10 @@ export class CommentsService {
       author: user,
       post: { id: post.id },
     });
-
-    await this.updatePostCommentNum(post, 1);
     const savedComment = await this.commentRepository.save(newComment);
 
-    // 게시글 작성자에게 알림 전송
-    const postAuthor = post.author;
-    const notification = await this.notificationService.createNotification(
-      postAuthor.id,
-      {
-        type: NotificationType.COMMENT,
-        message: `${user.credential.nickname}님이 게시글에 댓글을 남겼습니다`,
-      },
-    );
-
-    if (postAuthor.isSubscribed) {
-      await this.notificationService.sendNotificationToUser(postAuthor.id, {
-        type: notification.type,
-        message: notification.message,
-        subscriberNickname: postAuthor.credential.nickname,
-      });
-    }
+    await this.updatePostCommentNum(post, 1);
+    await this.notifyPostAuthor(post, post.author);
 
     return savedComment;
   }
@@ -127,7 +144,11 @@ export class CommentsService {
     parentId: number,
     createCommentDto: CreateCommentDto,
   ) {
-    const parent = await this.findOne(parentId);
+    const parent = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.post', 'post')
+      .where('comment.id = :parentId', { parentId })
+      .getOne();
 
     const newComment = this.commentRepository.create({
       ...createCommentDto,
@@ -136,12 +157,20 @@ export class CommentsService {
     });
 
     await this.updatePostCommentNum(parent.post, 1);
-
     return await this.commentRepository.save(newComment);
   }
 
   async remove(user: User, id: number) {
-    const existingComment = await this.findOne(id);
+    const existingComment = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoinAndSelect('comment.parent', 'parent')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.id = :id', { id })
+      .getOne();
+
+    if (!existingComment)
+      throw new CommentNotFoundException('존재하지 않는 댓글입니다');
 
     const userAuthorities = user.authorities.map(
       (authority) => authority.authorityName,
@@ -158,13 +187,25 @@ export class CommentsService {
 
     await this.commentRepository.softDelete(id);
 
-    const post = existingComment.parent
-      ? existingComment.parent.post
-      : existingComment.post;
+    let post: Post;
+    if (existingComment.parent) {
+      const parentComment = await this.commentRepository
+        .createQueryBuilder('comment')
+        .leftJoinAndSelect('comment.post', 'post')
+        .leftJoinAndSelect('comment.parent', 'parent')
+        .leftJoinAndSelect('comment.author', 'author')
+        .where('comment.id = :id', { id: existingComment.parent.id })
+        .withDeleted()
+        .getOne();
+      post = parentComment.post;
+    } else {
+      post = existingComment.post;
+    }
+
     await this.updatePostCommentNum(post, -1);
   }
 
-  async removeMany(user: User, ids: number[]) {
+  async removeMany(ids: number[]) {
     if (!ids || ids.length === 0)
       throw new CommentBadRequestException('삭제할 댓글이 없습니다');
 
@@ -177,6 +218,7 @@ export class CommentsService {
 
     const deletedCommentsIds = deletedComments.map((post) => post.id);
 
+    // 삭제하려는 댓글의 게시글이 삭제된 경우
     for (const id of ids) {
       if (deletedCommentsIds.includes(id)) {
         throw new CommentAlreadyDeletedException('잘못된 접근입니다');
@@ -192,11 +234,29 @@ export class CommentsService {
       .getMany();
 
     // 게시글 ID 추출
-    const postIds = comments
-      .map((comment) =>
-        comment.parent ? comment.parent.post.id : comment.post.id,
-      )
-      .filter((postId, index, self) => self.indexOf(postId) === index);
+    const postIdPromises = comments.map(async (comment) => {
+      let post: Post;
+      if (comment.parent) {
+        const parentComment = await this.commentRepository
+          .createQueryBuilder('comment')
+          .leftJoinAndSelect('comment.post', 'post')
+          .leftJoinAndSelect('comment.parent', 'parent')
+          .leftJoinAndSelect('comment.author', 'author')
+          .where('comment.id = :id', { id: comment.parent.id })
+          .withDeleted()
+          .getOne();
+        post = parentComment.post;
+      } else {
+        post = comment.post;
+      }
+      return post.id;
+    });
+
+    const postIds = await Promise.all(postIdPromises).then((ids) => {
+      return ids.filter(
+        (postId, index, self) => self.indexOf(postId) === index,
+      );
+    });
 
     const result = await this.commentRepository.softDelete(ids);
 
@@ -208,13 +268,22 @@ export class CommentsService {
       const post =
         await this.postService.findOneWithoutIncrementingViews(postId);
       if (post) {
-        await this.updatePostCommentNum(post, -1);
+        await this.updatePostCommentNum(post, -1 * ids.length);
       }
     }
   }
 
   async update(user: User, id: number, updateData: UpdateCommentDto) {
-    const comment = await this.findOne(id);
+    const comment = await this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoinAndSelect('comment.parent', 'parent')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.id = :id', { id })
+      .getOne();
+
+    if (!comment)
+      throw new CommentNotFoundException('존재하지 않는 댓글입니다');
 
     if (user.id !== comment.author.id)
       throw new CommentAuthorDifferentException(
@@ -222,14 +291,38 @@ export class CommentsService {
       );
 
     await this.commentRepository.update(id, updateData);
-    return this.findOne(id);
+    return this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.post', 'post')
+      .leftJoinAndSelect('comment.parent', 'parent')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.id = :id', { id })
+      .getOne();
   }
 
-  private async updatePostCommentNum(
-    post: Post,
-    increment: number,
-  ): Promise<void> {
+  private async updatePostCommentNum(post: Post, increment: number) {
     post.commentNum += increment;
-    await this.postsRepository.save(post);
+    const updatedPost = await this.postsRepository.save(post);
+    await this.searchService.update(post.id, updatedPost);
+  }
+
+  private async notifyPostAuthor(post: Post, commenter: User) {
+    // 게시글 작성자에게 알림 전송
+    const postAuthor = post.author;
+    const notification = await this.notificationService.createNotification(
+      postAuthor.id,
+      {
+        type: NotificationType.COMMENT,
+        message: `${commenter.credential.nickname}님이 게시글에 댓글을 남겼습니다`,
+      },
+    );
+
+    if (postAuthor.isSubscribed) {
+      await this.notificationService.sendNotificationToUser(postAuthor.id, {
+        type: notification.type,
+        message: notification.message,
+        subscriberNickname: postAuthor.credential.nickname,
+      });
+    }
   }
 }

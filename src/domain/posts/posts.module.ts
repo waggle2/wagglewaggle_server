@@ -7,12 +7,14 @@ import { Repository } from 'typeorm';
 import { Comment } from '@/domain/comments/entities/comment.entity';
 import { SearchHistoriesModule } from '@/domain/search-histories/search-histories.module';
 import { JwtModule } from '@nestjs/jwt';
+import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Post, Comment]),
     SearchHistoriesModule,
     JwtModule,
+    SearchModule,
   ],
   exports: [PostsService, Repository<Post>],
   controllers: [PostsController, LikesController],

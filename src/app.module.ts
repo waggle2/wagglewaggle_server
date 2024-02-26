@@ -23,6 +23,7 @@ import { MessagesModule } from './domain/messages/messages.module';
 import { SearchHistoriesModule } from '@/domain/search-histories/search-histories.module';
 import { FeedbacksModule } from '@/domain/feedbacks/feedbacks.module';
 import { NotificationModule } from './notification/notification.module';
+import { SearchModule } from '@/domain/search/search.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { NotificationModule } from './notification/notification.module';
     SearchHistoriesModule,
     FeedbacksModule,
     NotificationModule,
+    SearchModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
