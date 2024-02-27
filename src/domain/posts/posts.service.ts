@@ -201,7 +201,7 @@ export class PostsService {
     }
 
     if (tag) {
-      esQuery.query.bool.must.push({ match: { tags: tag.valueOf() } });
+      esQuery.query.bool.must.push({ match: { tag: tag.valueOf() } });
     }
 
     const { total, data } = await this.searchService.search(esQuery);
