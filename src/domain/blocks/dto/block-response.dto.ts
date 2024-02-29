@@ -7,11 +7,11 @@ export class BlockResponseDto {
   @Expose()
   readonly id: number;
 
-  @ApiProperty({ type: Object, description: '차단한 유저 정보' })
+  @ApiProperty({ type: Object, description: '차단한 유저 정보(id, nickname)' })
   @Expose()
   readonly blockedBy: { id: string; nickname: string };
 
-  @ApiProperty({ type: Object, description: '차단된 유저 정보' })
+  @ApiProperty({ type: Object, description: '차단된 유저 정보(id, nickname)' })
   @Expose()
   readonly blockedUser: { id: string; nickname: string };
 

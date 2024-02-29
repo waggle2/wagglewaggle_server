@@ -13,6 +13,7 @@ import {
 import { BlocksService } from './blocks.service';
 import { CreateBlockUserDto } from './dto/create-block-user.dto';
 import {
+  ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
@@ -27,6 +28,7 @@ import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
+import { BlockBadRequestException } from './exceptions/block.exception';
 
 @Controller('blocks')
 @ApiTags('blocks')
@@ -39,11 +41,20 @@ export class BlocksController {
   @ApiResponse({
     status: 201,
     description: '차단 성공',
-    type: BlockResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
   })
   @ApiNotFoundResponse({
     type: UserNotFoundException,
-    description: '사용자를 찾을 수 없습니다',
+    description: '사용자를 찾을 수 없습니다.',
+  })
+  @ApiBadRequestResponse({
+    type: BlockBadRequestException,
+    description: '이미 차단된 사용자입니다.',
   })
   async createBlock(
     @Req() req: RequestWithUser,
