@@ -16,6 +16,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { ItemCart } from '@/domain/items/entities/item-cart.entity';
 import { ProfileItems } from './profile-items.entity';
 import { MessageRoom } from '@/domain/messages/entities/message-room.entity';
+import { BlockUser } from '@/domain/blocks/entities/block.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -93,6 +94,9 @@ export class User {
 
   @OneToMany('ItemCart', 'user', { cascade: true })
   itemCart: ItemCart[];
+
+  @OneToMany('BlockUser', 'blockedBy', { cascade: true })
+  blockedUsers: BlockUser[]; // 유저가 차단한 다른 유저들의 목록
 
   // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];

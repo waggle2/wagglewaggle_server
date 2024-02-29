@@ -195,6 +195,9 @@ export class UsersService {
         'profileItems.background',
         'profileItems.wallpaper',
         'profileItems.frame',
+        'blockedUsers',
+        'blockedUsers.blockedBy',
+        'blockedUsers.blockedUser',
       ],
     });
     if (!user) {

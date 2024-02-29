@@ -26,3 +26,9 @@ export class UserReportForbiddenException extends BaseException {
     super(AuthExceptionEnum.REPORT_FORBIDDEN, HttpStatus.FORBIDDEN, message);
   }
 }
+
+export class UserBlockForbiddenException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.BLOCK_FORBIDDEN, HttpStatus.FORBIDDEN, message);
+  }
+}

@@ -24,6 +24,7 @@ import { SearchHistoriesModule } from '@/domain/search-histories/search-historie
 import { FeedbacksModule } from '@/domain/feedbacks/feedbacks.module';
 import { NotificationModule } from './notification/notification.module';
 import { SearchModule } from '@/domain/search/search.module';
+import { BlocksModule } from './domain/blocks/blocks.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { SearchModule } from '@/domain/search/search.module';
     FeedbacksModule,
     NotificationModule,
     SearchModule,
+    BlocksModule,
   ],
   controllers: [AppController, HealthCheckController],
   providers: [AppService],
