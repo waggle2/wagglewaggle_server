@@ -54,6 +54,7 @@ export enum AuthExceptionEnum {
   USER_UNAUTHORIZED = '4010',
   SOCIAL_LOGIN_FORBIDDEN = '4030',
   REPORT_FORBIDDEN = '4031',
+  BLOCK_FORBIDDEN = '4032',
 }
 
 export enum UserExceptionEnum {
@@ -87,4 +88,9 @@ export enum SearchHistoryExceptionEnum {
 export enum FeedbackExceptionEnum {
   NOT_ADMIN_NO_PERMISSION = '8030',
   FEEDBACK_NOT_FOUND = '8040',
+}
+
+export enum BlockExceptionEnum {
+  BLOCK_BAD_REQUEST = '9000',
+  BLOCK_NOT_FOUND = '9010',
 }
