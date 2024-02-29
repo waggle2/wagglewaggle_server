@@ -42,8 +42,16 @@ export class MessagesService {
       receiver: { id: createMessageDto.receiver },
       content: createMessageDto.content,
     });
-
     await this.messageRepository.save(message);
+
+    if (messageRoom.leaveRoom) {
+      if (messageRoom.leaveRoom.includes(createMessageDto.receiver)) {
+        messageRoom.leaveRoom = messageRoom.leaveRoom.filter(
+          (userId) => userId !== createMessageDto.receiver,
+        );
+        await this.messageRoomRepository.save(messageRoom);
+      }
+    }
 
     await this.messageRoomRepository.update(messageRoom.id, {
       updatedAt: new Date(),
@@ -137,7 +145,11 @@ export class MessagesService {
       .orderBy('messageRoom.updatedAt', 'DESC')
       .getMany();
 
-    rooms.forEach((room) => {
+    const filteredRooms = rooms.filter(
+      (room) => !room.leaveRoom || !room.leaveRoom.includes(user.id),
+    );
+
+    filteredRooms.forEach((room) => {
       const messagesLength = room.messages.length;
       if (messagesLength > 0) {
         const lastMessage = room.messages[messagesLength - 1];
@@ -159,7 +171,7 @@ export class MessagesService {
       room['unreadMessageCount'] = unreadMessageCount;
     });
 
-    return rooms;
+    return filteredRooms;
   }
 
   // 채팅방 조회
@@ -178,6 +190,9 @@ export class MessagesService {
       messageRoom.secondUser.id !== user.id
     ) {
       throw new MessageBadRequestException('유저가 속한 채팅방이 아닙니다.');
+    }
+    if (messageRoom.leaveRoom && messageRoom.leaveRoom.includes(user.id)) {
+      throw new MessageBadRequestException('이미 나간 채팅방입니다.');
     }
 
     return messageRoom;
@@ -215,10 +230,29 @@ export class MessagesService {
 
     if (!messageRoom.leaveRoom) {
       messageRoom.leaveRoom = [user.id];
+    } else if (messageRoom.leaveRoom.includes(user.id)) {
+      throw new MessageBadRequestException('이미 나간 채팅방입니다.');
     } else {
       messageRoom.leaveRoom.push(user.id);
     }
     await this.messageRoomRepository.save(messageRoom);
+
+    if (messageRoom.messages) {
+      await Promise.all(
+        messageRoom.messages.map(async (message) => {
+          if (!message.leaveRoom) {
+            message.leaveRoom = [user.id];
+          } else if (!message.leaveRoom.includes(user.id)) {
+            message.leaveRoom.push(user.id);
+          }
+          await this.messageRepository.save(message);
+
+          if (message.leaveRoom.length === 2) {
+            await this.messageRepository.delete(message.id);
+          }
+        }),
+      );
+    }
 
     if (messageRoom.leaveRoom.length === 2) {
       await this.messageRoomRepository.softDelete(id);

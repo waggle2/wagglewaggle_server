@@ -28,6 +28,10 @@ export class MessageResponseDto {
   @Expose()
   readonly isRead: boolean;
 
+  @ApiProperty({ type: Array, description: '나감 여부' })
+  @Expose()
+  readonly leaveRoom: string[];
+
   @ApiProperty({ type: Date, description: '보낸 날짜, 시간' })
   @Expose()
   readonly createdAt: Date;
@@ -39,6 +43,7 @@ export class MessageResponseDto {
     this.receiver = message.receiver.id;
     this.content = message.content;
     this.isRead = message.isRead;
+    this.leaveRoom = message.leaveRoom;
     this.createdAt = message.createdAt;
   }
 }
