@@ -535,6 +535,12 @@ export class MessagesController {
   })
   async getRoom(@Param('id') id: string, @Req() req: RequestWithUser) {
     const messageRoom = await this.messagesService.getRoom(+id, req.user);
+    if (messageRoom.messages && messageRoom.messages.length > 0) {
+      messageRoom.messages = messageRoom.messages.filter(
+        (message) =>
+          !message.leaveRoom || !message.leaveRoom.includes(req.user.id),
+      );
+    }
     await this.messagesService.markMessagesAsRead(messageRoom, req.user);
     const transformedFirstUser = new UserProfileDto(messageRoom.firstUser);
     const transformedSecondUser = new UserProfileDto(messageRoom.secondUser);

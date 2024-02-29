@@ -1,7 +1,6 @@
 import {
   Column,
   CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -34,10 +33,10 @@ export class Message {
   @Column({ name: 'is_read', default: false })
   isRead: boolean;
 
+  @Column({ type: 'simple-array', nullable: true })
+  leaveRoom: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   @Index()
   createdAt: Date;
-
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt: Date;
 }
