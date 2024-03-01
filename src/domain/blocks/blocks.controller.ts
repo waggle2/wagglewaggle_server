@@ -135,7 +135,7 @@ export class BlocksController {
 
   @Delete(':id')
   @UseGuards(JwtAuthenticationGuard)
-  @ApiOperation({ summary: '유저 차단 삭제' })
+  @ApiOperation({ summary: '유저 차단 삭제 (관리자)' })
   @ApiResponse({
     status: 200,
     description: '차단이 삭제되었습니다.',
