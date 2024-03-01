@@ -95,6 +95,7 @@ export class MessagesController {
                     },
                   },
                 },
+                state: { type: 'string', example: '가입' },
               },
             },
             secondUser: {
@@ -143,6 +144,7 @@ export class MessagesController {
                     },
                   },
                 },
+                state: { type: 'string', example: '탈퇴' },
               },
             },
             messages: {
@@ -271,6 +273,7 @@ export class MessagesController {
                       },
                     },
                   },
+                  state: { type: 'string', example: '가입' },
                 },
               },
               secondUser: {
@@ -319,6 +322,7 @@ export class MessagesController {
                       },
                     },
                   },
+                  state: { type: 'string', example: '탈퇴' },
                 },
               },
               messages: {
@@ -449,6 +453,7 @@ export class MessagesController {
                     },
                   },
                 },
+                state: { type: 'string', example: '가입' },
               },
             },
             secondUser: {
@@ -497,6 +502,7 @@ export class MessagesController {
                     },
                   },
                 },
+                state: { type: 'string', example: '탈퇴' },
               },
             },
             messages: {
