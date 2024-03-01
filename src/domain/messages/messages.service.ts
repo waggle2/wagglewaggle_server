@@ -258,4 +258,19 @@ export class MessagesService {
       await this.messageRoomRepository.softDelete(id);
     }
   }
+
+  async findMessage(id: number): Promise<Message> {
+    const message = await this.messageRepository
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.sender', 'sender')
+      .withDeleted()
+      .leftJoinAndSelect('message.receiver', 'receiver')
+      .withDeleted()
+      .where('message.id = :id', { id })
+      .getOne();
+    if (!message) {
+      throw new MessageNotFoundException('해당 메세지를 찾을 수 없습니다.');
+    }
+    return message;
+  }
 }

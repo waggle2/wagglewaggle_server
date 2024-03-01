@@ -43,6 +43,14 @@ export class ReportResponseDto {
   readonly messageRoomId?: number;
 
   @ApiProperty({
+    description: '신고 받은쪽지 ID',
+    type: Number,
+    required: false,
+  })
+  @Expose()
+  readonly messageId?: number;
+
+  @ApiProperty({
     description: '신고 내용',
     type: String,
   })
@@ -76,6 +84,7 @@ export class ReportResponseDto {
     this.postId = report?.postId;
     this.commentId = report?.commentId;
     this.messageRoomId = report?.messageRoomId;
+    this.messageId = report?.messageId;
     this.content = report.content;
     this.reason = report.reason;
     this.createdAt = report.createdAt;
