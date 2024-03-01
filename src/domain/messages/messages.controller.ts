@@ -10,12 +10,20 @@ import {
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { HttpResponse } from '@/@types/http-response';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { MessageResponseDto } from './dto/message-response.dto';
 import { UserProfileDto } from '../users/dto/user-profile.dto';
+import { UserBlockForbiddenException } from '../authentication/exceptions/authentication.exception';
+import { MessageBadRequestException } from './exceptions/message.exception';
 
 @Controller('messages')
 @ApiTags('messages')
@@ -169,9 +177,13 @@ export class MessagesController {
       },
     },
   })
-  @ApiResponse({
-    status: 400,
+  @ApiBadRequestResponse({
+    type: MessageBadRequestException,
     description: '쪽지 내용을 제공해야 합니다.',
+  })
+  @ApiForbiddenResponse({
+    type: UserBlockForbiddenException,
+    description: '차단한 유저에게 쪽지를 보낼 수 없습니다.',
   })
   async sendMessage(
     @Body() createMessageDto: CreateMessageDto,
@@ -522,6 +534,7 @@ export class MessagesController {
                 },
               },
             },
+            isBlockedUser: { type: 'boolean', example: false },
           },
         },
       },
