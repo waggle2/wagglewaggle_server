@@ -3,6 +3,7 @@ import { Expose } from 'class-transformer';
 import { Animal } from '@/@types/enum/animal.enum';
 import { User } from '@/domain/users/entities/user.entity';
 import { ProfileItems } from '../entities/profile-items.entity';
+import { State } from '@/@types/enum/user.enum';
 
 export class UserProfileDto {
   @ApiProperty({ type: String, description: '유저 ID' })
@@ -21,10 +22,15 @@ export class UserProfileDto {
   @Expose()
   readonly profileItems: ProfileItems[];
 
+  @ApiProperty({ enum: State, description: '가입 상태 (가입, 탈퇴)' })
+  @Expose()
+  readonly state: State;
+
   constructor(user: User) {
     this.id = user.id;
     this.nickname = user.credential.nickname;
     this.profileAnimal = user.profileAnimal;
     this.profileItems = user.profileItems;
+    this.state = user.state;
   }
 }
