@@ -98,6 +98,9 @@ export class User {
   @OneToMany('BlockUser', 'blockedBy', { cascade: true })
   blockedUsers: BlockUser[]; // 유저가 차단한 다른 유저들의 목록
 
+  @OneToMany('BlockUser', 'blockedUser', { cascade: true })
+  blockingUsers: BlockUser[]; // 유저를 차단한 다른 유저들의 목록
+
   // @OneToMany(() => Sticker, (stickers) => stickers.user)
   // givenStickers: Sticker[];
 
