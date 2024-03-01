@@ -30,6 +30,9 @@ export class Report {
   @Column({ name: 'message_room_id', nullable: true })
   messageRoomId: number;
 
+  @Column({ name: 'message_id', nullable: true })
+  messageId: number;
+
   @Column({ type: 'varchar', length: 300, nullable: false })
   content: string;
 

@@ -12,6 +12,7 @@ import {
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import {
+  ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
@@ -27,7 +28,11 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { CommentNotFoundException } from '@/domain/comments/exceptions/comments.exception';
-import { MessageRoomNotFoundException } from '../messages/exceptions/message.exception';
+import {
+  MessageBadRequestException,
+  MessageNotFoundException,
+  MessageRoomNotFoundException,
+} from '../messages/exceptions/message.exception';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -102,7 +107,7 @@ export class ReportsController {
   })
   @ApiNotFoundResponse({
     type: MessageRoomNotFoundException,
-    description: '채팅방을 찾을 수 없습니다',
+    description: '채팅방을 찾을 수 없습니다.',
   })
   @UseGuards(JwtAuthenticationGuard)
   @Post('/messages/:messageRoomId')
@@ -114,6 +119,39 @@ export class ReportsController {
     const report = await this.reportsService.reportMessageRoom(
       req.user,
       +messageRoomId,
+      createReportDto,
+    );
+
+    return HttpResponse.created(
+      '신고 접수 성공',
+      new ReportResponseDto(report),
+    );
+  }
+
+  @ApiOperation({ summary: '받은 쪽지 신고' })
+  @ApiResponse({
+    status: 201,
+    description: '신고 접수 성공',
+    type: ReportResponseDto,
+  })
+  @ApiNotFoundResponse({
+    type: MessageNotFoundException,
+    description: '해당 메세지를 찾을 수 없습니다.',
+  })
+  @ApiBadRequestResponse({
+    type: MessageBadRequestException,
+    description: '신고한 유저가 받은 메세지가 아닙니다.',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Post('/messages/message/:messageId')
+  async reportMessage(
+    @Req() req: RequestWithUser,
+    @Param('messageId') messageId: string,
+    @Body() createReportDto: CreateReportDto,
+  ) {
+    const report = await this.reportsService.reportMessage(
+      req.user,
+      +messageId,
       createReportDto,
     );
 

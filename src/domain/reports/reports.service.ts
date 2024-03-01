@@ -10,6 +10,7 @@ import { AuthorityName } from '@/@types/enum/user.enum';
 import { UserReportForbiddenException } from '@/domain/authentication/exceptions/authentication.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { MessagesService } from '../messages/messages.service';
+import { MessageBadRequestException } from '../messages/exceptions/message.exception';
 
 @Injectable()
 export class ReportsService {
@@ -74,6 +75,26 @@ export class ReportsService {
       messageRoomId,
     });
     return await this.reportsRepository.save(messageRoomReport);
+  }
+
+  async reportMessage(
+    user: User,
+    messageId: number,
+    createReportDto: CreateReportDto,
+  ) {
+    const message = await this.messagesService.findMessage(messageId);
+    if (message.receiver.id !== user.id) {
+      throw new MessageBadRequestException(
+        '신고한 유저가 받은 메세지가 아닙니다.',
+      );
+    }
+
+    const messageReport = this.reportsRepository.create({
+      ...createReportDto,
+      reporter: { id: user.id },
+      messageId,
+    });
+    return await this.reportsRepository.save(messageReport);
   }
 
   async findAll(user: User, pageOptionsDto: PageOptionsDto) {
