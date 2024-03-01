@@ -196,8 +196,8 @@ export class UsersService {
         'profileItems.wallpaper',
         'profileItems.frame',
         'blockedUsers',
-        'blockedUsers.blockedBy',
         'blockedUsers.blockedUser',
+        'blockingUsers.blockedBy',
       ],
     });
     if (!user) {

@@ -11,6 +11,7 @@ import {
   MessageNotFoundException,
   MessageRoomNotFoundException,
 } from './exceptions/message.exception';
+import { UserBlockForbiddenException } from '../authentication/exceptions/authentication.exception';
 
 @Injectable()
 export class MessagesService {
@@ -31,6 +32,14 @@ export class MessagesService {
       throw new MessageBadRequestException('쪽지 내용을 제공해야 합니다.');
     }
 
+    const blockedUsers = user.blockedUsers.map((block) => block.blockedUser.id);
+    const blockedBy = user.blockingUsers.map((block) => block.blockedBy.id);
+    if (blockedUsers.includes(createMessageDto.receiver)) {
+      throw new UserBlockForbiddenException(
+        '차단한 유저에게 쪽지를 보낼 수 없습니다.',
+      );
+    }
+
     const messageRoom = await this.findOrCreateMessageRoom(
       createMessageDto,
       user,
@@ -42,6 +51,9 @@ export class MessagesService {
       receiver: { id: createMessageDto.receiver },
       content: createMessageDto.content,
     });
+    if (blockedBy.includes(createMessageDto.receiver)) {
+      message.leaveRoom = [createMessageDto.receiver];
+    }
     await this.messageRepository.save(message);
 
     if (messageRoom.leaveRoom) {
@@ -150,6 +162,10 @@ export class MessagesService {
     );
 
     filteredRooms.forEach((room) => {
+      room.messages = room.messages.filter(
+        (message) => !message.leaveRoom || !message.leaveRoom.includes(user.id),
+      );
+
       const messagesLength = room.messages.length;
       if (messagesLength > 0) {
         const lastMessage = room.messages[messagesLength - 1];
@@ -193,6 +209,17 @@ export class MessagesService {
     }
     if (messageRoom.leaveRoom && messageRoom.leaveRoom.includes(user.id)) {
       throw new MessageBadRequestException('이미 나간 채팅방입니다.');
+    }
+
+    const blockedUsers = user.blockedUsers.map((block) => block.blockedUser.id);
+
+    if (
+      blockedUsers.includes(messageRoom.firstUser.id) ||
+      blockedUsers.includes(messageRoom.secondUser.id)
+    ) {
+      messageRoom['isBlockedUser'] = true;
+    } else {
+      messageRoom['isBlockedUser'] = false;
     }
 
     return messageRoom;
