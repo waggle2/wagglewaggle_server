@@ -278,7 +278,7 @@ export class UsersController {
   @ApiOperation({ summary: '상대 프로필 정보 조회' })
   @ApiResponse({
     status: 200,
-    description: '상대 프로필 정보가 조회되었습니다..',
+    description: '상대 프로필 정보가 조회되었습니다.',
     type: OtherUserProfileDto,
   })
   @ApiResponse({
