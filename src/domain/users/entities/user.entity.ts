@@ -17,7 +17,7 @@ import { ItemCart } from '@/domain/items/entities/item-cart.entity';
 import { ProfileItems } from './profile-items.entity';
 import { MessageRoom } from '@/domain/messages/entities/message-room.entity';
 import { BlockUser } from '@/domain/blocks/entities/block.entity';
-import { UserStickers } from './stickers.entity';
+import { UserStickers } from './user-stickers.entity';
 
 @Entity({ name: 'users' })
 export class User {

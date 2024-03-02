@@ -21,7 +21,7 @@ import { UserUnauthorizedException } from '@/domain/authentication/exceptions/au
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
 import { Animal } from '@/@types/enum/animal.enum';
-import { UserStickers } from './entities/stickers.entity';
+import { UserStickers } from './entities/user-stickers.entity';
 
 @Injectable()
 export class UsersService {

@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
 import { ProfileItems } from './entities/profile-items.entity';
-import { UserStickers } from './entities/stickers.entity';
+import { UserStickers } from './entities/user-stickers.entity';
 
 @Module({
   imports: [
