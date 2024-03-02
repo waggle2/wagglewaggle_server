@@ -18,6 +18,7 @@ import { ExitReasonDto } from './dto/exit-reason.dto';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { HttpResponse } from '@/@types/http-response';
 import { Animal } from '@/@types/enum/animal.enum';
+import { OtherUserProfileDto } from './dto/other-user-profile.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -220,7 +221,6 @@ export class UsersController {
             bearPoints: { type: 'integer' },
             dogPoints: { type: 'integer' },
             foxPoints: { type: 'integer' },
-            currentRefreshToken: { type: 'string' },
             items: { type: 'array', items: { type: 'object' }, nullable: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
@@ -245,6 +245,15 @@ export class UsersController {
                 },
               },
             },
+            userStickers: {
+              type: 'object',
+              properties: {
+                bearStickers: { type: 'number' },
+                foxStickers: { type: 'number' },
+                dogStickers: { type: 'number' },
+                catStickers: { type: 'number' },
+              },
+            },
             profileItems: {
               type: 'array',
               items: { type: 'object' },
@@ -261,7 +270,27 @@ export class UsersController {
   async findOne(@Req() request: RequestWithUser) {
     const { user } = request;
     user.credential.password = undefined;
+    user.currentRefreshToken = undefined;
     return HttpResponse.success('회원 정보가 조회되었습니다.', user);
+  }
+
+  @Get('/profile/:userId')
+  @ApiOperation({ summary: '상대 프로필 정보 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '상대 프로필 정보가 조회되었습니다.',
+    type: OtherUserProfileDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '사용자를 찾을 수 없습니다.',
+  })
+  async findOtherUserProfile(@Param('userId') userId: string) {
+    const otherUser = await this.usersService.findOtherUserProfile(userId);
+    return HttpResponse.success(
+      '상대 프로필 정보가 조회되었습니다.',
+      new OtherUserProfileDto(otherUser),
+    );
   }
 
   @Patch('/nickname')
