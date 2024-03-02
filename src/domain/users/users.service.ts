@@ -226,6 +226,27 @@ export class UsersService {
     return user;
   }
 
+  // 상대 프로필 정보 조회
+  async findOtherUserProfile(id: string): Promise<User> {
+    const otherUser = await this.userRepository.findOne({
+      where: { id },
+      relations: [
+        'credential',
+        'userStickers',
+        'profileItems',
+        'profileItems.emoji',
+        'profileItems.background',
+        'profileItems.wallpaper',
+        'profileItems.frame',
+      ],
+    });
+    if (!otherUser) {
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return otherUser;
+  }
+
   // 닉네임 수정
   async updateNickname(user: User, nickname: string): Promise<void> {
     user.credential.nickname = nickname;
