@@ -33,6 +33,9 @@ import {
   MessageNotFoundException,
   MessageRoomNotFoundException,
 } from '../messages/exceptions/message.exception';
+import { RolesGuard } from '../authentication/guards/roles.guard';
+import { AuthorityName } from '@/@types/enum/user.enum';
+import { Roles } from '../authentication/decorators/role.decorator';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -167,17 +170,12 @@ export class ReportsController {
     message: '신고 전체 조회에 성공했습니다',
     generic: ReportResponseDto,
   })
-  @UseGuards(JwtAuthenticationGuard)
   @Get()
-  async findAll(
-    @Req() req: RequestWithUser,
-    @Query() pageOptionsDto: PageOptionsDto,
-  ) {
-    const { user } = req;
-    const { reports, total } = await this.reportsService.findAll(
-      user,
-      pageOptionsDto,
-    );
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
+  async findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    const { reports, total } =
+      await this.reportsService.findAll(pageOptionsDto);
     const { data, meta } = new PageDto(
       reports.map((report) => new ReportResponseDto(report)),
       new PageMetaDto(pageOptionsDto, total),
@@ -192,11 +190,11 @@ export class ReportsController {
     description: '조회 성공',
     type: ReportResponseDto,
   })
-  @UseGuards(JwtAuthenticationGuard)
   @Get(':id')
-  async findOne(@Req() req: RequestWithUser, @Param('id') id: string) {
-    const { user } = req;
-    const report = await this.reportsService.findOne(user, +id);
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
+  async findOne(@Param('id') id: string) {
+    const report = await this.reportsService.findOne(+id);
 
     return HttpResponse.success('조회 성공', new ReportResponseDto(report));
   }
