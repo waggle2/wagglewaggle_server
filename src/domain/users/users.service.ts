@@ -9,7 +9,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
+import { catchError, lastValueFrom, map } from 'rxjs';
 import { ExitReasonDto } from './dto/exit-reason.dto';
 import { ExitReason } from './entities/exit-reason.entity';
 import {
@@ -249,6 +249,10 @@ export class UsersService {
 
   // 닉네임 수정
   async updateNickname(user: User, nickname: string): Promise<void> {
+    const existingUser = await this.checkNickname(nickname);
+    if (!existingUser) {
+      throw new UserBadRequestException('중복된 닉네임입니다.');
+    }
     user.credential.nickname = nickname;
     await this.credentialRepository.save(user.credential);
   }
@@ -256,8 +260,8 @@ export class UsersService {
   // 본인인증
   async updateVerificationStatus(user: User, impUid: string): Promise<boolean> {
     // 인증 토큰 발급 받기
-    const getTokenRequest = await lastValueFrom(
-      this.httpService.post(
+    const getTokenRequest = this.httpService
+      .post(
         'https://api.iamport.kr/users/getToken',
         {
           imp_key: process.env.PORTONE_REST_API_KEY,
@@ -266,29 +270,32 @@ export class UsersService {
         {
           headers: { 'Content-Type': 'application/json' },
         },
-      ),
-    );
-    const { accessToken } = getTokenRequest.data;
-    if (!accessToken) {
-      throw new UserUnauthorizedException(
-        '본인인증에 실패했습니다. 토큰을 가져오지 못했습니다.',
+      )
+      .pipe(map((res) => res.data?.response.access_token))
+      .pipe(
+        catchError(() => {
+          throw new UserUnauthorizedException(
+            '본인인증에 실패했습니다. 토큰을 가져오지 못했습니다.',
+          );
+        }),
       );
-    }
+    const accessToken = await lastValueFrom(getTokenRequest);
 
     // imp_uid로 인증 정보 조회
-    const getCertificationsRequest = await lastValueFrom(
-      this.httpService.get(`https://api.iamport.kr/certifications/${impUid}`, {
+    const getCertificationsRequest = this.httpService
+      .get(`https://api.iamport.kr/certifications/${impUid}`, {
         headers: { Authorization: accessToken },
-      }),
-    );
-    if (!getCertificationsRequest) {
-      throw new UserUnauthorizedException(
-        '본인인증에 실패했습니다. 유저 정보를 찾을 수 없습니다.',
+      })
+      .pipe(map((res) => res.data?.response.birthday))
+      .pipe(
+        catchError(() => {
+          throw new UserUnauthorizedException(
+            '본인인증에 실패했습니다. 유저 정보를 찾을 수 없습니다.',
+          );
+        }),
       );
-    }
-
-    const { birth } = getCertificationsRequest.data;
-    console.log(birth);
+    const birthday = await lastValueFrom(getCertificationsRequest);
+    const birth = Number(birthday.substring(0, 4));
 
     user.isVerified = true;
     user.credential.birthYear = birth;
