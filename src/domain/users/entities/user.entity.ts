@@ -17,6 +17,7 @@ import { ItemCart } from '@/domain/items/entities/item-cart.entity';
 import { ProfileItems } from './profile-items.entity';
 import { MessageRoom } from '@/domain/messages/entities/message-room.entity';
 import { BlockUser } from '@/domain/blocks/entities/block.entity';
+import { UserStickers } from './stickers.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -55,6 +56,9 @@ export class User {
 
   @Column({ name: 'profile_animal', type: 'enum', enum: Animal })
   profileAnimal: Animal;
+
+  @OneToOne('UserStickers', 'user', { cascade: true })
+  userStickers: UserStickers;
 
   @Column({ default: 0 })
   catCoins: number;
@@ -100,16 +104,6 @@ export class User {
 
   @OneToMany('BlockUser', 'blockedUser', { cascade: true })
   blockingUsers: BlockUser[]; // 유저를 차단한 다른 유저들의 목록
-
-  // @OneToMany(() => Sticker, (stickers) => stickers.user)
-  // givenStickers: Sticker[];
-
-  // @Column({
-  //   type: 'json',
-  //   default: { bear: 0, fox: 0, dog: 0, cat: 0 },
-  //   name: 'received_stickers',
-  // })
-  // receivedStickers: { bear: number; fox: number; dog: number; cat: number }
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -220,7 +220,6 @@ export class UsersController {
             bearPoints: { type: 'integer' },
             dogPoints: { type: 'integer' },
             foxPoints: { type: 'integer' },
-            currentRefreshToken: { type: 'string' },
             items: { type: 'array', items: { type: 'object' }, nullable: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
@@ -245,6 +244,15 @@ export class UsersController {
                 },
               },
             },
+            userStickers: {
+              type: 'object',
+              properties: {
+                bearStickers: { type: 'number' },
+                foxStickers: { type: 'number' },
+                dogStickers: { type: 'number' },
+                catStickers: { type: 'number' },
+              },
+            },
             profileItems: {
               type: 'array',
               items: { type: 'object' },
@@ -261,6 +269,7 @@ export class UsersController {
   async findOne(@Req() request: RequestWithUser) {
     const { user } = request;
     user.credential.password = undefined;
+    user.currentRefreshToken = undefined;
     return HttpResponse.success('회원 정보가 조회되었습니다.', user);
   }
 

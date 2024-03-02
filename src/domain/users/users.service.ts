@@ -21,6 +21,7 @@ import { UserUnauthorizedException } from '@/domain/authentication/exceptions/au
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Item } from '../items/entities/item.entity';
 import { Animal } from '@/@types/enum/animal.enum';
+import { UserStickers } from './entities/stickers.entity';
 
 @Injectable()
 export class UsersService {
@@ -31,12 +32,13 @@ export class UsersService {
     private readonly userAuthorityRepository: Repository<UserAuthority>,
     @InjectRepository(Credential)
     private readonly credentialRepository: Repository<Credential>,
+    @InjectRepository(UserStickers)
+    private readonly userStickersRepository: Repository<UserStickers>,
     @InjectRepository(ExitReason)
     private readonly exitReasonRepository: Repository<ExitReason>,
     @InjectRepository(ItemCart)
     private readonly itemCartRepository: Repository<ItemCart>,
     @InjectRepository(Item)
-    private readonly itemRepository: Repository<Item>,
     private readonly mailerService: MailerService,
     private readonly redisCacheService: RedisCacheService,
     private readonly httpService: HttpService,
@@ -86,8 +88,14 @@ export class UsersService {
     const userAuthority = this.userAuthorityRepository.create({
       user: { id: user.id },
     });
+
+    const stickers = this.userStickersRepository.create({
+      user: { id: user.id },
+    });
+
     await this.credentialRepository.save(credential);
     await this.userAuthorityRepository.save(userAuthority);
+    await this.userStickersRepository.save(stickers);
   }
 
   // 회원가입 이메일 인증 코드 전송
@@ -190,6 +198,7 @@ export class UsersService {
       relations: [
         'credential',
         'authorities',
+        'userStickers',
         'profileItems',
         'profileItems.emoji',
         'profileItems.background',
