@@ -19,6 +19,9 @@ import RequestWithUser from '../authentication/interfaces/request-with-user.inte
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { Animal } from '@/@types/enum/animal.enum';
 import { HttpResponse } from '@/@types/http-response';
+import { RolesGuard } from '../authentication/guards/roles.guard';
+import { Roles } from '../authentication/decorators/role.decorator';
+import { AuthorityName } from '@/@types/enum/user.enum';
 
 @Controller('items')
 @ApiTags('items')
@@ -568,6 +571,8 @@ export class ItemsController {
 
   /* 관리자 페이지 */
   @Post()
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '아이템 생성(관리자)' })
   @ApiResponse({
     status: 201,
@@ -604,6 +609,8 @@ export class ItemsController {
   }
 
   @Get('/admins')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '전체 아이템 조회(관리자)' })
   @ApiResponse({
     status: 200,
@@ -643,6 +650,8 @@ export class ItemsController {
   }
 
   @Get('/admins/:id')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '아이템 상세 조회(관리자)' })
   @ApiResponse({
     status: 200,
@@ -683,6 +692,8 @@ export class ItemsController {
   }
 
   @Patch('/admins/:id')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '아이템 수정(관리자)' })
   @ApiResponse({
     status: 200,
@@ -719,6 +730,8 @@ export class ItemsController {
   }
 
   @Delete('/admins/:id')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '아이템 삭제(관리자)' })
   @ApiResponse({
     status: 200,

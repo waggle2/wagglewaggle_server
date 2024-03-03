@@ -21,6 +21,12 @@ export class UserUnauthorizedException extends BaseException {
   }
 }
 
+export class UserForbiddenException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.USER_FORBIDDEN, HttpStatus.FORBIDDEN, message);
+  }
+}
+
 export class UserReportForbiddenException extends BaseException {
   constructor(message: string) {
     super(AuthExceptionEnum.REPORT_FORBIDDEN, HttpStatus.FORBIDDEN, message);

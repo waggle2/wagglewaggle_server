@@ -5,8 +5,6 @@ import { UsersService } from '../users/users.service';
 import { Repository } from 'typeorm';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { User } from '../users/entities/user.entity';
-import { AuthorityName } from '@/@types/enum/user.enum';
-import { UserBlockForbiddenException } from '../authentication/exceptions/authentication.exception';
 import {
   BlockBadRequestException,
   BlockNotFoundException,
@@ -41,13 +39,10 @@ export class BlocksService {
   }
 
   async getBlockedUsers(
-    user: User,
     blockedBy: string,
     pageOptionsDto: PageOptionsDto,
   ): Promise<{ blocks: BlockUser[]; total: number }> {
     const { page, pageSize } = pageOptionsDto;
-    if (!this.isAdmin(user))
-      throw new UserBlockForbiddenException('접근 권한이 없습니다');
 
     const queryBuilder = await this.findBlocks();
     let blocks: BlockUser[], total: number;
@@ -69,12 +64,9 @@ export class BlocksService {
   }
 
   async findAll(
-    user: User,
     pageOptionsDto: PageOptionsDto,
   ): Promise<{ blocks: BlockUser[]; total: number }> {
     const { page, pageSize } = pageOptionsDto;
-    if (!this.isAdmin(user))
-      throw new UserBlockForbiddenException('접근 권한이 없습니다');
 
     const queryBuilder = await this.findBlocks();
     let blocks: BlockUser[], total: number;
@@ -92,10 +84,7 @@ export class BlocksService {
     return { blocks, total };
   }
 
-  async findOne(user: User, id: number): Promise<BlockUser> {
-    if (!this.isAdmin(user))
-      throw new UserBlockForbiddenException('접근 권한이 없습니다');
-
+  async findOne(id: number): Promise<BlockUser> {
     const queryBuilder = await this.findBlocks();
     const block = await queryBuilder
       .andWhere('block.id = :id', { id })
@@ -107,8 +96,8 @@ export class BlocksService {
     return block;
   }
 
-  async remove(user: User, id: number): Promise<void> {
-    const block = await this.findOne(user, id);
+  async remove(id: number): Promise<void> {
+    const block = await this.findOne(id);
     await this.blockUserRepository.delete(block.id);
   }
 
@@ -119,11 +108,5 @@ export class BlocksService {
       .leftJoinAndSelect('blockedBy.credential', 'blockedBy_credential')
       .leftJoinAndSelect('block.blockedUser', 'blockedUser')
       .leftJoinAndSelect('blockedUser.credential', 'blockedUser_credential');
-  }
-
-  private isAdmin(user: User): boolean {
-    return user.authorities.some(
-      (authority) => authority.authorityName === AuthorityName.ADMIN,
-    );
   }
 }

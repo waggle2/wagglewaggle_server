@@ -6,8 +6,6 @@ import { PostsService } from '@/domain/posts/posts.service';
 import { CommentsService } from '@/domain/comments/comments.service';
 import { Report } from '@/domain/reports/entities/report.entity';
 import { User } from '@/domain/users/entities/user.entity';
-import { AuthorityName } from '@/@types/enum/user.enum';
-import { UserReportForbiddenException } from '@/domain/authentication/exceptions/authentication.exception';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { MessagesService } from '../messages/messages.service';
 import { MessageBadRequestException } from '../messages/exceptions/message.exception';
@@ -21,12 +19,6 @@ export class ReportsService {
     private readonly commentsService: CommentsService,
     private readonly messagesService: MessagesService,
   ) {}
-
-  private isAdmin(user: User): boolean {
-    return user.authorities.some(
-      (authority) => authority.authorityName === AuthorityName.ADMIN,
-    );
-  }
 
   private async findReports() {
     return this.reportsRepository
@@ -97,10 +89,8 @@ export class ReportsService {
     return await this.reportsRepository.save(messageReport);
   }
 
-  async findAll(user: User, pageOptionsDto: PageOptionsDto) {
+  async findAll(pageOptionsDto: PageOptionsDto) {
     const { page, pageSize } = pageOptionsDto;
-    if (!this.isAdmin(user))
-      throw new UserReportForbiddenException('접근 권한이 없습니다');
 
     const queryBuilder = await this.findReports();
     let reports: Report[], total: number;
@@ -118,10 +108,7 @@ export class ReportsService {
     return { reports, total };
   }
 
-  async findOne(user: User, id: number) {
-    if (!this.isAdmin(user))
-      throw new UserReportForbiddenException('접근 권한이 없습니다');
-
+  async findOne(id: number) {
     const queryBuilder = await this.findReports();
     return queryBuilder.andWhere('reports.id = :id', { id }).getOne();
   }

@@ -29,6 +29,9 @@ import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
 import { BlockBadRequestException } from './exceptions/block.exception';
+import { RolesGuard } from '../authentication/guards/roles.guard';
+import { AuthorityName } from '@/@types/enum/user.enum';
+import { Roles } from '../authentication/decorators/role.decorator';
 
 @Controller('blocks')
 @ApiTags('blocks')
@@ -66,7 +69,8 @@ export class BlocksController {
   }
 
   @Get('users/:userId')
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '해당 유저가 차단한 목록 조회 (관리자)' })
   @PaginationSuccessResponse(HttpStatus.OK, {
     model: PageDto,
@@ -74,12 +78,10 @@ export class BlocksController {
     generic: BlockResponseDto,
   })
   async getBlockedUsers(
-    @Req() req: RequestWithUser,
     @Param('userId') blockedBy: string,
     @Query() pageOptionsDto: PageOptionsDto,
   ) {
     const { blocks, total } = await this.blocksService.getBlockedUsers(
-      req.user,
       blockedBy,
       pageOptionsDto,
     );
@@ -95,21 +97,16 @@ export class BlocksController {
   }
 
   @Get()
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '유저 차단 전체 조회 (관리자)' })
   @PaginationSuccessResponse(HttpStatus.OK, {
     model: PageDto,
     message: '차단 전체 조회에 성공했습니다',
     generic: BlockResponseDto,
   })
-  async findAll(
-    @Req() req: RequestWithUser,
-    @Query() pageOptionsDto: PageOptionsDto,
-  ) {
-    const { blocks, total } = await this.blocksService.findAll(
-      req.user,
-      pageOptionsDto,
-    );
+  async findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    const { blocks, total } = await this.blocksService.findAll(pageOptionsDto);
     const { data, meta } = new PageDto(
       blocks.map((block) => new BlockResponseDto(block)),
       new PageMetaDto(pageOptionsDto, total),
@@ -118,15 +115,16 @@ export class BlocksController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '유저 차단 단일 조회 (관리자)' })
   @ApiResponse({
     status: 200,
     description: '차단 단일 조회에 성공했습니다.',
     type: BlockResponseDto,
   })
-  async findOne(@Req() req: RequestWithUser, @Param('id') id: string) {
-    const block = await this.blocksService.findOne(req.user, +id);
+  async findOne(@Param('id') id: string) {
+    const block = await this.blocksService.findOne(+id);
     return HttpResponse.success(
       '차단 단일 조회에 성공했습니다.',
       new BlockResponseDto(block),
@@ -134,14 +132,15 @@ export class BlocksController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '유저 차단 삭제 (관리자)' })
   @ApiResponse({
     status: 200,
     description: '차단이 삭제되었습니다.',
   })
-  async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
-    await this.blocksService.remove(req.user, +id);
+  async remove(@Param('id') id: string) {
+    await this.blocksService.remove(+id);
     return HttpResponse.success('차단이 삭제되었습니다.');
   }
 }
