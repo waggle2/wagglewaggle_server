@@ -19,7 +19,6 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
 import { ItemCart } from '../items/entities/item-cart.entity';
-import { Item } from '../items/entities/item.entity';
 import { Animal } from '@/@types/enum/animal.enum';
 import { UserStickers } from './entities/user-stickers.entity';
 
@@ -38,7 +37,6 @@ export class UsersService {
     private readonly exitReasonRepository: Repository<ExitReason>,
     @InjectRepository(ItemCart)
     private readonly itemCartRepository: Repository<ItemCart>,
-    @InjectRepository(Item)
     private readonly mailerService: MailerService,
     private readonly redisCacheService: RedisCacheService,
     private readonly httpService: HttpService,
