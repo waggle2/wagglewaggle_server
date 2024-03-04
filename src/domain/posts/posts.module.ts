@@ -8,6 +8,7 @@ import { Comment } from '@/domain/comments/entities/comment.entity';
 import { SearchHistoriesModule } from '@/domain/search-histories/search-histories.module';
 import { JwtModule } from '@nestjs/jwt';
 import { SearchModule } from '@/domain/search/search.module';
+import { UsersModule } from '@/domain/users/users.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { SearchModule } from '@/domain/search/search.module';
     SearchHistoriesModule,
     JwtModule,
     SearchModule,
+    UsersModule,
   ],
   exports: [PostsService, Repository<Post>],
   controllers: [PostsController, LikesController],

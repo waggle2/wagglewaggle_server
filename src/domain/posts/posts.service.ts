@@ -21,6 +21,7 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { SearchHistoriesService } from '@/domain/search-histories/search-histories.service';
 import { applyPaging } from '@/common/utils/applyPaging';
 import { SearchService } from '@/domain/search/search.service';
+import { UsersService } from '@/domain/users/users.service';
 
 @Injectable()
 export class PostsService {
@@ -29,6 +30,7 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
     private readonly searchHistoriesService: SearchHistoriesService,
     private readonly searchService: SearchService,
+    private readonly usersService: UsersService,
   ) {}
 
   private createBaseQueryBuilder(options?: {
@@ -52,32 +54,6 @@ export class PostsService {
 
     return queryBuilder;
   }
-
-  // private async addConditionalsToQueryBuilder(
-  //   queryBuilder: SelectQueryBuilder<Post>,
-  //   postFindDto: PostFindDto,
-  //   userId?: string,
-  // ) {
-  //   const { text, animal, category, tag } = postFindDto;
-  //
-  //   if (animal)
-  //     queryBuilder.andWhere('post.animalOfAuthor = :animal', { animal });
-  //   if (tag) queryBuilder.andWhere('post.tag = :tag', { tag: tag.valueOf() });
-  //   if (category)
-  //     queryBuilder.andWhere('post.category = :category', { category });
-  //   if (text) {
-  //     queryBuilder.andWhere(
-  //       '(post.title LIKE :text OR post.content LIKE :text)',
-  //       { text: `%${text}%` },
-  //     );
-  //     if (userId) {
-  //       await this.searchHistoriesService.create({
-  //         userId,
-  //         keyword: text,
-  //       });
-  //     }
-  //   }
-  // }
 
   private async ensurePostOwnership(user: User, postId: number) {
     const post = await this.findOneWithoutIncrementingViews(postId);
@@ -145,17 +121,11 @@ export class PostsService {
     pageOptionsDto: PageOptionsDto,
     userId?: string,
   ) {
-    // const queryBuilder = this.createBaseQueryBuilder().orderBy(
-    //   'post.createdAt',
-    //   'DESC',
-    // );
-    // await this.addConditionalsToQueryBuilder(queryBuilder, postFindDto, userId);
-    // return await applyPaging(queryBuilder, pageOptionsDto);
-
     const esQuery = {
       query: {
         bool: {
           must: [],
+          must_not: [],
         },
       },
       sort: [
@@ -202,6 +172,22 @@ export class PostsService {
 
     if (tag) {
       esQuery.query.bool.must.push({ match: { tag: tag.valueOf() } });
+    }
+
+    // 차단한 유저 게시물 제외
+    if (userId) {
+      const user = await this.usersService.findById(userId);
+      const blockedUsers = user.blockedUsers.map(
+        (blockedUser) => blockedUser.blockedUser.id,
+      );
+
+      blockedUsers.forEach((blockedUser) =>
+        esQuery.query.bool.must_not.push({
+          match: {
+            'author.id': blockedUser,
+          },
+        }),
+      );
     }
 
     const { total, data } = await this.searchService.search(esQuery);
