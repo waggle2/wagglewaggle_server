@@ -69,6 +69,24 @@ export class PostsService {
     return post;
   }
 
+  private async appendBlockedUsersFilter(
+    queryBuilder: SelectQueryBuilder<Post>,
+    userId: string,
+  ) {
+    const user = await this.usersService.findById(userId);
+    const blockedUsers = user.blockedUsers.map(
+      (blockedUser) => blockedUser.blockedUser.id,
+    );
+
+    if (blockedUsers.length > 0) {
+      queryBuilder.andWhere('author.id NOT IN (:...blockedUsers)', {
+        blockedUsers,
+      });
+    }
+
+    return queryBuilder;
+  }
+
   async findByUserId(user: User, pageOptionsDto: PageOptionsDto) {
     const queryBuilder = this.createBaseQueryBuilder()
       .where('author.id = :userId', { userId: user.id })
@@ -78,11 +96,12 @@ export class PostsService {
   }
 
   async findByComments(user: User, pageOptionsDto: PageOptionsDto) {
-    const userId = user.id;
-    const queryBuilder = this.createBaseQueryBuilder()
+    let queryBuilder = this.createBaseQueryBuilder()
       .leftJoin('post.comments', 'comment')
       .leftJoin('comment.author', 'commenter')
-      .andWhere('commenter.id = :userId', { userId });
+      .andWhere('commenter.id = :userId', { userId: user.id });
+
+    queryBuilder = await this.appendBlockedUsersFilter(queryBuilder, user.id);
 
     const { page, pageSize } = pageOptionsDto;
     let posts: Post[], total: number;
@@ -103,15 +122,19 @@ export class PostsService {
     };
   }
 
-  async findHotPosts(pageOptionsDto: PageOptionsDto) {
+  async findHotPosts(pageOptionsDto: PageOptionsDto, userId?: string) {
     const currentDate = new Date();
     const date48HoursAgo = new Date(currentDate);
     date48HoursAgo.setHours(currentDate.getHours() - 48);
 
-    const queryBuilder = this.createBaseQueryBuilder()
+    let queryBuilder = this.createBaseQueryBuilder()
       .andWhere('post.updatedAt > :date', { date: date48HoursAgo })
       .addSelect('post.commentNum + LENGTH(post.likes)', 'totalScore') // 댓글과 좋아요를 합친 가중치 적용
       .addOrderBy('totalScore', 'DESC');
+
+    if (userId) {
+      queryBuilder = await this.appendBlockedUsersFilter(queryBuilder, userId);
+    }
 
     return await applyPaging(queryBuilder, pageOptionsDto);
   }

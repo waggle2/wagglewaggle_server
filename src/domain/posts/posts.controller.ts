@@ -172,8 +172,15 @@ export class PostsController {
     generic: PostEntryResponseDto,
   })
   @Get('/hot-posts')
-  async findHotPosts(@Query() pageOptionDto: PageOptionsDto) {
-    const [posts, total] = await this.postsService.findHotPosts(pageOptionDto);
+  async findHotPosts(
+    @Req() req: Request,
+    @Query() pageOptionDto: PageOptionsDto,
+  ) {
+    const userId = await this.getUserIdFromToken(req);
+    const [posts, total] = await this.postsService.findHotPosts(
+      pageOptionDto,
+      userId,
+    );
     const { data, meta } = new PageDto(
       posts.map((post) => new PostEntryResponseDto(post)),
       new PageMetaDto(pageOptionDto, total),
