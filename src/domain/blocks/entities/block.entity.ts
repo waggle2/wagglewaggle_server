@@ -16,7 +16,7 @@ export class BlockUser {
   @JoinColumn({ name: 'blocked_by' })
   blockedBy: User;
 
-  @ManyToOne(() => User)
+  @ManyToOne('User', 'blockingUsers', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'blocked_user' })
   blockedUser: User;
 
