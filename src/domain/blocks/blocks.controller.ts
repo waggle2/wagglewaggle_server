@@ -43,7 +43,15 @@ export class BlocksController {
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: '유저 차단이 완료되었습니다.' },
+        code: { type: 'number', example: 201 },
+        message: {
+          type: 'string',
+          example: '유저 차단이 완료되었습니다.',
+        },
+        data: {
+          type: 'string',
+          example: '2021-10-06T06:00:00.000Z',
+        },
       },
     },
   })
@@ -64,7 +72,10 @@ export class BlocksController {
   })
   async createBlock(@Req() req: RequestWithUser, @Param('id') id: string) {
     await this.blocksService.createBlock(req.user, id);
-    return HttpResponse.created('유저 차단이 완료되었습니다.');
+    return HttpResponse.created(
+      `유저 차단이 완료되었습니다`,
+      `${new Date().toISOString()}`,
+    );
   }
 
   @Get()
@@ -102,6 +113,20 @@ export class BlocksController {
   @ApiResponse({
     status: 200,
     description: '차단이 해제되었습니다.',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '차단이 해제되었습니다.' },
+      },
+    },
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: '차단 해제할 유저 아이디',
+    required: true,
+    example: '77e88f4b-5ff5-47f9-9b3b-b1757c491cbb',
   })
   async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
     await this.blocksService.remove(req.user, id);

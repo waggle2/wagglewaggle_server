@@ -32,8 +32,8 @@ export class MessagesService {
       throw new MessageBadRequestException('쪽지 내용을 제공해야 합니다.');
     }
 
-    const blockedUsers = user.blockedUsers.map((block) => block.blockedUser.id);
-    const blockedBy = user.blockingUsers.map((block) => block.blockedBy.id);
+    const blockedUsers = user.usersBlockedByThisUser;
+    const blockedBy = user.usersBlockingThisUser;
     if (blockedUsers.includes(createMessageDto.receiver)) {
       throw new UserBlockForbiddenException(
         '차단한 유저에게 쪽지를 보낼 수 없습니다.',
@@ -177,14 +177,12 @@ export class MessagesService {
         room['lastMessage'] = null;
       }
 
-      const unreadMessageCount = room.messages.filter(
+      room['unreadMessageCount'] = room.messages.filter(
         (message) =>
           message.sender.id !== user.id &&
           message.receiver.id === user.id &&
           !message.isRead,
       ).length;
-
-      room['unreadMessageCount'] = unreadMessageCount;
     });
 
     return filteredRooms;
@@ -211,16 +209,11 @@ export class MessagesService {
       throw new MessageBadRequestException('이미 나간 채팅방입니다.');
     }
 
-    const blockedUsers = user.blockedUsers.map((block) => block.blockedUser.id);
+    const blockedUsers = user.usersBlockedByThisUser;
 
-    if (
+    messageRoom['isBlockedUser'] =
       blockedUsers.includes(messageRoom.firstUser.id) ||
-      blockedUsers.includes(messageRoom.secondUser.id)
-    ) {
-      messageRoom['isBlockedUser'] = true;
-    } else {
-      messageRoom['isBlockedUser'] = false;
-    }
+      blockedUsers.includes(messageRoom.secondUser.id);
 
     return messageRoom;
   }
@@ -232,7 +225,7 @@ export class MessagesService {
   ): Promise<void> {
     const promises = [];
     if (messageRoom.messages) {
-      messageRoom.messages.forEach(async (message) => {
+      for (const message of messageRoom.messages) {
         if (
           message &&
           message.sender &&
@@ -243,7 +236,7 @@ export class MessagesService {
           message.isRead = true;
           promises.push(this.messageRepository.save(message));
         }
-      });
+      }
     } else {
       throw new MessageNotFoundException('채팅방의 메세지를 찾을 수 없습니다.');
     }

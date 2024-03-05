@@ -52,10 +52,12 @@ export enum StickerExceptionEnum {
 
 export enum AuthExceptionEnum {
   USER_UNAUTHORIZED = '4010',
+  NEED_SELF_VERIFICATION = '4011',
   USER_FORBIDDEN = '4030',
   SOCIAL_LOGIN_FORBIDDEN = '4031',
   REPORT_FORBIDDEN = '4032',
   BLOCK_FORBIDDEN = '4033',
+  NOT_ADULT = '4034',
 }
 
 export enum UserExceptionEnum {

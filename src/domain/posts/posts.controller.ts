@@ -26,6 +26,7 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
 import { Post as PostEntity } from './entities/post.entity';
@@ -81,6 +82,12 @@ export class PostsController {
   })
   @ApiBadRequestResponse({
     description: 'Bad Request',
+  })
+  @ApiUnauthorizedResponse({
+    description: '본인 인증이 필요합니다',
+  })
+  @ApiForbiddenResponse({
+    description: '성인 인증에 실패했습니다',
   })
   @Get()
   async findAll(
@@ -220,8 +227,9 @@ export class PostsController {
     type: PostNotFoundException,
   })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const post = await this.postsService.findOne(+id);
+  async findOne(@Req() req: Request, @Param('id') id: string) {
+    const userId = await this.getUserIdFromToken(req);
+    const post = await this.postsService.findOne(+id, userId);
     return HttpResponse.success('게시글 정보가 조회되었습니다', post);
   }
 

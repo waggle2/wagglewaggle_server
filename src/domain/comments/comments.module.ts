@@ -7,6 +7,8 @@ import { PostsModule } from '../posts/posts.module';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { NotificationModule } from '@/notification/notification.module';
 import { SearchModule } from '@/domain/search/search.module';
+import { JwtModule } from '@nestjs/jwt';
+import { UsersModule } from '@/domain/users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { SearchModule } from '@/domain/search/search.module';
     PostsModule,
     NotificationModule,
     SearchModule,
+    JwtModule,
+    UsersModule,
   ],
   exports: [CommentsService],
   controllers: [CommentsController],
