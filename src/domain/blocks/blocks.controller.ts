@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Param,
   Delete,
   UseGuards,
@@ -11,34 +10,31 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { BlocksService } from './blocks.service';
-import { CreateBlockUserDto } from './dto/create-block-user.dto';
 import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '../authentication/interfaces/request-with-user.interface';
 import { UserNotFoundException } from '../users/exceptions/users.exception';
-import { BlockResponseDto } from './dto/block-response.dto';
 import { HttpResponse } from '@/@types/http-response';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
 import { BlockBadRequestException } from './exceptions/block.exception';
-import { RolesGuard } from '../authentication/guards/roles.guard';
-import { AuthorityName } from '@/@types/enum/user.enum';
-import { Roles } from '../authentication/decorators/role.decorator';
+import { UserProfileDto } from '@/domain/users/dto/user-profile.dto';
 
 @Controller('blocks')
 @ApiTags('blocks')
 export class BlocksController {
   constructor(private readonly blocksService: BlocksService) {}
 
-  @Post()
+  @Post(':id')
   @UseGuards(JwtAuthenticationGuard)
   @ApiOperation({ summary: '유저 차단' })
   @ApiResponse({
@@ -47,7 +43,15 @@ export class BlocksController {
     schema: {
       type: 'object',
       properties: {
-        createdAt: { type: 'string', format: 'date-time' },
+        code: { type: 'number', example: 201 },
+        message: {
+          type: 'string',
+          example: '유저 차단이 완료되었습니다.',
+        },
+        data: {
+          type: 'string',
+          example: '2021-10-06T06:00:00.000Z',
+        },
       },
     },
   })
@@ -59,36 +63,43 @@ export class BlocksController {
     type: BlockBadRequestException,
     description: '이미 차단된 사용자입니다.',
   })
-  async createBlock(
-    @Req() req: RequestWithUser,
-    @Body() createBlockUserDto: CreateBlockUserDto,
-  ) {
-    const { blockedUserId } = createBlockUserDto;
-    const block = await this.blocksService.createBlock(req.user, blockedUserId);
-    return HttpResponse.created('유저 차단이 완료되었습니다.', block.createdAt);
+  @ApiParam({
+    name: 'id',
+    type: String,
+    example: '77e88f4b-5ff5-47f9-9b3b-b1757c491cbb',
+    description: '차단할 유저 아이디',
+    required: true,
+  })
+  async createBlock(@Req() req: RequestWithUser, @Param('id') id: string) {
+    await this.blocksService.createBlock(req.user, id);
+    return HttpResponse.created(
+      `유저 차단이 완료되었습니다`,
+      `${new Date().toISOString()}`,
+    );
   }
 
-  @Get('users/:userId')
-  @UseGuards(JwtAuthenticationGuard, RolesGuard)
-  @Roles(AuthorityName.ADMIN)
-  @ApiOperation({ summary: '해당 유저가 차단한 목록 조회 (관리자)' })
+  @Get()
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '현재 로그인한 유저가 차단한 목록 조회' })
   @PaginationSuccessResponse(HttpStatus.OK, {
     model: PageDto,
     message: '유저가 차단한 목록 조회에 성공했습니다.',
-    generic: BlockResponseDto,
+    generic: UserProfileDto,
   })
   async getBlockedUsers(
-    @Param('userId') blockedBy: string,
+    @Req() req: RequestWithUser,
     @Query() pageOptionsDto: PageOptionsDto,
   ) {
-    const { blocks, total } = await this.blocksService.getBlockedUsers(
-      blockedBy,
-      pageOptionsDto,
-    );
+    const [blockedUsers, total] =
+      await this.blocksService.getBlockedUsersByCurrentUser(
+        req.user,
+        pageOptionsDto,
+      );
     const { data, meta } = new PageDto(
-      blocks.map((block) => new BlockResponseDto(block)),
+      blockedUsers.map((blockedUser) => new UserProfileDto(blockedUser)),
       new PageMetaDto(pageOptionsDto, total),
     );
+
     return HttpResponse.success(
       '유저가 차단한 목록 조회에 성공했습니다.',
       data,
@@ -96,51 +107,29 @@ export class BlocksController {
     );
   }
 
-  @Get()
-  @UseGuards(JwtAuthenticationGuard, RolesGuard)
-  @Roles(AuthorityName.ADMIN)
-  @ApiOperation({ summary: '유저 차단 전체 조회 (관리자)' })
-  @PaginationSuccessResponse(HttpStatus.OK, {
-    model: PageDto,
-    message: '차단 전체 조회에 성공했습니다',
-    generic: BlockResponseDto,
-  })
-  async findAll(@Query() pageOptionsDto: PageOptionsDto) {
-    const { blocks, total } = await this.blocksService.findAll(pageOptionsDto);
-    const { data, meta } = new PageDto(
-      blocks.map((block) => new BlockResponseDto(block)),
-      new PageMetaDto(pageOptionsDto, total),
-    );
-    return HttpResponse.success('차단 전체 조회에 성공했습니다.', data, meta);
-  }
-
-  @Get(':id')
-  @UseGuards(JwtAuthenticationGuard, RolesGuard)
-  @Roles(AuthorityName.ADMIN)
-  @ApiOperation({ summary: '유저 차단 단일 조회 (관리자)' })
-  @ApiResponse({
-    status: 200,
-    description: '차단 단일 조회에 성공했습니다.',
-    type: BlockResponseDto,
-  })
-  async findOne(@Param('id') id: string) {
-    const block = await this.blocksService.findOne(+id);
-    return HttpResponse.success(
-      '차단 단일 조회에 성공했습니다.',
-      new BlockResponseDto(block),
-    );
-  }
-
   @Delete(':id')
-  @UseGuards(JwtAuthenticationGuard, RolesGuard)
-  @Roles(AuthorityName.ADMIN)
-  @ApiOperation({ summary: '유저 차단 삭제 (관리자)' })
+  @UseGuards(JwtAuthenticationGuard)
+  @ApiOperation({ summary: '유저 차단 해제' })
   @ApiResponse({
     status: 200,
-    description: '차단이 삭제되었습니다.',
+    description: '차단이 해제되었습니다.',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: { type: 'string', example: '차단이 해제되었습니다.' },
+      },
+    },
   })
-  async remove(@Param('id') id: string) {
-    await this.blocksService.remove(+id);
-    return HttpResponse.success('차단이 삭제되었습니다.');
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: '차단 해제할 유저 아이디',
+    required: true,
+    example: '77e88f4b-5ff5-47f9-9b3b-b1757c491cbb',
+  })
+  async remove(@Req() req: RequestWithUser, @Param('id') id: string) {
+    await this.blocksService.remove(req.user, id);
+    return HttpResponse.success('차단이 해제되었습니다.');
   }
 }

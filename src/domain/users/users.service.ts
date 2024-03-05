@@ -202,9 +202,28 @@ export class UsersService {
         'profileItems.background',
         'profileItems.wallpaper',
         'profileItems.frame',
-        'blockedUsers',
-        'blockedUsers.blockedUser',
-        'blockingUsers.blockedBy',
+      ],
+    });
+    if (!user) {
+      throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
+
+  async findByIdWithDeleted(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: [
+        'credential',
+        'authorities',
+        'userStickers',
+        'profileItems',
+        'profileItems.emoji',
+        'profileItems.background',
+        'profileItems.wallpaper',
+        'profileItems.frame',
       ],
     });
     if (!user) {

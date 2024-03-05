@@ -38,3 +38,19 @@ export class UserBlockForbiddenException extends BaseException {
     super(AuthExceptionEnum.BLOCK_FORBIDDEN, HttpStatus.FORBIDDEN, message);
   }
 }
+
+export class NeedSelfVerificationException extends BaseException {
+  constructor(message: string) {
+    super(
+      AuthExceptionEnum.NEED_SELF_VERIFICATION,
+      HttpStatus.FORBIDDEN,
+      message,
+    );
+  }
+}
+
+export class NotAdultException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.NOT_ADULT, HttpStatus.FORBIDDEN, message);
+  }
+}
