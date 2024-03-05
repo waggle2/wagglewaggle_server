@@ -22,12 +22,12 @@ export class BlockResponseDto {
   constructor(blockUser: BlockUser) {
     this.id = blockUser.id;
     this.blockedBy = {
-      id: blockUser.blockedBy.id,
-      nickname: blockUser.blockedBy.credential.nickname,
+      id: blockUser.blockedBy?.id,
+      nickname: blockUser.blockedBy?.credential.nickname,
     };
     this.blockedUser = {
-      id: blockUser.blockedUser.id,
-      nickname: blockUser.blockedUser.credential.nickname,
+      id: blockUser.blockedUser?.id,
+      nickname: blockUser.blockedUser?.credential.nickname,
     };
     this.createdAt = blockUser.createdAt;
   }
