@@ -10,7 +10,6 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -37,18 +36,11 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { CommentFindDto } from '@/domain/comments/dto/comment-find.dto';
-import { getUserIdFromToken } from '@/common/utils/getUserIdFromToken';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 
 @Controller('comments')
 @ApiTags('comments')
 export class CommentsController {
-  constructor(
-    private readonly commentsService: CommentsService,
-    private readonly configService: ConfigService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly commentsService: CommentsService) {}
 
   @ApiOperation({ summary: '댓글 생성' })
   @ApiCreatedResponse({
@@ -120,19 +112,12 @@ export class CommentsController {
   })
   @Get()
   async findAll(
-    @Req() req: Request,
     @Query() commentFindDto: CommentFindDto,
     @Query() pageOptionsDto: PageOptionsDto,
   ) {
-    const userId = await getUserIdFromToken(
-      req,
-      this.configService,
-      this.jwtService,
-    );
     const { comments, total } = await this.commentsService.findAll(
       commentFindDto,
       pageOptionsDto,
-      userId,
     );
     const { data, meta } = new PageDto(
       comments.map((comment) => new CommentResponseDto(comment)),
