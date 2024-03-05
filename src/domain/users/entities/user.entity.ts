@@ -1,4 +1,5 @@
 import {
+  AfterLoad,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -16,7 +17,6 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { ItemCart } from '@/domain/items/entities/item-cart.entity';
 import { ProfileItems } from './profile-items.entity';
 import { MessageRoom } from '@/domain/messages/entities/message-room.entity';
-import { BlockUser } from '@/domain/blocks/entities/block.entity';
 import { UserStickers } from './user-stickers.entity';
 
 @Entity({ name: 'users' })
@@ -99,11 +99,11 @@ export class User {
   @OneToMany('ItemCart', 'user', { cascade: true })
   itemCart: ItemCart[];
 
-  @OneToMany('BlockUser', 'blockedBy', { cascade: true })
-  blockedUsers: BlockUser[]; // 유저가 차단한 다른 유저들의 목록
+  @Column({ type: 'simple-array', nullable: true })
+  usersBlockedByThisUser: string[];
 
-  @OneToMany('BlockUser', 'blockedUser', { cascade: true })
-  blockingUsers: BlockUser[]; // 유저를 차단한 다른 유저들의 목록
+  @Column({ type: 'simple-array', nullable: true })
+  usersBlockingThisUser: string[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -113,4 +113,15 @@ export class User {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt: Date;
+
+  @AfterLoad()
+  _convertNullToArray() {
+    if (this.usersBlockedByThisUser === null) {
+      this.usersBlockedByThisUser = [];
+    }
+
+    if (this.usersBlockingThisUser === null) {
+      this.usersBlockingThisUser = [];
+    }
+  }
 }

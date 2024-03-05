@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { BlocksService } from './blocks.service';
 import { BlocksController } from './blocks.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BlockUser } from './entities/block.entity';
 import { UsersModule } from '../users/users.module';
+import { User } from '@/domain/users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BlockUser]), UsersModule],
+  imports: [TypeOrmModule.forFeature([User]), UsersModule],
   controllers: [BlocksController],
   providers: [BlocksService],
 })

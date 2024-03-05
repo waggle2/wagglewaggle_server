@@ -1,112 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BlockUser } from './entities/block.entity';
 import { UsersService } from '../users/users.service';
 import { Repository } from 'typeorm';
 import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { User } from '../users/entities/user.entity';
-import {
-  BlockBadRequestException,
-  BlockNotFoundException,
-} from './exceptions/block.exception';
+import { BlockBadRequestException } from './exceptions/block.exception';
+import { applyPaging } from '@/common/utils/applyPaging';
 
 @Injectable()
 export class BlocksService {
   constructor(
-    @InjectRepository(BlockUser)
-    private readonly blockUserRepository: Repository<BlockUser>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     private readonly usersService: UsersService,
   ) {}
 
-  async createBlock(user: User, blockedUserId: string): Promise<BlockUser> {
-    await this.usersService.findById(blockedUserId);
+  async createBlock(user: User, blockedUserId: string) {
+    const userToBlockNow = await this.usersService.findById(blockedUserId);
 
     if (user.id === blockedUserId) {
       throw new BlockBadRequestException('자기 자신을 차단할 수 없습니다.');
     }
-    const blockedUsers = user.blockedUsers.map((block) => block.blockedUser.id);
+
+    const blockedUsers = user.usersBlockedByThisUser;
+
     if (blockedUsers.includes(blockedUserId)) {
       throw new BlockBadRequestException('이미 차단된 사용자입니다.');
     }
 
-    const block = this.blockUserRepository.create({
-      blockedBy: { id: user.id },
-      blockedUser: { id: blockedUserId },
-    });
-    const blocked = await this.blockUserRepository.save(block);
-
-    return blocked;
+    user.usersBlockedByThisUser.push(blockedUserId);
+    await this.usersRepository.save(user);
+    userToBlockNow.usersBlockingThisUser.push(user.id);
+    await this.usersRepository.save(userToBlockNow);
   }
 
-  async getBlockedUsers(
-    blockedBy: string,
+  async getBlockedUsersByCurrentUser(
+    user: User,
     pageOptionsDto: PageOptionsDto,
-  ): Promise<{ blocks: BlockUser[]; total: number }> {
-    const { page, pageSize } = pageOptionsDto;
+  ) {
+    const blockedUsers = user.usersBlockedByThisUser;
 
-    const queryBuilder = await this.findBlocks();
-    let blocks: BlockUser[], total: number;
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.credential', 'credential')
+      .whereInIds(blockedUsers);
 
-    if (page && pageSize) {
-      [blocks, total] = await queryBuilder
-        .andWhere('blockedBy.id = :blockedBy', { blockedBy })
-        .skip(pageSize * (page - 1))
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      blocks = await queryBuilder
-        .andWhere('blockedBy.id = :blockedBy', { blockedBy })
-        .getMany();
-      total = blocks.length;
+    return await applyPaging(queryBuilder, pageOptionsDto);
+  }
+
+  async remove(user: User, id: string) {
+    if (user.usersBlockedByThisUser.includes(id)) {
+      user.usersBlockedByThisUser = user.usersBlockedByThisUser.filter(
+        (userId) => userId !== id,
+      );
+      await this.usersRepository.save(user);
     }
-
-    return { blocks, total };
-  }
-
-  async findAll(
-    pageOptionsDto: PageOptionsDto,
-  ): Promise<{ blocks: BlockUser[]; total: number }> {
-    const { page, pageSize } = pageOptionsDto;
-
-    const queryBuilder = await this.findBlocks();
-    let blocks: BlockUser[], total: number;
-
-    if (page && pageSize) {
-      [blocks, total] = await queryBuilder
-        .skip(pageSize * (page - 1))
-        .take(pageSize)
-        .getManyAndCount();
-    } else {
-      blocks = await queryBuilder.getMany();
-      total = blocks.length;
-    }
-
-    return { blocks, total };
-  }
-
-  async findOne(id: number): Promise<BlockUser> {
-    const queryBuilder = await this.findBlocks();
-    const block = await queryBuilder
-      .andWhere('block.id = :id', { id })
-      .getOne();
-    if (!block) {
-      throw new BlockNotFoundException('해당 차단을 찾을 수 없습니다.');
-    }
-
-    return block;
-  }
-
-  async remove(id: number): Promise<void> {
-    const block = await this.findOne(id);
-    await this.blockUserRepository.delete(block.id);
-  }
-
-  private async findBlocks() {
-    return this.blockUserRepository
-      .createQueryBuilder('block')
-      .leftJoinAndSelect('block.blockedBy', 'blockedBy')
-      .leftJoinAndSelect('blockedBy.credential', 'blockedBy_credential')
-      .leftJoinAndSelect('block.blockedUser', 'blockedUser')
-      .leftJoinAndSelect('blockedUser.credential', 'blockedUser_credential');
   }
 }
