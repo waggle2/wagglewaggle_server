@@ -212,18 +212,13 @@ export class ItemsService {
   /* 마이페이지 */
 
   // 유저가 갖고 있는 아이템 조회
-  async getUserItems(
-    animal: Animal,
-    itemType: ItemType,
-    user: User,
-  ): Promise<Item[]> {
+  async getUserItems(animal: Animal, user: User): Promise<Item[]> {
     const userItemIds = user.items || [];
 
     const userItems = await this.itemRepository.find({
       where: {
         id: In(userItemIds.map((id) => parseInt(id.toString()))),
         animal,
-        itemType,
       },
       order: { createdAt: 'DESC' },
     });
