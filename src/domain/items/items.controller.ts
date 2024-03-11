@@ -320,14 +320,9 @@ export class ItemsController {
   })
   async getUserItems(
     @Query('animal') animal: Animal,
-    @Query('itemType') itemType: ItemType,
     @Req() req: RequestWithUser,
   ) {
-    const items = await this.itemsService.getUserItems(
-      animal,
-      itemType,
-      req.user,
-    );
+    const items = await this.itemsService.getUserItems(animal, req.user);
     return HttpResponse.success(
       '유저가 갖고 있는 아이템이 조회되었습니다.',
       items,
