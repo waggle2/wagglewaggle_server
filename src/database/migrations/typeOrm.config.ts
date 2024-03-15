@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import { AnimalEnumRefactoring1708161878890 } from '@/database/migrations/1708161878890-AnimalEnumRefactoring';
+import { ItemTypeEnumRefactoring1710410177498 } from './1710410177498-itemTypeEnumRefactoring';
 
 config();
 
@@ -15,5 +15,5 @@ export default new DataSource({
   password: configService.get(`DB_PASSWORD`),
   database: configService.get(`DB_NAME`),
   entities: [__dirname + '/../**/*.entities.{js,ts}'],
-  migrations: [AnimalEnumRefactoring1708161878890],
+  migrations: [ItemTypeEnumRefactoring1710410177498],
 });
