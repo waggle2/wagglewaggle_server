@@ -13,8 +13,8 @@ export class CreateItemDto {
   readonly animal: Animal;
 
   @ApiProperty({
-    example: 'wallpaper',
-    description: '아이템 종류(emoji, background, frame, wallpaper)',
+    example: '이모지',
+    description: '아이템 종류(이모지, 프로필 배경, 프레임, 벽지)',
     required: true,
   })
   @IsEnum(ItemType)

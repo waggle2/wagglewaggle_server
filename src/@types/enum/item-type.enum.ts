@@ -1,6 +1,6 @@
 export enum ItemType {
-  EMOJI = 'emoji',
-  BACKGROUND = 'background',
-  FRAME = 'frame',
-  WALLPAPER = 'wallpaper',
+  EMOJI = '이모지',
+  BACKGROUND = '프로필 배경',
+  FRAME = '프레임',
+  WALLPAPER = '벽지',
 }
