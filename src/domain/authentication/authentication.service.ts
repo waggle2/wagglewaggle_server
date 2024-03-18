@@ -13,13 +13,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Credential } from '../users/entities/credential.entity';
 import {
   SocialLoginForbiddenException,
+  UserExpelledException,
   UserUnauthorizedException,
+  UserWithdrawnException,
 } from '@/domain/authentication/exceptions/authentication.exception';
 import {
   UserBadRequestException,
   UserNotFoundException,
 } from '@/domain/users/exceptions/users.exception';
 import { LoginDto } from '@/domain/authentication/dto/login.dto';
+import { State } from '@/@types/enum/user.enum';
 
 @Injectable()
 export class AuthenticationService {
@@ -76,6 +79,11 @@ export class AuthenticationService {
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
+    if (user.state === State.WITHDRAWN) {
+      throw new UserWithdrawnException('이미 탈퇴한 회원입니다.');
+    } else if (user.state === State.EXPELLED) {
+      throw new UserExpelledException('추방된 회원입니다.');
+    }
 
     const isMatchPassword = await this.comparePassword(
       password,
@@ -127,6 +135,11 @@ export class AuthenticationService {
     const user = await this.usersService.findBySocialId(userData.socialId);
     if (!user) {
       return { message: '회원가입이 필요합니다.', userData };
+    }
+    if (user.state === State.WITHDRAWN) {
+      throw new UserWithdrawnException('이미 탈퇴한 회원입니다.');
+    } else if (user.state === State.EXPELLED) {
+      throw new UserExpelledException('추방된 회원입니다.');
     }
 
     const accessCookie = await this.getCookieWithAccessToken(user);

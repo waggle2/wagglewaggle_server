@@ -75,6 +75,10 @@ export class AuthenticationController {
     status: 404,
     description: '사용자를 찾을 수 없습니다.',
   })
+  @ApiResponse({
+    status: 403,
+    description: '이미 탈퇴한 회원입니다, 추방된 회원입니다.',
+  })
   async emailLogin(@Body() loginDto: LoginDto, @Res() response: Response) {
     const user = await this.authenticationService.emailLogin(loginDto);
     const accessCookie =
