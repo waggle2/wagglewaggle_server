@@ -72,8 +72,10 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollsService.create(user, +postId, createPollDto);
-
-    return HttpResponse.created('투표 생성 성공', new PollResponseDto(poll));
+    return HttpResponse.created(
+      '투표 생성 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
   @ApiOperation({ summary: '투표' })
@@ -101,8 +103,10 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollItemsService.vote(user, +pollItemId);
-
-    return HttpResponse.success('투표 성공', poll);
+    return HttpResponse.success(
+      '투표 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
   @ApiOperation({ summary: '재투표' })
@@ -130,7 +134,10 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollItemsService.updateVote(user, +pollItemId);
-    return HttpResponse.success('재투표 성공', poll);
+    return HttpResponse.success(
+      '재투표 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
   @ApiOperation({ summary: '투표 수정' })
@@ -158,7 +165,6 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollsService.update(user, +id, updatePollDto);
-
     return HttpResponse.success('투표 수정 성공', poll);
   }
 
