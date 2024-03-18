@@ -26,11 +26,19 @@ export class UserProfileDto {
   @Expose()
   readonly state: State;
 
+  @ApiProperty({ type: [String], description: '이 유저가 차단한 유저들' })
+  usersBlockedByThisUser: string[];
+
+  @ApiProperty({ type: [String], description: '이 유저를 차단한 유저들' })
+  usersBlockingThisUser: string[];
+
   constructor(user: User) {
     this.id = user.id;
     this.nickname = user.credential.nickname;
     this.profileAnimal = user.profileAnimal;
     this.profileItems = user.profileItems;
     this.state = user.state;
+    this.usersBlockedByThisUser = user.usersBlockedByThisUser;
+    this.usersBlockingThisUser = user.usersBlockingThisUser;
   }
 }

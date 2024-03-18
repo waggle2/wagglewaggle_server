@@ -47,6 +47,7 @@ import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserUnauthorizedException } from '@/domain/authentication/exceptions/authentication.exception';
+import { PostResponseDto } from '@/domain/posts/dto/post-response.dto';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -221,7 +222,7 @@ export class PostsController {
   @ApiResponse({
     status: 200,
     description: '요청 성공시',
-    type: PostEntity,
+    type: PostResponseDto,
   })
   @ApiNotFoundResponse({
     type: PostNotFoundException,
@@ -230,7 +231,11 @@ export class PostsController {
   async findOne(@Req() req: Request, @Param('id') id: string) {
     const userId = await this.getUserIdFromToken(req);
     const post = await this.postsService.findOne(+id, userId);
-    return HttpResponse.success('게시글 정보가 조회되었습니다', post);
+
+    return HttpResponse.success(
+      '게시글 정보가 조회되었습니다',
+      new PostResponseDto(post),
+    );
   }
 
   @ApiOperation({ summary: '게시글 생성' })
@@ -247,7 +252,10 @@ export class PostsController {
   ) {
     const { user } = req;
     const post = await this.postsService.create(user, createPostDto);
-    return HttpResponse.created('게시글 작성에 성공했습니다', post);
+    return HttpResponse.created(
+      '게시글 작성에 성공했습니다',
+      new PostResponseDto(post),
+    );
   }
 
   @ApiOperation({ summary: '게시글 수정' })
@@ -268,7 +276,10 @@ export class PostsController {
   ) {
     const { user } = req;
     const post = await this.postsService.update(user, +id, updatePostDto);
-    return HttpResponse.success('게시글이 수정되었습니다', post);
+    return HttpResponse.success(
+      '게시글이 수정되었습니다',
+      new PostResponseDto(post),
+    );
   }
 
   @ApiOperation({ summary: '게시글 삭제' })
