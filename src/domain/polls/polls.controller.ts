@@ -7,13 +7,10 @@ import {
   Delete,
   UseGuards,
   Req,
-  Query,
 } from '@nestjs/common';
 import { PollsService } from './polls.service';
 import { CreatePollDto } from './dto/create-poll.dto';
-import { UpdatePollDto } from './dto/update-poll.dto';
 import {
-  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -138,68 +135,6 @@ export class PollsController {
       '재투표 성공',
       new PollResponseDto(poll, poll.post.id),
     );
-  }
-
-  @ApiOperation({ summary: '투표 수정' })
-  @ApiOkResponse({
-    type: PollResponseDto,
-    description: '투표 수정 성공',
-  })
-  @ApiBadRequestResponse({
-    description: 'Bad Request',
-  })
-  @ApiForbiddenResponse({
-    type: PollAuthorDifferentException,
-    description: '투표 작성자와 다른 유저인 경우',
-  })
-  @ApiNotFoundResponse({
-    type: PollNotFoundException,
-    description: '해당 투표가 존재하지 않습니다',
-  })
-  @UseGuards(JwtAuthenticationGuard)
-  @Patch(':id')
-  async update(
-    @Req() req: RequestWithUser,
-    @Param('id') id: string,
-    @Body() updatePollDto: UpdatePollDto,
-  ) {
-    const { user } = req;
-    const poll = await this.pollsService.update(user, +id, updatePollDto);
-    return HttpResponse.success('투표 수정 성공', poll);
-  }
-
-  @ApiOperation({ summary: '투표 항목 여러 개 삭제' })
-  @ApiResponse({
-    status: 200,
-    description: '삭제 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '성공적으로 삭제되었습니다' },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    type: PollAuthorDifferentException,
-    description: '투표 작성자와 다른 유저인 경우',
-  })
-  @ApiNotFoundResponse({
-    type: PollNotFoundException,
-    description: '해당 투표가 존재하지 않습니다',
-  })
-  @UseGuards(JwtAuthenticationGuard)
-  @Delete('/poll-items')
-  async removePollItems(
-    @Req() req: RequestWithUser,
-    @Query('ids') ids: string[],
-  ) {
-    const { user } = req;
-    const idsNum = ids.map((id) => +id);
-
-    await this.pollItemsService.removeMultiple(user, idsNum);
-
-    return HttpResponse.success('성공적으로 삭제되었습니다.');
   }
 
   @ApiOperation({ summary: '투표 삭제' })
