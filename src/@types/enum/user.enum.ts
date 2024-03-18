@@ -13,6 +13,7 @@ export enum AuthorityName {
 export enum State {
   JOINED = '가입',
   WITHDRAWN = '탈퇴',
+  EXPELLED = '추방',
 }
 
 export enum Gender {

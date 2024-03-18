@@ -19,6 +19,9 @@ import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authenticat
 import { HttpResponse } from '@/@types/http-response';
 import { Animal } from '@/@types/enum/animal.enum';
 import { OtherUserProfileDto } from './dto/other-user-profile.dto';
+import { RolesGuard } from '../authentication/guards/roles.guard';
+import { Roles } from '../authentication/decorators/role.decorator';
+import { AuthorityName } from '@/@types/enum/user.enum';
 
 @Controller('users')
 @ApiTags('users')
@@ -386,6 +389,63 @@ export class UsersController {
     const { user } = request;
     await this.usersService.remove(user.id, exitReasonDto);
     return HttpResponse.success('회원 탈퇴가 완료되었습니다.');
+  }
+
+  /* 관리자 페이지 */
+  @Get('/admin')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
+  @ApiOperation({ summary: '전체 회원 조회(관리자)' })
+  @ApiResponse({
+    status: 200,
+    description: '전체 회원이 조회되었습니다.',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '전체 회원이 조회되었습니다.',
+        },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+          },
+        },
+      },
+    },
+  })
+  async findAll() {
+    const users = await this.usersService.findAll();
+    users.forEach((user) => {
+      user.credential.password = undefined;
+      user.currentRefreshToken = undefined;
+    });
+    return HttpResponse.success('전체 회원이 조회되었습니다.', users);
+  }
+
+  @Delete('/admin/:userId')
+  @UseGuards(JwtAuthenticationGuard, RolesGuard)
+  @Roles(AuthorityName.ADMIN)
+  @ApiOperation({ summary: '회원 추방(관리자)' })
+  @ApiResponse({
+    status: 200,
+    description: '회원 추방이 완료되었습니다.',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: '회원 추방이 완료되었습니다.',
+        },
+      },
+    },
+  })
+  async expelMember(@Param('userId') userId: string) {
+    await this.usersService.expelMember(userId);
+    return HttpResponse.success('회원 추방이 완료되었습니다.');
   }
 
   // 임시
