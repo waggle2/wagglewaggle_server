@@ -16,6 +16,10 @@ export class PollResponseDto {
   @Expose()
   readonly postId: number;
 
+  @ApiProperty({ description: '투표 참여 인원 수', type: Number })
+  @Expose()
+  readonly participantCount: number;
+
   @ApiProperty({ description: '투표 마감일자', type: Date })
   @Expose()
   readonly endedAt: Date;
@@ -28,17 +32,16 @@ export class PollResponseDto {
   @Expose()
   readonly createdAt: Date;
 
-  @ApiProperty({ description: '투표 수정일자', type: Date })
-  @Expose()
-  readonly updatedAt: Date;
-
-  constructor(poll: Poll) {
+  constructor(poll: Poll, postId: number) {
     this.id = poll.id;
     this.title = poll.title;
-    this.postId = poll.post.id;
+    this.postId = postId;
     this.endedAt = poll.endedAt;
     this.pollItems = poll.pollItems;
     this.createdAt = poll.createdAt;
-    this.updatedAt = poll.updatedAt;
+    this.participantCount = poll.pollItems.reduce(
+      (acc, cur) => acc + cur.userIds.length,
+      0,
+    );
   }
 }

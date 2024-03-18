@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePollDto } from './dto/create-poll.dto';
-import { UpdatePollDto } from './dto/update-poll.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Poll } from './entities/poll.entity';
 import { Repository } from 'typeorm';
@@ -67,29 +66,6 @@ export class PollsService {
     }
 
     return poll;
-  }
-
-  async update(user: User, id: number, updatePollDto: UpdatePollDto) {
-    const existingPoll = await this.findOne(id);
-
-    if (existingPoll.post.author.id !== user.id)
-      throw new PollAuthorDifferentException('잘못된 접근입니다');
-
-    const { title, pollItemDtos, endedAt } = updatePollDto;
-
-    if (pollItemDtos && pollItemDtos.length > 0) {
-      existingPoll.pollItems = await Promise.all(
-        pollItemDtos.map(({ id: pollItemId, content }) =>
-          this.pollItemsService.update(pollItemId, { content }),
-        ),
-      );
-    }
-
-    if (title) existingPoll.title = title;
-    if (endedAt) existingPoll.endedAt = endedAt;
-
-    await this.pollsRepository.save(existingPoll);
-    return this.findOne(id);
   }
 
   async remove(user: User, id: number) {

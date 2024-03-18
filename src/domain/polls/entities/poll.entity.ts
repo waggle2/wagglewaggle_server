@@ -6,7 +6,6 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { PollItem } from '@/domain/pollItems/entities/pollItem.entity';
@@ -34,7 +33,4 @@ export class Poll {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 }

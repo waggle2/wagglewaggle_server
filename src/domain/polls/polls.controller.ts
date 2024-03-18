@@ -7,13 +7,10 @@ import {
   Delete,
   UseGuards,
   Req,
-  Query,
 } from '@nestjs/common';
 import { PollsService } from './polls.service';
 import { CreatePollDto } from './dto/create-poll.dto';
-import { UpdatePollDto } from './dto/update-poll.dto';
 import {
-  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -72,8 +69,10 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollsService.create(user, +postId, createPollDto);
-
-    return HttpResponse.created('투표 생성 성공', new PollResponseDto(poll));
+    return HttpResponse.created(
+      '투표 생성 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
   @ApiOperation({ summary: '투표' })
@@ -101,71 +100,41 @@ export class PollsController {
   ) {
     const { user } = req;
     const poll = await this.pollItemsService.vote(user, +pollItemId);
-
-    return HttpResponse.success('투표 성공', poll);
+    return HttpResponse.success(
+      '투표 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
-  @ApiOperation({ summary: '투표 수정' })
+  @ApiOperation({ summary: '재투표' })
   @ApiOkResponse({
     type: PollResponseDto,
-    description: '투표 수정 성공',
-  })
-  @ApiBadRequestResponse({
-    description: 'Bad Request',
+    description: '재투표 성공',
   })
   @ApiForbiddenResponse({
-    type: PollAuthorDifferentException,
-    description: '투표 작성자와 다른 유저인 경우',
+    type: DuplicateVoteForbiddenException,
+    description: '한 항목에만 투표할 수 있습니다',
   })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
-    description: '해당 투표가 존재하지 않습니다',
+    description: '투표 요청 중에 투표가 삭제된 경우',
+  })
+  @ApiConflictResponse({
+    type: AlreadyVoteException,
+    description: '이미 투표한 항목입니다',
   })
   @UseGuards(JwtAuthenticationGuard)
-  @Patch(':id')
-  async update(
+  @Patch('/poll-items/:pollItemId')
+  async updateVote(
     @Req() req: RequestWithUser,
-    @Param('id') id: string,
-    @Body() updatePollDto: UpdatePollDto,
+    @Param('pollItemId') pollItemId: string,
   ) {
     const { user } = req;
-    const poll = await this.pollsService.update(user, +id, updatePollDto);
-
-    return HttpResponse.success('투표 수정 성공', poll);
-  }
-
-  @ApiOperation({ summary: '투표 항목 여러 개 삭제' })
-  @ApiResponse({
-    status: 200,
-    description: '삭제 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: { type: 'string', example: '성공적으로 삭제되었습니다' },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    type: PollAuthorDifferentException,
-    description: '투표 작성자와 다른 유저인 경우',
-  })
-  @ApiNotFoundResponse({
-    type: PollNotFoundException,
-    description: '해당 투표가 존재하지 않습니다',
-  })
-  @UseGuards(JwtAuthenticationGuard)
-  @Delete('/poll-items')
-  async removePollItems(
-    @Req() req: RequestWithUser,
-    @Query('ids') ids: string[],
-  ) {
-    const { user } = req;
-    const idsNum = ids.map((id) => +id);
-
-    await this.pollItemsService.removeMultiple(user, idsNum);
-
-    return HttpResponse.success('성공적으로 삭제되었습니다.');
+    const poll = await this.pollItemsService.updateVote(user, +pollItemId);
+    return HttpResponse.success(
+      '재투표 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
   }
 
   @ApiOperation({ summary: '투표 삭제' })
