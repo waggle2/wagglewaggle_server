@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePollItemDto } from './dto/create-pollItem.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { PollItem } from './entities/pollItem.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { User } from '@/domain/users/entities/user.entity';
 import {
   AlreadyVoteException,
@@ -15,6 +15,7 @@ import { Poll } from '@/domain/polls/entities/poll.entity';
 @Injectable()
 export class PollItemsService {
   constructor(
+    @InjectEntityManager() private readonly entityManager: EntityManager,
     @InjectRepository(PollItem)
     private readonly pollItemsRepository: Repository<PollItem>,
     @InjectRepository(Poll)
@@ -59,6 +60,50 @@ export class PollItemsService {
     if (!votedPoll) throw new PollNotFoundException('잘못된 접근입니다');
 
     return votedPoll;
+  }
+
+  async updateVote(user: User, id: number) {
+    return await this.entityManager.transaction(async () => {
+      const newPollItemToVote = await this.pollItemsRepository
+        .createQueryBuilder('poll_item')
+        .leftJoinAndSelect('poll_item.poll', 'poll')
+        .leftJoinAndSelect('poll.pollItems', 'poll_items')
+        .where('poll_item.id = :id', { id })
+        .getOne();
+
+      if (!newPollItemToVote) {
+        throw new NotFoundException('해당 투표 항목이 존재하지 않습니다');
+      }
+
+      const poll = newPollItemToVote.poll;
+
+      // 원래 투표에서 투표를 취소
+      const originalPollItem = poll.pollItems.find((pi) =>
+        pi.userIds.includes(user.id),
+      );
+
+      if (originalPollItem.id == newPollItemToVote.id) {
+        throw new AlreadyVoteException('이미 투표한 항목입니다');
+      }
+
+      if (originalPollItem) {
+        originalPollItem.userIds = originalPollItem.userIds.filter(
+          (uid) => uid !== user.id,
+        );
+        await this.pollItemsRepository.save(originalPollItem);
+      }
+
+      // 새로운 투표에 투표
+      newPollItemToVote.userIds.push(user.id);
+      await this.pollItemsRepository.save(newPollItemToVote);
+
+      const votedPoll = await this.pollsRepository.findOneBy({
+        id: newPollItemToVote.poll.id,
+      });
+      if (!votedPoll) throw new PollNotFoundException('잘못된 접근입니다');
+
+      return votedPoll;
+    });
   }
 
   async findOne(id: number) {

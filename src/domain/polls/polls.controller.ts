@@ -105,6 +105,34 @@ export class PollsController {
     return HttpResponse.success('투표 성공', poll);
   }
 
+  @ApiOperation({ summary: '재투표' })
+  @ApiOkResponse({
+    type: PollResponseDto,
+    description: '재투표 성공',
+  })
+  @ApiForbiddenResponse({
+    type: DuplicateVoteForbiddenException,
+    description: '한 항목에만 투표할 수 있습니다',
+  })
+  @ApiNotFoundResponse({
+    type: PollNotFoundException,
+    description: '투표 요청 중에 투표가 삭제된 경우',
+  })
+  @ApiConflictResponse({
+    type: AlreadyVoteException,
+    description: '이미 투표한 항목입니다',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Patch('/poll-items/:pollItemId')
+  async updateVote(
+    @Req() req: RequestWithUser,
+    @Param('pollItemId') pollItemId: string,
+  ) {
+    const { user } = req;
+    const poll = await this.pollItemsService.updateVote(user, +pollItemId);
+    return HttpResponse.success('재투표 성공', poll);
+  }
+
   @ApiOperation({ summary: '투표 수정' })
   @ApiOkResponse({
     type: PollResponseDto,
