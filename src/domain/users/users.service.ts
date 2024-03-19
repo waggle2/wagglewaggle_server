@@ -22,6 +22,8 @@ import { ItemCart } from '../items/entities/item-cart.entity';
 import { Animal } from '@/@types/enum/animal.enum';
 import { UserStickers } from './entities/user-stickers.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { applyPaging } from '@/common/utils/applyPaging';
 
 @Injectable()
 export class UsersService {
@@ -373,11 +375,14 @@ export class UsersService {
   /* 관리자 페이지 */
 
   // 전체 회원 조회(관리자)
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      withDeleted: true,
-      relations: ['credential', 'authorities'],
-    });
+  async findAll(pageOptionsDto: PageOptionsDto) {
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('users')
+      .innerJoinAndSelect('users.credential', 'credential')
+      .leftJoinAndSelect('users.authorities', 'authorities')
+      .withDeleted();
+
+    return await applyPaging(queryBuilder, pageOptionsDto);
   }
 
   // 회원 추방(관리자)

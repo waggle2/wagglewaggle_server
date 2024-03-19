@@ -11,6 +11,7 @@ import {
   Param,
   Query,
   Headers,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -23,6 +24,11 @@ import { OtherUserProfileDto } from './dto/other-user-profile.dto';
 import { RolesGuard } from '../authentication/guards/roles.guard';
 import { Roles } from '../authentication/decorators/role.decorator';
 import { AuthorityName } from '@/@types/enum/user.enum';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
+import { PageDto } from '@/common/dto/page/page.dto';
+import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
+import { UserProfileDto } from './dto/user-profile.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -56,10 +62,6 @@ export class UsersController {
         },
       },
     },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '중복된 이메일입니다.',
   })
   @ApiResponse({
     status: 404,
@@ -405,33 +407,22 @@ export class UsersController {
   @UseGuards(JwtAuthenticationGuard, RolesGuard)
   @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '전체 회원 조회(관리자)' })
-  @ApiResponse({
-    status: 200,
-    description: '전체 회원이 조회되었습니다.',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: {
-          type: 'string',
-          example: '전체 회원이 조회되었습니다.',
-        },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-          },
-        },
-      },
-    },
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '전체 회원이 조회되었습니다.',
+    generic: UserProfileDto,
   })
-  async findAll() {
-    const users = await this.usersService.findAll();
+  async findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    const [users, total] = await this.usersService.findAll(pageOptionsDto);
     users.forEach((user) => {
       user.credential.password = undefined;
       user.currentRefreshToken = undefined;
     });
-    return HttpResponse.success('전체 회원이 조회되었습니다.', users);
+    const { data, meta } = new PageDto(
+      users,
+      new PageMetaDto(pageOptionsDto, total),
+    );
+    return HttpResponse.success('전체 회원이 조회되었습니다.', data, meta);
   }
 
   @Delete('/admin/:userId')
