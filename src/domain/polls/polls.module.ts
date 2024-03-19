@@ -5,14 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Poll } from './entities/poll.entity';
 import { Post } from '../posts/entities/post.entity';
 import { PostsModule } from '../posts/posts.module';
-import { PollItemsModule } from '../pollItems/pollItems.module';
+import { PollItem } from '@/domain/polls/entities/pollItem.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Poll, Post]),
-    PostsModule,
-    PollItemsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Poll, PollItem, Post]), PostsModule],
   controllers: [PollsController],
   providers: [PollsService],
   exports: [PollsService],

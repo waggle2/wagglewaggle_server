@@ -8,7 +8,7 @@ import {
   Length,
   ValidateNested,
 } from 'class-validator';
-import { CreatePollItemDto } from '@/domain/pollItems/dto/create-pollItem.dto';
+import { CreatePollItemDto } from '@/domain/polls/dto/create-pollItem.dto';
 
 export class CreatePollDto {
   @ApiProperty({

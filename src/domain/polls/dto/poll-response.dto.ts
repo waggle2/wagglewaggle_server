@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { PollItem } from '@/domain/pollItems/entities/pollItem.entity';
 import { Poll } from '@/domain/polls/entities/poll.entity';
+import { PollItem } from '@/domain/polls/entities/pollItem.entity';
 
 export class PollResponseDto {
   @ApiProperty({ description: '투표 ID', type: Number })

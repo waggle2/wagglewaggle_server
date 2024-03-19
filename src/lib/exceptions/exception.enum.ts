@@ -27,16 +27,22 @@ export enum CommentExceptionEnum {
 }
 
 export enum PollExceptionEnum {
+  // 400
+  NOT_POLLED = '2000',
+
   // 403
   AUTHOR_DIFFERENT_USER = '2030',
   DUPLICATE_VOTE = '2031',
+  POLL_ENDED = '2032',
 
   // 404
   POLL_NOT_FOUND = '2040',
+  POLL_ITEM_NOT_FOUND = '2041',
 
   // 409
   POLL_CONFLICT = '2090',
   ALREADY_VOTE = '2091',
+  POLL_ALREADY_EXISTS = '2092',
 }
 
 export enum StickerExceptionEnum {
