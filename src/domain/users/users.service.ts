@@ -287,11 +287,7 @@ export class UsersService {
 
   // 닉네임 수정
   async updateNickname(user: User, nickname: string): Promise<void> {
-    const existingUser = await this.checkNickname(
-      nickname,
-      user.credential.email,
-      user.socialId,
-    );
+    const existingUser = await this.checkNickname(nickname);
     if (!existingUser) {
       throw new UserBadRequestException('중복된 닉네임입니다.');
     }
