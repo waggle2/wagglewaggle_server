@@ -54,7 +54,7 @@ export class AuthenticationService {
         } else if (existingUser.state === State.EXPELLED) {
           throw new UserExpelledException('추방된 회원입니다.');
         } else {
-          throw new UserBadRequestException('존재하는 소셜id 입니다.');
+          throw new UserBadRequestException('존재하는 소셜id입니다.');
         }
       }
     }

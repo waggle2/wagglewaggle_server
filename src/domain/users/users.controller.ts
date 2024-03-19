@@ -11,6 +11,7 @@ import {
   Param,
   Query,
   Headers,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -23,6 +24,11 @@ import { OtherUserProfileDto } from './dto/other-user-profile.dto';
 import { RolesGuard } from '../authentication/guards/roles.guard';
 import { Roles } from '../authentication/decorators/role.decorator';
 import { AuthorityName } from '@/@types/enum/user.enum';
+import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
+import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
+import { PageDto } from '@/common/dto/page/page.dto';
+import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -56,10 +62,6 @@ export class UsersController {
         },
       },
     },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '중복된 이메일입니다.',
   })
   @ApiResponse({
     status: 404,
@@ -209,81 +211,18 @@ export class UsersController {
   @ApiOperation({ summary: '회원 정보 조회' })
   @ApiResponse({
     status: 200,
-    description: '회원 정보 반환',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: {
-          type: 'string',
-          example: '회원 정보가 조회되었습니다.',
-        },
-        data: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            authenticationProvider: { type: 'string' },
-            socialId: { type: 'string', nullable: true },
-            isVerified: { type: 'boolean' },
-            state: { type: 'string' },
-            primaryAnimal: { type: 'string' },
-            secondAnimal: { type: 'string', nullable: true },
-            profileAnimal: { type: 'string' },
-            catPoints: { type: 'integer' },
-            bearPoints: { type: 'integer' },
-            dogPoints: { type: 'integer' },
-            foxPoints: { type: 'integer' },
-            items: { type: 'array', items: { type: 'object' }, nullable: true },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-            deletedAt: { type: 'string', nullable: true, format: 'date-time' },
-            credential: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer' },
-                email: { type: 'string' },
-                nickname: { type: 'string' },
-                birthYear: { type: 'integer' },
-                gender: { type: 'string' },
-              },
-            },
-            authorities: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'integer' },
-                  authorityName: { type: 'string' },
-                },
-              },
-            },
-            userStickers: {
-              type: 'object',
-              properties: {
-                bearStickers: { type: 'number' },
-                foxStickers: { type: 'number' },
-                dogStickers: { type: 'number' },
-                catStickers: { type: 'number' },
-              },
-            },
-            profileItems: {
-              type: 'array',
-              items: { type: 'object' },
-            },
-          },
-        },
-      },
-    },
+    description: '회원 정보 조회 성공',
+    type: UserResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async findOne(@Req() request: RequestWithUser) {
-    const { user } = request;
-    user.credential.password = undefined;
-    user.currentRefreshToken = undefined;
-    return HttpResponse.success('회원 정보가 조회되었습니다.', user);
+  async findOne(@Req() req: RequestWithUser) {
+    return HttpResponse.success(
+      '회원 정보가 조회되었습니다.',
+      new UserResponseDto(req.user),
+    );
   }
 
   @Get('/profile/:userId')
@@ -405,33 +344,18 @@ export class UsersController {
   @UseGuards(JwtAuthenticationGuard, RolesGuard)
   @Roles(AuthorityName.ADMIN)
   @ApiOperation({ summary: '전체 회원 조회(관리자)' })
-  @ApiResponse({
-    status: 200,
-    description: '전체 회원이 조회되었습니다.',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: {
-          type: 'string',
-          example: '전체 회원이 조회되었습니다.',
-        },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-          },
-        },
-      },
-    },
+  @PaginationSuccessResponse(HttpStatus.OK, {
+    model: PageDto,
+    message: '전체 회원이 조회되었습니다.',
+    generic: UserResponseDto,
   })
-  async findAll() {
-    const users = await this.usersService.findAll();
-    users.forEach((user) => {
-      user.credential.password = undefined;
-      user.currentRefreshToken = undefined;
-    });
-    return HttpResponse.success('전체 회원이 조회되었습니다.', users);
+  async findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    const [users, total] = await this.usersService.findAll(pageOptionsDto);
+    const { data, meta } = new PageDto(
+      users.map((user) => new UserResponseDto(user)),
+      new PageMetaDto(pageOptionsDto, total),
+    );
+    return HttpResponse.success('전체 회원이 조회되었습니다.', data, meta);
   }
 
   @Delete('/admin/:userId')
