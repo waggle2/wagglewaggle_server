@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Post } from '@/domain/posts/entities/post.entity';
-import { PollItem } from '@/domain/pollItems/entities/pollItem.entity';
+import { PollItem } from '@/domain/polls/entities/pollItem.entity';
 
 @Entity('polls')
 export class Poll {

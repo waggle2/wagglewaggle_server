@@ -6,7 +6,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { PostsModule } from './domain/posts/posts.module';
 import { CommentsModule } from './domain/comments/comments.module';
 import { PollsModule } from './domain/polls/polls.module';
-import { PollItemsModule } from './domain/pollItems/pollItems.module';
 import { UsersModule } from './domain/users/users.module';
 import { ItemsModule } from './domain/items/items.module';
 import { FilesModule } from '@/domain/files/files.module';
@@ -48,7 +47,6 @@ import { BlocksModule } from './domain/blocks/blocks.module';
     PostsModule,
     CommentsModule,
     PollsModule,
-    PollItemsModule,
     UsersModule,
     ItemsModule,
     FilesModule,

@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { UpdatePollItemDto } from '@/domain/pollItems/dto/update-pollItem.dto';
+import { UpdatePollItemDto } from '@/domain/polls/dto/update-pollItem.dto';
 
 export class UpdatePollDto {
   @ApiProperty({

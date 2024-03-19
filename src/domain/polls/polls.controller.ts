@@ -29,7 +29,6 @@ import {
 } from '@/domain/polls/exceptions/polls.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
 import RequestWithUser from '@/domain/authentication/interfaces/request-with-user.interface';
-import { PollItemsService } from '@/domain/pollItems/pollItems.service';
 import { HttpResponse } from '@/@types/http-response';
 import { PollResponseDto } from '@/domain/polls/dto/poll-response.dto';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
@@ -37,10 +36,7 @@ import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception
 @Controller('polls')
 @ApiTags('polls')
 export class PollsController {
-  constructor(
-    private readonly pollsService: PollsService,
-    private readonly pollItemsService: PollItemsService,
-  ) {}
+  constructor(private readonly pollsService: PollsService) {}
 
   @ApiOperation({ summary: '투표 생성' })
   @ApiResponse({
@@ -99,7 +95,7 @@ export class PollsController {
     @Param('pollItemId') pollItemId: string,
   ) {
     const { user } = req;
-    const poll = await this.pollItemsService.vote(user, +pollItemId);
+    const poll = await this.pollsService.vote(user, +pollItemId);
     return HttpResponse.success(
       '투표 성공',
       new PollResponseDto(poll, poll.post.id),
@@ -130,7 +126,7 @@ export class PollsController {
     @Param('pollItemId') pollItemId: string,
   ) {
     const { user } = req;
-    const poll = await this.pollItemsService.updateVote(user, +pollItemId);
+    const poll = await this.pollsService.updateVote(user, +pollItemId);
     return HttpResponse.success(
       '재투표 성공',
       new PollResponseDto(poll, poll.post.id),
