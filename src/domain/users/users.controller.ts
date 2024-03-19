@@ -29,6 +29,7 @@ import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
 import { UserProfileDto } from './dto/user-profile.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -211,81 +212,18 @@ export class UsersController {
   @ApiOperation({ summary: '회원 정보 조회' })
   @ApiResponse({
     status: 200,
-    description: '회원 정보 반환',
-    schema: {
-      type: 'object',
-      properties: {
-        code: { type: 'number', example: 200 },
-        message: {
-          type: 'string',
-          example: '회원 정보가 조회되었습니다.',
-        },
-        data: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            authenticationProvider: { type: 'string' },
-            socialId: { type: 'string', nullable: true },
-            isVerified: { type: 'boolean' },
-            state: { type: 'string' },
-            primaryAnimal: { type: 'string' },
-            secondAnimal: { type: 'string', nullable: true },
-            profileAnimal: { type: 'string' },
-            catPoints: { type: 'integer' },
-            bearPoints: { type: 'integer' },
-            dogPoints: { type: 'integer' },
-            foxPoints: { type: 'integer' },
-            items: { type: 'array', items: { type: 'object' }, nullable: true },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-            deletedAt: { type: 'string', nullable: true, format: 'date-time' },
-            credential: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer' },
-                email: { type: 'string' },
-                nickname: { type: 'string' },
-                birthYear: { type: 'integer' },
-                gender: { type: 'string' },
-              },
-            },
-            authorities: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'integer' },
-                  authorityName: { type: 'string' },
-                },
-              },
-            },
-            userStickers: {
-              type: 'object',
-              properties: {
-                bearStickers: { type: 'number' },
-                foxStickers: { type: 'number' },
-                dogStickers: { type: 'number' },
-                catStickers: { type: 'number' },
-              },
-            },
-            profileItems: {
-              type: 'array',
-              items: { type: 'object' },
-            },
-          },
-        },
-      },
-    },
+    description: '회원 정보 조회 성공',
+    type: UserProfileDto,
   })
   @ApiResponse({
     status: 404,
     description: '사용자를 찾을 수 없습니다.',
   })
-  async findOne(@Req() request: RequestWithUser) {
-    const { user } = request;
-    user.credential.password = undefined;
-    user.currentRefreshToken = undefined;
-    return HttpResponse.success('회원 정보가 조회되었습니다.', user);
+  async findOne(@Req() req: RequestWithUser) {
+    return HttpResponse.success(
+      '회원 정보가 조회되었습니다.',
+      new UserResponseDto(req.user),
+    );
   }
 
   @Get('/profile/:userId')
@@ -414,12 +352,8 @@ export class UsersController {
   })
   async findAll(@Query() pageOptionsDto: PageOptionsDto) {
     const [users, total] = await this.usersService.findAll(pageOptionsDto);
-    users.forEach((user) => {
-      user.credential.password = undefined;
-      user.currentRefreshToken = undefined;
-    });
     const { data, meta } = new PageDto(
-      users,
+      users.map((user) => new UserResponseDto(user)),
       new PageMetaDto(pageOptionsDto, total),
     );
     return HttpResponse.success('전체 회원이 조회되었습니다.', data, meta);
