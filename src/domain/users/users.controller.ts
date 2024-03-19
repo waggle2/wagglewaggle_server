@@ -10,6 +10,7 @@ import {
   Req,
   Param,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -188,8 +189,16 @@ export class UsersController {
       },
     },
   })
-  async checkNickname(@Param('nickname') nickname: string) {
-    const result = await this.usersService.checkNickname(nickname);
+  async checkNickname(
+    @Param('nickname') nickname: string,
+    @Headers('email') email?: string,
+    @Headers('socialId') socialId?: string,
+  ) {
+    const result = await this.usersService.checkNickname(
+      nickname,
+      email,
+      socialId,
+    );
     return HttpResponse.success('닉네임 사용 가능 여부', {
       available: result,
     });
