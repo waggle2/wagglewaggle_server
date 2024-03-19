@@ -117,11 +117,7 @@ export class PollsService {
       updatedPollId = poll.id;
     });
 
-    if (!updatedPollId) {
-      throw new PollItemNotFoundException('투표 항목 수정에 실패했습니다');
-    } else {
-      return await this.findOne(updatedPollId);
-    }
+    return await this.findOne(updatedPollId);
   }
 
   private async validatePollItem(

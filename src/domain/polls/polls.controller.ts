@@ -11,6 +11,7 @@ import {
 import { PollsService } from './polls.service';
 import { CreatePollDto } from './dto/create-poll.dto';
 import {
+  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -23,8 +24,11 @@ import {
 import {
   AlreadyVoteException,
   DuplicateVoteForbiddenException,
+  NotPolledException,
   PollAuthorDifferentException,
   PollConflictException,
+  PollEndedException,
+  PollItemNotFoundException,
   PollNotFoundException,
 } from '@/domain/polls/exceptions/polls.exception';
 import { JwtAuthenticationGuard } from '@/domain/authentication/guards/jwt-authentication.guard';
@@ -77,8 +81,16 @@ export class PollsController {
     description: '투표 성공',
   })
   @ApiForbiddenResponse({
+    type: PollEndedException,
+    description: '투표가 마감되었습니다.',
+  })
+  @ApiForbiddenResponse({
     type: DuplicateVoteForbiddenException,
     description: '한 항목에만 투표할 수 있습니다',
+  })
+  @ApiNotFoundResponse({
+    type: PollItemNotFoundException,
+    description: '해당 투표 항목이 존재하지 않습니다',
   })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
@@ -107,9 +119,21 @@ export class PollsController {
     type: PollResponseDto,
     description: '재투표 성공',
   })
+  @ApiBadRequestResponse({
+    type: NotPolledException,
+    description: '투표하지 않은 투표입니다. 재투표 대상이 아닙니다.',
+  })
+  @ApiForbiddenResponse({
+    type: PollConflictException,
+    description: '투표가 마감된 경우',
+  })
   @ApiForbiddenResponse({
     type: DuplicateVoteForbiddenException,
     description: '한 항목에만 투표할 수 있습니다',
+  })
+  @ApiNotFoundResponse({
+    type: PollItemNotFoundException,
+    description: '해당 투표 항목이 존재하지 않습니다',
   })
   @ApiNotFoundResponse({
     type: PollNotFoundException,
