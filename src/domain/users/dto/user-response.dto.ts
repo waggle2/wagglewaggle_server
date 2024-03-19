@@ -11,7 +11,7 @@ export class UserResponseDto {
   @Expose()
   readonly id: string;
 
-  @ApiProperty({ type: AuthenticationProvider, description: '가입 경로' })
+  @ApiProperty({ enum: AuthenticationProvider, description: '가입 경로' })
   @Expose()
   readonly authenticationProvider: AuthenticationProvider;
 

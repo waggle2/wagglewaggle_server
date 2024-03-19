@@ -28,7 +28,6 @@ import { PageOptionsDto } from '@/common/dto/page/page-options.dto';
 import { PageMetaDto } from '@/common/dto/page/page-meta.dto';
 import { PageDto } from '@/common/dto/page/page.dto';
 import { PaginationSuccessResponse } from '@/common/decorators/pagination-success-response.decorator';
-import { UserProfileDto } from './dto/user-profile.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
 @Controller('users')
@@ -213,7 +212,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: '회원 정보 조회 성공',
-    type: UserProfileDto,
+    type: UserResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -348,7 +347,7 @@ export class UsersController {
   @PaginationSuccessResponse(HttpStatus.OK, {
     model: PageDto,
     message: '전체 회원이 조회되었습니다.',
-    generic: UserProfileDto,
+    generic: UserResponseDto,
   })
   async findAll(@Query() pageOptionsDto: PageOptionsDto) {
     const [users, total] = await this.usersService.findAll(pageOptionsDto);
