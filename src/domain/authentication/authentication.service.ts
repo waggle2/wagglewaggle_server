@@ -13,13 +13,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Credential } from '../users/entities/credential.entity';
 import {
   SocialLoginForbiddenException,
+  UserExpelledException,
   UserUnauthorizedException,
+  UserWithdrawnException,
 } from '@/domain/authentication/exceptions/authentication.exception';
 import {
   UserBadRequestException,
   UserNotFoundException,
 } from '@/domain/users/exceptions/users.exception';
 import { LoginDto } from '@/domain/authentication/dto/login.dto';
+import { AuthenticationProvider, State } from '@/@types/enum/user.enum';
 
 @Injectable()
 export class AuthenticationService {
@@ -41,20 +44,41 @@ export class AuthenticationService {
     if (authenticationProvider === 'email' && (!email || !password)) {
       throw new UserBadRequestException('이메일 및 비밀번호가 필요합니다.');
     }
+
     if (socialId) {
-      const existingSocialId = await this.usersService.findBySocialId(socialId);
-      if (existingSocialId) {
-        throw new UserBadRequestException('존재하는 소셜id 입니다.');
+      const existingUser = await this.usersService.findBySocialId(socialId);
+      if (existingUser) {
+        if (existingUser.state === State.WITHDRAWN) {
+          await this.usersService.update(existingUser.id, registrationData);
+          return;
+        } else if (existingUser.state === State.EXPELLED) {
+          throw new UserExpelledException('추방된 회원입니다.');
+        } else {
+          throw new UserBadRequestException('존재하는 소셜id 입니다.');
+        }
       }
     }
+
     if (email) {
-      const existingEmail = await this.usersService.findByEmail(email);
-      if (existingEmail) {
-        throw new UserBadRequestException('존재하는 이메일입니다.');
+      const existingUser = await this.usersService.findByEmail(email);
+      if (existingUser) {
+        if (existingUser.state === State.WITHDRAWN) {
+          await this.usersService.update(existingUser.id, registrationData);
+          return;
+        } else if (existingUser.state === State.EXPELLED) {
+          throw new UserExpelledException('추방된 회원입니다.');
+        } else {
+          throw new UserBadRequestException('존재하는 이메일입니다.');
+        }
       }
     }
-    const result = await this.usersService.checkNickname(nickname);
-    if (result === false) {
+
+    const result = await this.usersService.checkNickname(
+      nickname,
+      registrationData.email,
+      registrationData.socialId,
+    );
+    if (!result) {
       throw new UserBadRequestException('존재하는 닉네임입니다.');
     }
 
@@ -76,6 +100,11 @@ export class AuthenticationService {
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
+    if (user.state === State.WITHDRAWN) {
+      throw new UserWithdrawnException('이미 탈퇴한 회원입니다.');
+    } else if (user.state === State.EXPELLED) {
+      throw new UserExpelledException('추방된 회원입니다.');
+    }
 
     const isMatchPassword = await this.comparePassword(
       password,
@@ -90,7 +119,7 @@ export class AuthenticationService {
 
   // 소셜 로그인
   async socialLogin(
-    provider: string,
+    provider: AuthenticationProvider,
     authorizationCode: string,
     state: string,
   ) {
@@ -98,14 +127,14 @@ export class AuthenticationService {
     let userData;
 
     switch (provider) {
-      case 'kakao':
+      case AuthenticationProvider.KAKAO:
         accessToken = await this.getKakaoToken(
           authorizationCode,
           process.env.KAKAO_REST_API_KEY,
         );
         userData = await this.getKakaoUserData(accessToken);
         break;
-      case 'naver':
+      case AuthenticationProvider.NAVER:
         accessToken = await this.getNaverToken(
           authorizationCode,
           state,
@@ -114,7 +143,7 @@ export class AuthenticationService {
         );
         userData = await this.getNaverUserData(accessToken);
         break;
-      case 'google':
+      case AuthenticationProvider.GOOGLE:
         accessToken = await this.getGoogleToken(
           authorizationCode,
           process.env.GOOGLE_CLIENT_ID,
@@ -127,6 +156,11 @@ export class AuthenticationService {
     const user = await this.usersService.findBySocialId(userData.socialId);
     if (!user) {
       return { message: '회원가입이 필요합니다.', userData };
+    }
+    if (user.state === State.WITHDRAWN) {
+      throw new UserWithdrawnException('이미 탈퇴한 회원입니다.');
+    } else if (user.state === State.EXPELLED) {
+      throw new UserExpelledException('추방된 회원입니다.');
     }
 
     const accessCookie = await this.getCookieWithAccessToken(user);

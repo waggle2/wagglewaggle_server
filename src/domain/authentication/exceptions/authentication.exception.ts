@@ -54,3 +54,15 @@ export class NotAdultException extends BaseException {
     super(AuthExceptionEnum.NOT_ADULT, HttpStatus.FORBIDDEN, message);
   }
 }
+
+export class UserWithdrawnException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.USER_WITHDRAWN, HttpStatus.FORBIDDEN, message);
+  }
+}
+
+export class UserExpelledException extends BaseException {
+  constructor(message: string) {
+    super(AuthExceptionEnum.USER_EXPELLED, HttpStatus.FORBIDDEN, message);
+  }
+}

@@ -21,6 +21,7 @@ import { UserUnauthorizedException } from '@/domain/authentication/exceptions/au
 import { ItemCart } from '../items/entities/item-cart.entity';
 import { Animal } from '@/@types/enum/animal.enum';
 import { UserStickers } from './entities/user-stickers.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -98,11 +99,6 @@ export class UsersService {
 
   // 회원가입 이메일 인증 코드 전송
   async sendSignupCode(email: string): Promise<void> {
-    const existingUser = await this.findByEmail(email);
-    if (existingUser) {
-      throw new UserBadRequestException('중복된 이메일입니다.');
-    }
-
     const emailVerificationCode = Math.floor(Math.random() * 1000000)
       .toString()
       .padStart(6, '0');
@@ -164,16 +160,40 @@ export class UsersService {
   }
 
   // 닉네임 중복 확인
-  async checkNickname(nickname: string): Promise<boolean> {
-    const existingUser = await this.credentialRepository.findOne({
-      where: { nickname },
-    });
-
-    return !existingUser;
-  }
-
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async checkNickname(
+    nickname: string,
+    email?: string,
+    socialId?: string,
+  ): Promise<boolean> {
+    const existingUser = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.credential', 'credential')
+      .where('credential.nickname = :nickname', { nickname })
+      .withDeleted()
+      .getOne();
+    if (existingUser) {
+      if (email) {
+        const user = await this.findByEmail(email);
+        if (
+          user &&
+          user.state === State.WITHDRAWN &&
+          user.id === existingUser.id
+        ) {
+          return true;
+        }
+      } else if (socialId) {
+        const user = await this.findBySocialId(socialId);
+        if (
+          user &&
+          user.state === State.WITHDRAWN &&
+          user.id === existingUser.id
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
   }
 
   // 이메일로 회원 정보 조회
@@ -183,8 +203,19 @@ export class UsersService {
       .innerJoinAndSelect('user.credential', 'credential')
       .leftJoinAndSelect('user.authorities', 'authorities')
       .where('credential.email = :email', { email })
-      .andWhere('user.deletedAt IS NULL')
+      .withDeleted()
       .getOne();
+
+    return user;
+  }
+
+  // socialId로 회원 정보 조회
+  async findBySocialId(socialId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { socialId },
+      withDeleted: true,
+      relations: ['credential', 'authorities'],
+    });
 
     return user;
   }
@@ -229,16 +260,6 @@ export class UsersService {
     if (!user) {
       throw new UserNotFoundException('사용자를 찾을 수 없습니다.');
     }
-
-    return user;
-  }
-
-  // socialId로 회원 정보 조회
-  async findBySocialId(socialId: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { socialId },
-      relations: ['credential', 'authorities'],
-    });
 
     return user;
   }
@@ -322,6 +343,17 @@ export class UsersService {
     return true;
   }
 
+  // 재가입 시 회원정보 업데이트
+  async update(userId: string, updateUserDto: UpdateUserDto): Promise<void> {
+    const user = await this.findByIdWithDeleted(userId);
+    user.deletedAt = null;
+    Object.assign(user, updateUserDto);
+    user.state = State.JOINED;
+    user.isVerified = false;
+
+    await this.userRepository.save(user);
+  }
+
   // 회원 탈퇴
   async remove(id: string, exitReasonDto: ExitReasonDto): Promise<void> {
     const user = await this.findById(id);
@@ -336,6 +368,24 @@ export class UsersService {
       exitReason.otherReasons = exitReasonDto.otherReasons;
     }
     await this.exitReasonRepository.save(exitReason);
+  }
+
+  /* 관리자 페이지 */
+
+  // 전체 회원 조회(관리자)
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+      withDeleted: true,
+      relations: ['credential', 'authorities'],
+    });
+  }
+
+  // 회원 추방(관리자)
+  async expelMember(id: string): Promise<void> {
+    const user = await this.findByIdWithDeleted(id);
+    user.state = State.EXPELLED;
+    await this.userRepository.save(user);
+    await this.userRepository.softDelete(id);
   }
 
   // refresh token을 데이터베이스에 저장
@@ -354,6 +404,8 @@ export class UsersService {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(refreshToken, salt);
   }
+
+  /* 임시 */
 
   // 코인 조절(임시)
   async addCoins(user: User, animal: Animal, coins: number) {

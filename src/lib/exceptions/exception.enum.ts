@@ -58,6 +58,8 @@ export enum AuthExceptionEnum {
   REPORT_FORBIDDEN = '4032',
   BLOCK_FORBIDDEN = '4033',
   NOT_ADULT = '4034',
+  USER_WITHDRAWN = '4035',
+  USER_EXPELLED = '4036',
 }
 
 export enum UserExceptionEnum {

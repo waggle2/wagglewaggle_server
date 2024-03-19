@@ -18,6 +18,7 @@ import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
 import { RefreshAuthenticationGuard } from './guards/refresh-authentication.guard';
 import { LoginDto } from '@/domain/authentication/dto/login.dto';
 import { HttpResponse } from '@/@types/http-response';
+import { AuthenticationProvider } from '@/@types/enum/user.enum';
 
 @Controller('authentication')
 @ApiTags('authentication')
@@ -74,6 +75,10 @@ export class AuthenticationController {
   @ApiResponse({
     status: 404,
     description: '사용자를 찾을 수 없습니다.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '이미 탈퇴한 회원입니다, 추방된 회원입니다.',
   })
   async emailLogin(@Body() loginDto: LoginDto, @Res() response: Response) {
     const user = await this.authenticationService.emailLogin(loginDto);
@@ -150,7 +155,7 @@ export class AuthenticationController {
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
       await this.authenticationService.socialLogin(
-        'kakao',
+        AuthenticationProvider.KAKAO,
         authorizationCode,
         null,
       );
@@ -229,7 +234,7 @@ export class AuthenticationController {
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
       await this.authenticationService.socialLogin(
-        'naver',
+        AuthenticationProvider.NAVER,
         authorizationCode,
         state,
       );
@@ -304,7 +309,7 @@ export class AuthenticationController {
   ) {
     const { user, accessCookie, refreshCookie, message, userData } =
       await this.authenticationService.socialLogin(
-        'google',
+        AuthenticationProvider.GOOGLE,
         authorizationCode,
         null,
       );
