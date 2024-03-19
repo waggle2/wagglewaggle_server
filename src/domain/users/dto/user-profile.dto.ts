@@ -22,7 +22,7 @@ export class UserProfileDto {
   @Expose()
   readonly profileItems: ProfileItems[];
 
-  @ApiProperty({ enum: State, description: '가입 상태 (가입, 탈퇴)' })
+  @ApiProperty({ enum: State, description: '가입 상태 (가입, 탈퇴, 추방)' })
   @Expose()
   readonly state: State;
 

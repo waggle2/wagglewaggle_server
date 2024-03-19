@@ -44,7 +44,11 @@ export class AuthenticationController {
   @ApiResponse({
     status: 400,
     description:
-      '(authenticationProvider가 email일 경우) 이메일 및 비밀번호가 필요합니다.',
+      '(authenticationProvider가 email일 경우) 이메일 및 비밀번호가 필요합니다, 존재하는 이메일/소셜id/닉네임입니다.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '추방된 회원입니다.',
   })
   async register(@Body() createUserDto: CreateUserDto) {
     await this.authenticationService.register(createUserDto);
