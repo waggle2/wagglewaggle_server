@@ -18,6 +18,7 @@ import { User } from '@/domain/users/entities/user.entity';
 import { CreatePollItemDto } from '@/domain/polls/dto/create-pollItem.dto';
 import { PollItem } from '@/domain/polls/entities/pollItem.entity';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { UpdatePollDto } from '@/domain/polls/dto/update-poll.dto';
 
 @Injectable()
 export class PollsService {
@@ -67,6 +68,32 @@ export class PollsService {
     }
 
     return poll;
+  }
+
+  async update(user: User, id: number, updatePollDto: UpdatePollDto) {
+    const poll = await this.findOne(id);
+    this.validatePollOwner(poll, user);
+
+    const { title, endedAt, createPollItemDtos, deletePollItemIds } =
+      updatePollDto;
+
+    if (title) poll.title = title;
+    if (endedAt) poll.endedAt = endedAt;
+
+    if (createPollItemDtos) {
+      const pollItems = await Promise.all(
+        createPollItemDtos.map((item) => this.createPollItem(item)),
+      );
+      poll.pollItems.push(...pollItems);
+    }
+
+    if (deletePollItemIds) {
+      poll.pollItems = poll.pollItems.filter(
+        (item) => !deletePollItemIds.includes(item.id),
+      );
+    }
+
+    return await this.pollsRepository.save(poll);
   }
 
   async remove(user: User, id: number) {

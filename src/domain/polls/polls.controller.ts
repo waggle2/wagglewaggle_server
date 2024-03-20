@@ -36,6 +36,7 @@ import RequestWithUser from '@/domain/authentication/interfaces/request-with-use
 import { HttpResponse } from '@/@types/http-response';
 import { PollResponseDto } from '@/domain/polls/dto/poll-response.dto';
 import { PostNotFoundException } from '@/domain/posts/exceptions/posts.exception';
+import { UpdatePollDto } from '@/domain/polls/dto/update-poll.dto';
 
 @Controller('polls')
 @ApiTags('polls')
@@ -71,6 +72,35 @@ export class PollsController {
     const poll = await this.pollsService.create(user, +postId, createPollDto);
     return HttpResponse.created(
       '투표 생성 성공',
+      new PollResponseDto(poll, poll.post.id),
+    );
+  }
+
+  @ApiOperation({ summary: '투표 수정' })
+  @ApiResponse({
+    status: 201,
+    description: '투표 업데이트 성공',
+    type: PollResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    type: PollAuthorDifferentException,
+    description: '해당 게시물의 작성자가 아닌 경우입니다',
+  })
+  @ApiNotFoundResponse({
+    type: PostNotFoundException,
+    description: '해당 투표가 존재하지 않습니다',
+  })
+  @UseGuards(JwtAuthenticationGuard)
+  @Patch(':id')
+  async update(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updatePollDto: UpdatePollDto,
+  ) {
+    const { user } = req;
+    const poll = await this.pollsService.update(user, +id, updatePollDto);
+    return HttpResponse.created(
+      '투표 업데이트 성공',
       new PollResponseDto(poll, poll.post.id),
     );
   }
