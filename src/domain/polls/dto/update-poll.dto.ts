@@ -1,13 +1,8 @@
-import {
-  IsArray,
-  IsDate,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsDate, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { UpdatePollItemDto } from '@/domain/polls/dto/update-pollItem.dto';
+import { CreatePollItemDto } from '@/domain/polls/dto/create-pollItem.dto';
+import { number } from 'joi';
 
 export class UpdatePollDto {
   @ApiProperty({
@@ -18,20 +13,6 @@ export class UpdatePollDto {
   @IsString()
   @IsOptional()
   readonly title: string;
-
-  @ApiProperty({
-    name: 'poll_item_dtos',
-    example:
-      '[{ "id": 1, "content": "치킨" }, { "id": 2, "content": "피자" }, { "id": 3, "content": "제육볶음" }]',
-    description: '투표 항목 DTO, content는 1~50글자',
-    required: true,
-  })
-  @IsArray()
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => UpdatePollItemDto)
-  @Expose({ name: 'poll_item_dtos' })
-  readonly pollItemDtos: UpdatePollItemDto[];
 
   // @ApiProperty({
   //   example: '점메추',
@@ -54,4 +35,24 @@ export class UpdatePollDto {
   @Type(() => Date)
   @Expose({ name: 'ended_at' })
   readonly endedAt: Date;
+
+  @ApiProperty({
+    type: CreatePollItemDto,
+    isArray: true,
+    description: '추가할 투표 항목',
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => CreatePollItemDto)
+  readonly createPollItemDtos: CreatePollItemDto[];
+
+  @ApiProperty({
+    type: number,
+    isArray: true,
+    description: '삭제할 투표 항목',
+    example: [1, 2],
+  })
+  @IsOptional()
+  @IsArray()
+  readonly deletePollItemIds: number[];
 }
